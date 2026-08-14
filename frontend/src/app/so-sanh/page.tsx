@@ -95,7 +95,7 @@ function CompareContent() {
                     </button>
                     <div className="aspect-[4/3] bg-gray-200 rounded-lg overflow-hidden mb-3">
                       {item.images && item.images.length > 0 ? (
-                        <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
+                        <img width={400} height={300} src={item.images[0]} alt={item.title} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">No Img</div>
                       )}
@@ -180,7 +180,7 @@ function CompareContent() {
                 <td key={`user-${item.id}`} className="p-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-                      {item.user?.avatar && <img src={item.user.avatar} className="w-full h-full object-cover" />}
+                      {item.user?.avatar && <img width={40} height={40} src={item.user.avatar} className="w-full h-full object-cover" />}
                     </div>
                     <span className="font-medium text-sm text-gray-700">{item.user?.name || 'Ẩn danh'}</span>
                   </div>

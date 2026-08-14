@@ -189,7 +189,7 @@ export default function Wallet() {
         {qrData && (
           <div className="flex-1 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8 flex flex-col items-center justify-center animate-fade-in">
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <img src={qrData.qrUrl} alt="QR Code" className="w-64 h-64 object-contain" />
+              <img width={256} height={256} src={qrData.qrUrl} alt="QR Code" className="w-64 h-64 object-contain" />
             </div>
             <p className="mt-4 text-center text-sm text-gray-500">
               Mở ứng dụng ngân hàng và <strong className="text-primary">Quét mã QR</strong><br />

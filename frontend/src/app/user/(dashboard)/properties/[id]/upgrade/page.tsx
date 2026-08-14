@@ -75,7 +75,7 @@ export default function UpgradePropertyPage() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col md:flex-row gap-6 items-center">
         {property.images && property.images.length > 0 ? (
-          <img src={property.images[0]} alt={property.title} className="w-full md:w-32 h-32 object-cover rounded-lg" />
+          <img width={128} height={128} src={property.images[0]} alt={property.title} className="w-full md:w-32 h-32 object-cover rounded-lg" />
         ) : (
           <div className="w-full md:w-32 h-32 bg-gray-100 flex items-center justify-center rounded-lg text-gray-400">Không có ảnh</div>
         )}

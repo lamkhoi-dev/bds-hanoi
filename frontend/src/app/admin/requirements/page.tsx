@@ -1,5 +1,6 @@
 "use client";
 import { formatNumberString } from '@/lib/utils';
+import { propertyTypeByEnum } from '@/lib/seo/taxonomy';
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
@@ -119,21 +120,7 @@ export default function AdminRequirementsPage() {
                         {req.transactionType === 'CAN_MUA' ? 'CẦN MUA' : 'CẦN THUÊ'}
                       </span>
                       <div className="text-sm font-medium mt-1">
-                        {{
-                          CHUNG_CU: 'Chung cư',
-                          NHA_RIENG: 'Nhà riêng',
-                          NHA_MAT_PHO: 'Nhà mặt phố',
-                          NHA_BIET_THU: 'Biệt thự',
-                          DAT_NEN: 'Đất nền',
-                          DAT_THO_CU: 'Đất thổ cư',
-                          DAT_NONG_NGHIEP: 'Đất nông nghiệp',
-                          DU_AN: 'Dự án',
-                          KHO_XUONG: 'Kho xưởng',
-                          KHACH_SAN: 'Khách sạn',
-                          VAN_PHONG: 'Văn phòng',
-                          MAT_BANG: 'Mặt bằng kinh doanh',
-                          PHONG_TRO: 'Phòng trọ'
-                        }[req.propertyType as string] || req.propertyType}
+                        {propertyTypeByEnum(req.propertyType as string)?.label || req.propertyType}
                       </div>
                     </td>
                     <td data-label="Nội dung / Yêu cầu" className="p-4">
@@ -254,16 +241,9 @@ export default function AdminRequirementsPage() {
                   <p className="font-medium text-gray-900">
                     {(() => {
                       if (!viewingReq.location) return 'Chưa xác định';
-                      const locName = viewingReq.location.name;
-                      const wardAliases: Record<string, string> = {
-                        'Phường Thành Vinh': 'Vinh Tân',
-                        'Phường Trường Vinh': 'Trường Thi',
-                        'Phường Vinh Lộc': 'Hưng Bình',
-                        'Phường Vinh Phú': 'Vinh Tân',
-                        'Phường Vinh Hưng': 'Vinh Tân',
-                        'Phường Cửa Lò': 'Cửa Lò'
-                      };
-                      return wardAliases[locName] ? `${locName} (${wardAliases[locName]})` : locName;
+                      // Bảng alias 6 phường Vinh viết cứng đã bỏ — tên phường cũ giờ
+                      // là dữ liệu thật trong CSDL (loại OLD_WARD).
+                      return viewingReq.location.name;
                     })()}
                   </p>
                 </div>

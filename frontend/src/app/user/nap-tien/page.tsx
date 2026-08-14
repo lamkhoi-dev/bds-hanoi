@@ -200,7 +200,7 @@ export default function DepositPage() {
             <div className="w-64 h-64 bg-gray-100 animate-pulse rounded-2xl flex items-center justify-center">Đang tạo mã...</div>
           ) : (
             <div className="flex flex-col items-center">
-              <img 
+              <img width={256} height={256} 
                 src={qrData?.qrUrl || `https://img.vietqr.io/image/970436-0987654321-compact.png?amount=${amount}&addInfo=napid%20${user?.id || 'TEST'}&accountName=CONG%20TY%20BDS`} 
                 alt="QR Code" 
                 className="w-64 h-64 rounded-2xl border p-2 shadow-sm mb-4" 

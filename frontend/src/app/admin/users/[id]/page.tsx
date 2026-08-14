@@ -70,7 +70,7 @@ export default function AdminUserDetail({ params }: { params: Promise<{ id: stri
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center">
             <div className="w-24 h-24 bg-gradient-to-tr from-blue-100 to-indigo-100 text-blue-600 rounded-full flex items-center justify-center font-bold overflow-hidden mx-auto mb-4 border-4 border-white shadow-sm">
-              {user.avatar ? <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" /> : <span className="text-3xl">{user.name?.charAt(0) || 'U'}</span>}
+              {user.avatar ? <img width={96} height={96} src={user.avatar} alt="avatar" className="w-full h-full object-cover" /> : <span className="text-3xl">{user.name?.charAt(0) || 'U'}</span>}
             </div>
             <h2 className="text-xl font-bold text-gray-900">{user.name || 'Người dùng'}</h2>
             <p className="text-sm text-gray-500 mt-1">{user.role}</p>
@@ -131,7 +131,7 @@ export default function AdminUserDetail({ params }: { params: Promise<{ id: stri
                 properties.map(post => (
                   <div key={post.id} className="p-6 flex flex-col sm:flex-row gap-4 hover:bg-gray-50/50 transition-colors">
                     <div className="w-full sm:w-32 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                      <img 
+                      <img width={400} height={300} 
                         src={post.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=300'} 
                         alt={post.title} 
                         className="w-full h-full object-cover"

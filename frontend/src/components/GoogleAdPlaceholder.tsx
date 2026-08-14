@@ -91,7 +91,7 @@ const GoogleAdPlaceholder = () => {
       );
     } else {
       content = (
-        <img 
+        <img width={300} height={250} 
           src={adUrl} 
           alt="Advertisement" 
           className="w-full h-auto md:max-h-[400px] object-cover rounded-lg shadow-sm"

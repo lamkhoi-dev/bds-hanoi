@@ -257,7 +257,7 @@ export default function SettingsPage() {
         <div className="flex items-center gap-6">
           <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-primary/20 bg-gray-100 flex-shrink-0">
             {formData.avatar ? (
-              <img src={toMediaUrl(formData.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+              <img width={128} height={128} src={toMediaUrl(formData.avatar)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-2xl">
                 {formData.name ? formData.name.charAt(0) : 'U'}

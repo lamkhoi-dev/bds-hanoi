@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
+import { PROPERTY_TYPES, propertyTypeByEnum } from '@/lib/seo/taxonomy';
 import { CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { generateSlug } from '@/lib/utils';
@@ -99,20 +100,11 @@ export default function AdminPosts() {
         </select>
         <select value={propertyType} onChange={(e) => setPropertyType(e.target.value)} className="font-sans border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary">
           <option className="font-sans" value="">Loại BĐS</option>
-          <option className="font-sans" value="CHUNG_CU">Chung cư</option>
-          <option className="font-sans" value="NHA_RIENG">Nhà riêng</option>
-          <option className="font-sans" value="NHA_MAT_PHO">Nhà mặt phố</option>
-          <option className="font-sans" value="NHA_BIET_THU">Biệt thự</option>
-          <option className="font-sans" value="DAT_NEN">Đất nền</option>
-          <option className="font-sans" value="DAT_THO_CU">Đất thổ cư</option>
-          <option className="font-sans" value="DAT_NONG_NGHIEP">Đất nông nghiệp</option>
-          <option className="font-sans" value="DU_AN">Dự án</option>
-          <option className="font-sans" value="KHO_XUONG">Kho xưởng</option>
-          <option className="font-sans" value="KHACH_SAN">Khách sạn</option>
-          <option className="font-sans" value="VAN_PHONG">Văn phòng</option>
-          <option className="font-sans" value="MAT_BANG">Mặt bằng kinh doanh</option>
-          <option className="font-sans" value="PHONG_TRO">Phòng trọ</option>
-          <option className="font-sans" value="BDS_KHAC">Khác</option>
+          {/* 8 giá trị cũ (NHA_MAT_PHO, KHO_XUONG, VAN_PHONG, PHONG_TRO…) không
+              tồn tại trong dữ liệu — lọc theo chúng luôn ra 0 tin. */}
+          {PROPERTY_TYPES.map((t) => (
+            <option className="font-sans" key={t.enum} value={t.enum}>{t.label}</option>
+          ))}
         </select>
         <select value={tier} onChange={(e) => setTier(e.target.value)} className="font-sans border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary">
           <option className="font-sans" value="">Tất cả VIP / UP</option>
@@ -152,22 +144,7 @@ export default function AdminPosts() {
                   </td>
                   <td data-label="Loại BĐS & Khu vực" className="px-6 py-4">
                     <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-semibold">
-                      {{
-                        CHUNG_CU: 'Chung cư',
-                        NHA_RIENG: 'Nhà riêng',
-                        NHA_MAT_PHO: 'Nhà mặt phố',
-                        NHA_BIET_THU: 'Biệt thự',
-                        DAT_NEN: 'Đất nền',
-                        DAT_THO_CU: 'Đất thổ cư',
-                        DAT_NONG_NGHIEP: 'Đất nông nghiệp',
-                        DU_AN: 'Dự án',
-                        KHO_XUONG: 'Kho xưởng',
-                        KHACH_SAN: 'Khách sạn',
-                        VAN_PHONG: 'Văn phòng',
-                        MAT_BANG: 'Mặt bằng KD',
-                        PHONG_TRO: 'Phòng trọ',
-                        BDS_KHAC: 'Khác'
-                      }[post.propertyType as string] || post.propertyType}
+                      {propertyTypeByEnum(post.propertyType as string)?.label || post.propertyType}
                     </span>
                     <div className="text-gray-500 text-xs mt-1">{post.ward || post.district || ''}</div>
                   </td>

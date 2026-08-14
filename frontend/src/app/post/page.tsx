@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from 'react';
+import { PROPERTY_TYPES, propertyTypeByEnum } from '@/lib/seo/taxonomy';
 import api from '@/lib/axios';
 import { getAuthToken } from '@/lib/auth';
 import { toMediaUrl } from '@/lib/media';
@@ -9,13 +10,16 @@ import dynamic from 'next/dynamic';
 const MapPin = dynamic(() => import('@/components/MapPin'), { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl"></div> });
 import toast from 'react-hot-toast';
 import { PRICE_RANGES_SELL, PRICE_RANGES_RENT, AREA_RANGES, getPriceLabel, getAreaLabel } from '@/constants/ranges';
+import { siteConfig } from '@/lib/site-config';
 
 import { useAuth } from '@/contexts/AuthContext';
+
+const PROVINCE_NAME = siteConfig.province.name;
 
 const INITIAL_FORM_DATA = {
   transactionType: 'BAN',
   propertyType: '',
-  city: 'Nghệ An',
+  city: PROVINCE_NAME,
   district: '',
   ward: '',
   oldWard: '',
@@ -49,7 +53,6 @@ function PostPropertyContent() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState<any[]>([]);
-  const [haTinhLocations, setHaTinhLocations] = useState<any[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -61,8 +64,8 @@ function PostPropertyContent() {
     //   const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
     //   router.push(`/login?returnUrl=${currentUrl}`);
     // }
-    // Fetch locations for Nghệ An (default)
-    api.get('/locations?city=Nghệ An').then(res => {
+    // Backend đã giới hạn /locations theo tỉnh đang cấu hình, không cần truyền city.
+    api.get('/locations').then(res => {
       setLocations(res.data);
     }).catch(console.error);
   }, [user, isAuthLoading, router]);
@@ -84,7 +87,7 @@ function PostPropertyContent() {
         api.get(endpoint).then(res => {
           const prop = res.data;
           
-          let city = 'Nghệ An';
+          let city = PROVINCE_NAME;
           let district = '';
           let ward = '';
           let oldWard = '';
@@ -134,9 +137,6 @@ function PostPropertyContent() {
              }
           }
           
-          if (city === 'Hà Tĩnh' && haTinhLocations.length === 0) {
-            api.get('/locations?city=Hà Tĩnh').then(r => setHaTinhLocations(r.data)).catch(console.error);
-          }
           
           setImages(prop.images || []);
           setFormData(prev => {
@@ -233,19 +233,14 @@ function PostPropertyContent() {
   const isRequirement = formData.transactionType === 'CAN_MUA' || formData.transactionType === 'CAN_THUE';
   const labelText = isRequirement ? 'Gửi nhu cầu mua hoặc thuê Bất động sản' : 'Đăng tin công khai';
 
-  const isHaTinh = formData.city === 'Hà Tĩnh';
-  const activeLocations = isHaTinh ? haTinhLocations : locations;
+  // Site phục vụ một tỉnh: không còn nhánh riêng cho tỉnh thứ hai.
+  const activeLocations = locations;
   const selectedDistrictObj = activeLocations.find(d => d.name === formData.district);
   const currentWards = selectedDistrictObj ? selectedDistrictObj.children.filter((c: any) => c.type === 'WARD') : [];
   const oldWards = selectedDistrictObj ? selectedDistrictObj.children.filter((c: any) => c.type === 'OLD_WARD') : [];
 
   const handleCityChange = (city: string) => {
     setFormData(prev => ({...prev, city, district: '', ward: '', oldWard: ''}));
-    if (city === 'Hà Tĩnh' && haTinhLocations.length === 0) {
-      api.get('/locations?city=Hà Tĩnh').then(res => {
-        setHaTinhLocations(res.data);
-      }).catch(console.error);
-    }
   };
 
   useEffect(() => {
@@ -371,8 +366,8 @@ function PostPropertyContent() {
       setTimeout(() => router.push(`/login?returnUrl=${currentUrl}`), 1500);
       return;
     }
-    if (!formData.district || (!isRequirement && !isHaTinh && !formData.ward)) {
-      toast.error(isHaTinh ? "Vui lòng chọn Quận/Huyện" : "Vui lòng chọn Quận/Huyện và Phường/Xã");
+    if (!formData.district || (!isRequirement && !formData.ward)) {
+      toast.error("Vui lòng chọn Quận/Huyện và Phường/Xã");
       return;
     }
     const hasValidPrice = formData.priceRangeKey;
@@ -570,13 +565,12 @@ function PostPropertyContent() {
                   onChange={(e) => setFormData(prev => ({...prev, propertyType: e.target.value}))}
                   className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
                 >
+                  {/* Danh sách này thiếu hẳn BIET_THU dù backend nhận, và nhãn
+                      MAT_BANG lệch với 4 nơi khác. Lấy từ taxonomy là hết cả hai. */}
                   <option className="font-sans" value="">Chọn Loại BĐS</option>
-                  <option className="font-sans" value="DAT_NEN">Đất nền</option>
-                  <option className="font-sans" value="NHA_RIENG">Nhà riêng, nhà mặt phố</option>
-                  <option className="font-sans" value="CHUNG_CU">Căn hộ / Chung cư</option>
-                  <option className="font-sans" value="DU_AN">Dự án</option>
-                  <option className="font-sans" value="MAT_BANG">Mặt bằng, kho xưởng</option>
-                  <option className="font-sans" value="BDS_KHAC">Bất động sản khác</option>
+                  {PROPERTY_TYPES.map((t) => (
+                    <option className="font-sans" key={t.enum} value={t.enum}>{t.label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -598,8 +592,7 @@ function PostPropertyContent() {
                   onChange={(e) => handleCityChange(e.target.value)}
                   className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
                 >
-                  <option className="font-sans" value="Nghệ An">Nghệ An</option>
-                  <option className="font-sans" value="Hà Tĩnh">Hà Tĩnh</option>
+                  <option className="font-sans" value={PROVINCE_NAME}>{PROVINCE_NAME}</option>
                 </select>
               </div>
               <div>
@@ -617,12 +610,7 @@ function PostPropertyContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-textMain">Phường/Xã mới {!isRequirement && <span className="text-danger">*</span>}</label>
-                {isHaTinh ? (
-                  <div className="w-full border border-borderLight rounded-xl p-3.5 text-sm bg-gray-100 text-gray-400 mb-3 cursor-not-allowed">
-                    Không áp dụng cho Hà Tĩnh
-                  </div>
-                ) : (
-                  <select 
+                <select 
                     value={formData.ward} 
                     onChange={(e) => setFormData(prev => ({...prev, ward: e.target.value}))}
                     className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm mb-3"
@@ -631,16 +619,10 @@ function PostPropertyContent() {
                     <option className="font-sans" value="">Chọn Phường/Xã mới</option>
                     {currentWards.map((w: any) => (
                       <option className="font-sans" key={w.id} value={w.name}>{formatLocationName(w.name)}</option>
-                    ))}
-                  </select>
-                )}
+                  ))}
+                </select>
                 <label className="block text-sm font-medium mb-2 text-textMain">Phường/Xã cũ (tuỳ chọn)</label>
-                {isHaTinh ? (
-                  <div className="w-full border border-borderLight rounded-xl p-3.5 text-sm bg-gray-100 text-gray-400 cursor-not-allowed">
-                    Không áp dụng cho Hà Tĩnh
-                  </div>
-                ) : (
-                  <select 
+                <select 
                     value={formData.oldWard} 
                     onChange={(e) => setFormData(prev => ({...prev, oldWard: e.target.value}))}
                     className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
@@ -650,9 +632,8 @@ function PostPropertyContent() {
                     {oldWards.length > 0 && oldWards.map((w: any) => (
                       <option className="font-sans" key={w.id} value={w.name}>{formatLocationName(w.name)}</option>
                     ))}
-                    <option className="font-sans" value="Khác">Khác</option>
-                  </select>
-                )}
+                  <option className="font-sans" value="Khác">Khác</option>
+                </select>
               </div>
             </div>
             
@@ -971,7 +952,7 @@ function PostPropertyContent() {
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))}
                 className="w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow text-sm" 
-                placeholder={isRequirement ? "VD: Cần mua nhà mặt phố TP Vinh" : "VD: Bán nhà mặt tiền đường Quang Trung, TP Vinh"} 
+                placeholder={isRequirement ? `VD: Cần mua nhà mặt phố ${PROVINCE_NAME}` : `VD: Bán nhà mặt tiền, ${PROVINCE_NAME}`} 
               />
             </div>
             <div className="mb-5">
@@ -995,7 +976,7 @@ function PostPropertyContent() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   {images.map((url, idx) => (
                     <div key={idx} className="relative group rounded-xl overflow-hidden aspect-square border border-borderLight shadow-sm">
-                      <img loading="lazy" src={toMediaUrl(url)} alt="Preview" className="w-full h-full object-cover" />
+                      <img width={400} height={300} loading="lazy" src={toMediaUrl(url)} alt="Preview" className="w-full h-full object-cover" />
                       <button 
                         type="button"
                         onClick={() => setImages(images.filter((_, i) => i !== idx))}
@@ -1125,29 +1106,24 @@ function PostPropertyContent() {
                   {images.length > 0 ? (
                     <div className={`grid gap-1 ${images.length === 1 ? 'grid-cols-1' : images.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
                       {images.map((img, i) => (
-                        <img key={i} src={toMediaUrl(img)} className={`w-full object-cover ${images.length === 1 ? 'h-[300px] md:h-[400px]' : 'h-[200px] md:h-[250px]'}`} alt="Preview" />
+                        <img width={400} height={300} key={i} src={toMediaUrl(img)} className={`w-full object-cover ${images.length === 1 ? 'h-[300px] md:h-[400px]' : 'h-[200px] md:h-[250px]'}`} alt="Preview" />
                       ))}
                     </div>
                   ) : (
                     <div className="w-full h-[250px] md:h-[350px] flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 border-2 border-dashed border-gray-200">
-                      <img src="/logo/logo-icon.svg" alt="No image" className="opacity-20 grayscale w-24 h-24 object-contain" />
+                      <img width={223} height={145} src="/logo/logo-icon.svg" alt="No image" className="opacity-20 grayscale w-24 h-24 object-contain" />
                       <span className="text-gray-400 mt-4 font-medium text-sm">Chưa có hình ảnh</span>
                     </div>
                   )}
                 </div>
 
                 <div className="text-sm text-primary font-bold mb-2 uppercase">
-                  {{
-                    DAT_NEN: "Đất nền",
-                    NHA_RIENG: "Nhà riêng",
-                    CHUNG_CU: "Chung cư",
-                    MAT_BANG: "Mặt bằng",
-                    BDS_KHAC: "Bất động sản khác",
-                    DU_AN: "Dự án",
-                    BIET_THU: "Biệt thự"
-                  }[formData.propertyType] || formData.propertyType || 'BẤT ĐỘNG SẢN'}
+                  {propertyTypeByEnum(formData.propertyType)?.label || formData.propertyType || 'BẤT ĐỘNG SẢN'}
                 </div>
-                <h1 className="text-2xl font-bold mb-4 text-gray-900">{formData.title || 'Chưa nhập tiêu đề'}</h1>
+                {/* Đây là bản XEM TRƯỚC nằm trong `{previewMode && …}`, hiển thị đồng
+                    thời với <h1> tiêu đề trang ở trên -> phải là h2, nếu không trang
+                    có 2 thẻ h1 (yêu cầu II.8: mỗi trang chỉ một H1). */}
+                <h2 className="text-2xl font-bold mb-4 text-gray-900">{formData.title || 'Chưa nhập tiêu đề'}</h2>
                 
                 <div className="flex gap-4 mb-6">
                   <div className="text-primary font-bold text-xl">{getPriceLabel(formData.priceRangeKey, formData.transactionType) || 'Chưa chọn mức giá'}</div>

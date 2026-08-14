@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
@@ -164,7 +165,7 @@ export default function MyListingsClient() {
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-extrabold text-textMain">Quản lý tin đăng</h1>
-            <p className="mt-2 text-textSecondary">Quản lý các bất động sản của bạn trên Nhà Đất Xứ Nghệ</p>
+            <p className="mt-2 text-textSecondary">Quản lý các bất động sản của bạn trên {siteConfig.name}</p>
           </div>
           <Link
             href="/post"
@@ -215,7 +216,7 @@ export default function MyListingsClient() {
               <div key={property.id} className="bg-white rounded-2xl shadow-sm border border-borderLight flex flex-col md:flex-row overflow-hidden hover:shadow-card hover:-translate-y-1 transition-all duration-300">
                 <Link href={`/tin/${property.id}`} className="w-full md:w-72 h-56 md:h-auto bg-gray-100 relative shrink-0 block group overflow-hidden">
                   {thumbnail ? (
-                    <img src={thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" alt={property.title} />
+                    <img width={400} height={300} src={thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" alt={property.title} />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 font-medium bg-gray-50">
                       <svg className="w-12 h-12 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

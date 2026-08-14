@@ -170,7 +170,7 @@ export default function AdminUsers() {
                 <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
                   <td data-label="Tài khoản" className="px-6 py-4 flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-tr from-blue-100 to-indigo-100 text-blue-600 rounded-full flex items-center justify-center font-bold overflow-hidden">
-                      {user.avatar ? <img src={user.avatar} alt="avatar" /> : user.name?.charAt(0) || 'U'}
+                      {user.avatar ? <img width={40} height={40} src={user.avatar} alt="avatar" /> : user.name?.charAt(0) || 'U'}
                     </div>
                     <div>
                       <div className="font-bold text-gray-900">{user.name || user.email || 'Người dùng'}</div>

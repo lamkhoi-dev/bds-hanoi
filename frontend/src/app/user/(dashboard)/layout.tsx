@@ -38,7 +38,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         <div className="p-6 text-center border-b border-white/10">
           <div className="w-20 h-20 rounded-2xl mx-auto mb-4 overflow-hidden ring-4 ring-accent/30 shadow-glow bg-white/10 flex items-center justify-center">
             {user?.avatar ? (
-              <img src={toMediaUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+              <img width={40} height={40} src={toMediaUrl(user.avatar)} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <svg className="w-10 h-10 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

@@ -61,7 +61,7 @@ export default function SavedProperties() {
             <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-borderLight/50 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
               <Link href={`/tin/${generateSlug(item.title)}--${item.id}`} className="block relative h-48 bg-gray-200">
                 {item.images && item.images.length > 0 ? (
-                  <img loading="lazy" src={toMediaUrl(item.images[0])} className="w-full h-full object-cover" alt={item.title} />
+                  <img width={400} height={300} loading="lazy" src={toMediaUrl(item.images[0])} className="w-full h-full object-cover" alt={item.title} />
                 ) : (
                   <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary/50 font-medium">Không có ảnh</div>
                 )}

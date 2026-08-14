@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
 import { notFound, useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { toast } from 'react-hot-toast'; // Assuming react-hot-toast or just use alert
@@ -13,7 +14,7 @@ export default function SubmitRequirementPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     transactionType: 'CAN_MUA',
-    propertyType: 'Nha-rieng',
+    propertyType: 'NHA_RIENG',
     name: '',
     phone: '',
     email: '',
@@ -125,11 +126,12 @@ export default function SubmitRequirementPage() {
                     <Building size={16} className="text-gray-400" />
                   </div>
                   <select name="propertyType" required value={formData.propertyType} onChange={handleChange} className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary outline-none">
-                    <option value="Nha-rieng">Nhà riêng</option>
-                    <option value="Can-ho">Căn hộ chung cư</option>
-                    <option value="Biet-thu">Biệt thự, Liền kề</option>
-                    <option value="Dat-nen">Đất nền</option>
-                    <option value="Mat-bang">Mặt bằng kinh doanh</option>
+                    {/* Trước đây gửi giá trị kiểu 'Nha-rieng' — không khớp enum nào
+                        backend dùng, nên 2 trang quản lý nhu cầu hiển thị nguyên chuỗi
+                        thô thay vì nhãn. Nay gửi đúng enum. */}
+                    {PROPERTY_TYPES.map((t) => (
+                      <option key={t.enum} value={t.enum}>{t.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>

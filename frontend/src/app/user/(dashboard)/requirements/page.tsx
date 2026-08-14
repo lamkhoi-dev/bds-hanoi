@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { propertyTypeByEnum } from '@/lib/seo/taxonomy';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
@@ -31,17 +32,9 @@ function transactionLabel(value?: string | null) {
 }
 
 function propertyTypeLabel(value?: string | null) {
-  const map: Record<string, string> = {
-    DAT_NEN: "Đất nền",
-    NHA_RIENG: "Nhà riêng / nhà mặt phố",
-    CHUNG_CU: "Chung cư",
-    DU_AN: "Dự án",
-    MAT_BANG: "Mặt bằng / kho xưởng",
-    KHO_XUONG: "Kho xưởng",
-    BIET_THU: "Biệt thự",
-    DAT_NONG_NGHIEP: "Đất nông nghiệp",
-  };
-  return value ? map[value] || value : "Chưa xác định";
+  // Bản đồ cục bộ cũ có nhãn lệch với 7 nơi khác ("Mặt bằng / kho xưởng").
+  if (!value) return "Chưa xác định";
+  return propertyTypeByEnum(value)?.label || value;
 }
 
 function statusLabel(value?: string | null) {

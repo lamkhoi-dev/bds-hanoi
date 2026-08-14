@@ -107,7 +107,7 @@ export default function MapSearchPage() {
               >
                 <div className="w-24 h-24 bg-gray-200 rounded-lg shrink-0 flex items-center justify-center text-gray-400">
                   {prop.images?.[0] ? (
-                    <img src={toMediaUrl(prop.images[0])} alt={prop.title} className="w-full h-full object-cover rounded-lg" />
+                    <img width={400} height={300} src={toMediaUrl(prop.images[0])} alt={prop.title} className="w-full h-full object-cover rounded-lg" />
                   ) : (
                     <Home className="w-8 h-8" />
                   )}

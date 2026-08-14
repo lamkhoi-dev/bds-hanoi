@@ -33,7 +33,7 @@ export default function HeaderAuth() {
         className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[13px] sm:text-sm font-semibold text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 whitespace-nowrap"
       >
         {user.avatar ? (
-          <img src={toMediaUrl(user.avatar)} alt="Ảnh đại diện" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover shrink-0" />
+          <img width={24} height={24} src={toMediaUrl(user.avatar)} alt="Ảnh đại diện" className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover shrink-0" />
         ) : (
           <User className="w-4 h-4 shrink-0" aria-hidden="true" />
         )}

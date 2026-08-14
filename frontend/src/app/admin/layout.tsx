@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -71,10 +72,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-4 lg:p-6 border-b border-white/10 flex-shrink-0 flex items-center justify-between relative">
           <Link href="/" className="flex flex-col items-center gap-2 lg:gap-3 text-white hover:opacity-80 transition-opacity w-full">
             <div className="flex items-center justify-center gap-2 w-full">
-              <img src="/logo/logo-icon.svg" alt="Logo" className="w-6 h-6 lg:w-8 lg:h-8 object-contain" />
+              <img width={223} height={145} src="/logo/logo-icon.svg" alt="Logo" className="w-6 h-6 lg:w-8 lg:h-8 object-contain" />
               <span className="font-extrabold text-base lg:text-xl tracking-tight text-white">ADMIN PANEL</span>
             </div>
-            <img src="/logo/nha_dat_xu_nghe.svg" alt="Nhà Đất Xứ Nghệ" className="h-4 sm:h-5 w-auto object-contain mx-auto" />
+            <span className="block text-center text-xs sm:text-sm font-bold uppercase tracking-wide text-white/80">{siteConfig.name}</span>
           </Link>
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden absolute top-3 right-2 text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
             <X size={24} />
