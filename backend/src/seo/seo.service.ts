@@ -6,6 +6,7 @@ import { LocationService } from '../location/location.service';
 import {
   PROPERTY_TYPE_SLUG,
   TRANSACTION_SLUG,
+  listingDetailPath,
   listingPath,
   renderSitemapIndex,
   renderUrlSet,
@@ -166,6 +167,7 @@ export class SeoService {
         where: { status: { in: [...INDEXABLE_STATUSES] }, deletedAt: null },
         select: {
           id: true,
+          shortCode: true,
           title: true,
           tier: true,
           contentUpdatedAt: true,
@@ -177,7 +179,7 @@ export class SeoService {
       });
 
       return properties.map((p) => ({
-        loc: this.abs(`/tin/${generateSlug(p.title)}--${p.id}`),
+        loc: this.abs(listingDetailPath(generateSlug(p.title), p.shortCode, p.id)),
         // updatedAt bị đẩy bởi lượt xem và cron gia hạn VIP nên không dùng được.
         lastmod: p.contentUpdatedAt ?? p.publishedAt ?? p.createdAt,
         changefreq: 'daily',

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import { generateSlug, formatPrice, formatArea } from '@/lib/utils';
 import { toMediaUrl } from '@/lib/media';
 import api from '@/lib/axios';
@@ -59,7 +60,7 @@ export default function SavedProperties() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {properties.map((item: any) => (
             <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-borderLight/50 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-              <Link href={`/tin/${generateSlug(item.title)}--${item.id}`} className="block relative h-48 bg-gray-200">
+              <Link href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)} className="block relative h-48 bg-gray-200">
                 {item.images && item.images.length > 0 ? (
                   <img width={400} height={300} loading="lazy" src={toMediaUrl(item.images[0])} className="w-full h-full object-cover" alt={item.title} />
                 ) : (
@@ -73,7 +74,7 @@ export default function SavedProperties() {
                 )}
               </Link>
               <div className="p-4 flex flex-col flex-1">
-                <Link href={`/tin/${generateSlug(item.title)}--${item.id}`} className="font-bold text-lg text-textMain line-clamp-2 hover:text-primary transition-colors">{item.title}</Link>
+                <Link href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)} className="font-bold text-lg text-textMain line-clamp-2 hover:text-primary transition-colors">{item.title}</Link>
                 <p className="text-primary font-extrabold mt-2">{item.price ? formatPrice(item.price) : 'Thỏa thuận'}</p>
                 <div className="flex gap-4 mt-3 text-sm text-textSecondary border-b border-borderLight/50 pb-3">
                   <span>{formatArea(item.area)}</span>

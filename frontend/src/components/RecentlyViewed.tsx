@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import Link from 'next/link';
 import Image from 'next/image';
 import { generateSlug } from '@/lib/utils';
@@ -28,7 +29,7 @@ export default function RecentlyViewed() {
         {properties.map((item: any) => (
           <Link 
             key={item.id} 
-            href={`/tin/${generateSlug(item.title)}--${item.id}`}
+            href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)}
             className="flex-shrink-0 w-72 bg-white rounded-2xl overflow-hidden border border-borderLight/50 shadow-sm hover:shadow-md transition-shadow group"
           >
             <div className="h-36 bg-gray-100 relative">

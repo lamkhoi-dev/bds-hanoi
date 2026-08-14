@@ -1,4 +1,4 @@
-import { listingPath, renderUrlSet, renderSitemapIndex } from './seo-urls';
+import { listingDetailPath, listingPath, renderUrlSet, renderSitemapIndex } from './seo-urls';
 import { generateSlug } from './slug';
 
 describe('listingPath (backend) khớp với listingPath của frontend', () => {
@@ -65,5 +65,23 @@ describe('Tuần tự hoá XML', () => {
     const xml = renderSitemapIndex([{ loc: 'https://x.vn/sitemaps/static.xml' }]);
     expect(xml).toContain('<sitemapindex');
     expect(xml).toContain('<sitemap>');
+  });
+});
+
+describe('listingDetailPath phải khớp bản frontend', () => {
+  const UUID = 'f35dd809-352b-4caf-9cc4-14092195f5bd';
+
+  it('dùng mã ngắn khi có', () => {
+    expect(listingDetailPath('ban-dat-nen-cau-giay', '19xk3', UUID)).toBe(
+      '/tin/ban-dat-nen-cau-giay-19xk3',
+    );
+  });
+
+  it('chưa backfill thì lùi về dạng uuid — sitemap không phát URL hỏng', () => {
+    expect(listingDetailPath('ban-dat-nen', null, UUID)).toBe(`/tin/ban-dat-nen--${UUID}`);
+  });
+
+  it('không có id lẫn mã cũng không ném lỗi', () => {
+    expect(listingDetailPath('ban-dat-nen')).toBe('/tin/ban-dat-nen--');
   });
 });

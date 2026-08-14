@@ -131,3 +131,33 @@ export function listingPath(opts: {
 
   return '/' + parts.join('/');
 }
+
+/**
+ * Đường dẫn trang chi tiết tin: `/tin/{slug}-{shortCode}`.
+ *
+ * Bản sao của `backend/src/seo/seo-urls.ts` — hai workspace có Docker build context
+ * tách nhau nên không import chéo được. Lệch nhau thì canonical và sitemap sẽ khai
+ * hai URL khác nhau cho cùng một tin, nên có test đối chiếu ở cả hai phía.
+ */
+export function listingDetailPath(
+  slug: string,
+  shortCode?: string | null,
+  id?: string,
+): string {
+  if (shortCode) return `/tin/${slug}-${shortCode}`;
+  return `/tin/${slug}--${id ?? ''}`;
+}
+
+/**
+ * Tách đoạn định danh khỏi tham số `[slug_id]`.
+ *
+ * Dạng cũ `{slug}--{uuid}` nhận ra nhờ dấu `--`; dạng mới `{slug}-{shortCode}` lấy
+ * đoạn sau dấu `-` cuối cùng. Không đoán mã hợp lệ hay không — cứ tra, không thấy thì 404.
+ */
+export function parseListingRef(slugId: string): { ref: string; isLegacy: boolean } {
+  if (!slugId) return { ref: '', isLegacy: false };
+  const legacy = slugId.split('--');
+  if (legacy.length > 1) return { ref: legacy[legacy.length - 1], isLegacy: true };
+  const i = slugId.lastIndexOf('-');
+  return { ref: i >= 0 ? slugId.slice(i + 1) : slugId, isLegacy: false };
+}

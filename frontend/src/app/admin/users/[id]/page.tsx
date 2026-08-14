@@ -1,5 +1,6 @@
 "use client";
-import { formatNumberString } from '@/lib/utils';
+import { generateSlug, formatNumberString } from '@/lib/utils';
+import { listingDetailPath } from '@/lib/seo/canonical';
 
 import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,7 +140,7 @@ export default function AdminUserDetail({ params }: { params: Promise<{ id: stri
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <Link href={`/tin/${post.slug || post.id}`} target="_blank" className="font-bold text-base text-gray-900 hover:text-primary transition-colors line-clamp-2">
+                        <Link href={listingDetailPath(generateSlug(post.title), post.shortCode, post.id)} target="_blank" className="font-bold text-base text-gray-900 hover:text-primary transition-colors line-clamp-2">
                           {post.title}
                         </Link>
                         {post.status === 'APPROVED' ? (

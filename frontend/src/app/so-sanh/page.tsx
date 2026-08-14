@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { getCompareItems, removeCompareItem } from '@/lib/compare';
 import api from '@/lib/axios';
 
 import { useSearchParams } from 'next/navigation';
-import { formatPrice, formatArea } from '@/lib/utils';
+import { generateSlug, formatPrice, formatArea } from '@/lib/utils';
 
 
 function CompareContent() {
@@ -100,7 +101,7 @@ function CompareContent() {
                         <div className="w-full h-full flex items-center justify-center text-gray-400">No Img</div>
                       )}
                     </div>
-                    <Link href={`/tin/${item.id}`} className="font-bold text-gray-900 hover:text-primary line-clamp-2 leading-tight">
+                    <Link href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)} className="font-bold text-gray-900 hover:text-primary line-clamp-2 leading-tight">
                       {item.title}
                     </Link>
                   </div>

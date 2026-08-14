@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,7 @@ import api from '@/lib/axios';
 import { getAuthToken, isUnauthorizedError, loginUrl } from '@/lib/auth';
 import toast from 'react-hot-toast';
 import { confirmAction } from '@/lib/toast-helpers';
-import { formatNumberString, formatPrice, formatArea } from '@/lib/utils';
+import { generateSlug, formatNumberString, formatPrice, formatArea } from '@/lib/utils';
 import { Crown, ArrowUpCircle, EyeOff, CheckCircle, Trash2, Edit, MapPin } from 'lucide-react';
 import { toMediaUrl } from '@/lib/media';
 
@@ -214,7 +215,7 @@ export default function MyListingsClient() {
 
               return (
               <div key={property.id} className="bg-white rounded-2xl shadow-sm border border-borderLight flex flex-col md:flex-row overflow-hidden hover:shadow-card hover:-translate-y-1 transition-all duration-300">
-                <Link href={`/tin/${property.id}`} className="w-full md:w-72 h-56 md:h-auto bg-gray-100 relative shrink-0 block group overflow-hidden">
+                <Link href={listingDetailPath(generateSlug(property.title), property.shortCode, property.id)} className="w-full md:w-72 h-56 md:h-auto bg-gray-100 relative shrink-0 block group overflow-hidden">
                   {thumbnail ? (
                     <img width={400} height={300} src={thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" alt={property.title} />
                   ) : (
@@ -234,7 +235,7 @@ export default function MyListingsClient() {
                 <div className="flex-1 p-6 flex flex-col justify-between relative">
                   <div>
                     <div className="flex justify-between items-start mb-3 gap-4">
-                      <Link href={`/tin/${property.id}`} className="flex-1">
+                      <Link href={listingDetailPath(generateSlug(property.title), property.shortCode, property.id)} className="flex-1">
                         <h3 className="font-bold text-xl text-textMain line-clamp-2 hover:text-primary transition-colors leading-snug">{property.title}</h3>
                       </Link>
                       <div className="shrink-0">

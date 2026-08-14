@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import { PROPERTY_TYPES, propertyTypeByEnum } from '@/lib/seo/taxonomy';
 import { CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, Filter } from 'lucide-react';
 import Link from 'next/link';
@@ -169,7 +170,7 @@ export default function AdminPosts() {
                     {post.tier === 'NORMAL' && <span className="text-gray-300">-</span>}
                   </td>
                   <td data-label="Thao tác" className="px-6 py-4 text-right space-x-2">
-                    <Link href={`/tin/${generateSlug(post.title)}--${post.id}`} target="_blank" className="inline-flex p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết (Tab mới)">
+                    <Link href={listingDetailPath(generateSlug(post.title), post.shortCode, post.id)} target="_blank" className="inline-flex p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết (Tab mới)">
                       <Eye size={18} />
                     </Link>
                     {post.status === 'PENDING' && (

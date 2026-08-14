@@ -1,4 +1,5 @@
 import React from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -141,7 +142,7 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentItems.map((item: any) => (
-                <Link key={item.id} href={`/tin/${generateSlug(item.title)}--${item.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all duration-300 border border-borderLight hover:-translate-y-1 block">
+                <Link key={item.id} href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)} className="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all duration-300 border border-borderLight hover:-translate-y-1 block">
                   <div className="relative h-[240px] overflow-hidden">
                     <img width={400} height={300} src={item.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center gap-1 z-10">

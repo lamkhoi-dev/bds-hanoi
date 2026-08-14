@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { listingDetailPath } from '@/lib/seo/canonical';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -174,7 +175,7 @@ export default function PropertyCard({ item }: { item: any }) {
   return (
     <>
     <Link 
-      href={`/tin/${generateSlug(item.title)}--${item.id}`}
+      href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)}
       className="flex flex-col h-full card-lift group bg-white rounded-2xl overflow-hidden border border-borderLight shadow-sm animate-fade-in"
     >
       <div 

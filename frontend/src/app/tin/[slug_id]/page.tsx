@@ -6,6 +6,7 @@ import ExploreMoreContextual from '@/components/ExploreMoreContextual';
 import { generateSlug } from '@/lib/utils';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { siteConfig } from '@/lib/site-config';
+import { listingDetailPath, parseListingRef } from '@/lib/seo/canonical';
 import JsonLd from '@/components/JsonLd';
 import Breadcrumb from '@/components/Breadcrumb';
 import { buildBreadcrumbList, buildRealEstateListing } from '@/lib/seo/schema';
@@ -18,11 +19,12 @@ type PageProps = {
 };
 
 async function getProperty(slugId: string) {
-  const actualId = slugId ? slugId.split('--').pop() : '';
-  if (!actualId) return null;
+  // Nhận cả URL cũ `{slug}--{uuid}` lẫn URL mới `{slug}-{shortCode}`.
+  const { ref } = parseListingRef(slugId ?? '');
+  if (!ref) return null;
 
   try {
-    const res = await fetch(serverApiUrl(`/properties/${actualId}`), {
+    const res = await fetch(serverApiUrl(`/properties/${encodeURIComponent(ref)}`), {
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
@@ -58,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   // Canonical tương đối: metadataBase trong layout.tsx tự ghép domain, nên không còn
   // chỗ nào tự nối chuỗi domain (và nối nhầm sang domain khác).
-  const canonical = `/tin/${generateSlug(property.title)}--${property.id}`;
+  const canonical = listingDetailPath(generateSlug(property.title), property.shortCode, property.id);
   const description = getDescription(property);
   const image = Array.isArray(property.imageObjects) && property.imageObjects.length > 0 
     ? property.imageObjects[0].url 
@@ -97,14 +99,17 @@ export default async function PropertyDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  // URL chuẩn là dạng NGẮN. Mọi biến thể khác — kể cả toàn bộ URL cũ `--{uuid}` đang
+  // được Google index — đều 301 về đây. Khách yêu cầu rút gọn đuôi link kèm điều kiện
+  // "giữ ID cố định và chuyển hướng 301": bản ghi không đổi id, chỉ đổi cách địa chỉ hoá.
   const expectedSlug = generateSlug(property.title);
-  const actualId = property.id;
-  if (resolvedParams.slug_id !== `${expectedSlug}--${actualId}`) {
-    permanentRedirect(`/tin/${expectedSlug}--${actualId}`);
+  const expectedPath = listingDetailPath(expectedSlug, property.shortCode, property.id);
+  if (`/tin/${resolvedParams.slug_id}` !== expectedPath) {
+    permanentRedirect(expectedPath);
   }
 
   // JSON-LD cần URL tuyệt đối — Next không resolve URL bên trong khối ld+json.
-  const canonical = siteConfig.absolute(`/tin/${expectedSlug}--${actualId}`);
+  const canonical = siteConfig.absolute(expectedPath);
 
   // Breadcrumb đầy đủ: Trang chủ / Giao dịch / Loại BĐS / Quận-Huyện / Phường-Xã / Tiêu đề.
   // Trước đây chỉ có 3 cấp và trỏ sang /tat-ca (không nằm trong sitemap).
