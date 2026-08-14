@@ -22,8 +22,31 @@ import {
   applyRangeKeys,
   type NormalizedFilters,
 } from './property-utils';
+import { listingPath, PROPERTY_TYPE_LABEL, PROPERTY_TYPE_SLUG } from '../seo/seo-urls';
 
 type PropertyWhereInput = any;
+
+/**
+ * Số card tin mỗi khối/chuyên mục trên trang chủ.
+ *
+ * Khách chốt 3 (trước đây là 5). Đặt thành hằng số vì con số này lặp ở 4 chỗ: khối
+ * danh mục, tin VIP, tin UP và các tab khu vực — sửa lẻ từng chỗ là chắc chắn lệch.
+ */
+const HOMEPAGE_ITEMS_PER_BLOCK = 3;
+
+/** Nhận dạng UUID v4 để phân biệt URL tin dạng cũ với mã ngắn dạng mới. */
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Thứ tự tab của khối "Cho thuê" trên trang chủ, đúng như khách liệt kê. */
+const RENT_TAB_TYPES = ['NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'DAT_NEN', 'BDS_KHAC'] as const;
+
+/** Tiêu đề + đường dẫn của một khối theo loại BĐS, lấy từ một nguồn duy nhất. */
+function blockMeta(propertyTypeEnum: string, transaction: 'ban' | 'cho-thue' = 'ban') {
+  return {
+    title: PROPERTY_TYPE_LABEL[propertyTypeEnum] ?? 'Bất động sản',
+    href: listingPath({ transaction, propertyTypeSlug: PROPERTY_TYPE_SLUG[propertyTypeEnum] }),
+  };
+}
 
 @Injectable()
 export class PropertyService {
@@ -265,7 +288,29 @@ export class PropertyService {
     };
     applyRangeKeys(propertyData);
     delete propertyData.images; // Prisma property has string[] images but we migrate to imageObjects if using new schema. Actually, schema still has string[] images. Let's keep both for now if needed. Or just leave it as it works. Wait, schema.prisma has `images String[]`.
-    return this.prisma.property.create({ data: { ...propertyData, contentUpdatedAt: new Date() } });
+    const shortCode = await this.nextShortCode();
+    return this.prisma.property.create({ data: { ...propertyData, shortCode, contentUpdatedAt: new Date() } });
+  }
+
+  /**
+   * Mã ngắn dùng trong URL `/tin/{slug}-{shortCode}`.
+   *
+   * Lấy từ sequence Postgres nên duy nhất tuyệt đối — không cần vòng lặp thử lại như
+   * `generateUniquePropertyCode` (mã nội bộ BDS-xxxxxx, khác mục đích). base36 của
+   * 1.700.000 là 5 ký tự, ngắn hơn nhiều so với UUID 36 ký tự của URL cũ.
+   */
+  private async nextShortCode(): Promise<string> {
+    // Chỉ lấy SỐ từ sequence rồi tự đổi cơ số ở đây, không gọi hàm SQL `bds_to_base36`
+    // — hàm đó chỉ tồn tại để backfill một lần trong migration, ứng dụng không nên phụ
+    // thuộc vào việc nó còn nằm trong CSDL hay không.
+    const rows = await this.prisma.$queryRaw<
+      { n: bigint | number }[]
+    >`SELECT nextval('property_short_code_seq') AS n`;
+    const n = rows?.[0]?.n;
+    if (n === undefined || n === null) {
+      throw new Error('Không sinh được shortCode cho tin đăng.');
+    }
+    return BigInt(n).toString(36);
   }
 
   private async generateUniquePropertyCode(): Promise<string> {
@@ -361,6 +406,9 @@ export class PropertyService {
 
     const propertyCode = await this.generateUniquePropertyCode();
     const slug = await this.generateUniqueSlug(normalizedData.title);
+    // Lấy ngoài transaction: nextval() không bị rollback nên nằm trong hay ngoài đều
+    // không tái sử dụng số, mà để ngoài thì transaction ngắn hơn.
+    const shortCode = await this.nextShortCode();
 
     const imagesArr = Array.isArray(normalizedData.images) ? normalizedData.images : [];
     const propertyData: any = {
@@ -404,7 +452,7 @@ export class PropertyService {
         });
       }
 
-      return tx.property.create({ data: { ...propertyData, contentUpdatedAt: new Date() } });
+      return tx.property.create({ data: { ...propertyData, shortCode, contentUpdatedAt: new Date() } });
     });
 
     if (status === 'APPROVED') {
@@ -490,9 +538,13 @@ export class PropertyService {
       include: includeOptions
     });
 
+    // Giữ nguyên quy tắc "2 tin mới nhất + phần còn lại ngẫu nhiên", chỉ hạ tổng số
+    // xuống HOMEPAGE_ITEMS_PER_BLOCK theo yêu cầu 3 card mỗi khối.
     const newestVips = allVips.slice(0, 2);
     const remainingVips = allVips.slice(2);
-    const randomVips = remainingVips.sort(() => 0.5 - Math.random()).slice(0, 3);
+    const randomVips = remainingVips
+      .sort(() => 0.5 - Math.random())
+      .slice(0, Math.max(0, HOMEPAGE_ITEMS_PER_BLOCK - newestVips.length));
     return [...newestVips, ...randomVips];
   }
 
@@ -507,7 +559,7 @@ export class PropertyService {
     const getItems = (where: any) => this.prisma.property.findMany({
       where: { ...baseWhere, ...where, tier: 'NORMAL' },
       orderBy: [{ status: 'asc' }, { publishedAt: { sort: 'desc', nulls: 'last' } }, { pushedAt: { sort: 'desc', nulls: 'last' } }],
-      take: 5,
+      take: HOMEPAGE_ITEMS_PER_BLOCK,
       include: includeOptions
     });
 
@@ -532,7 +584,9 @@ export class PropertyService {
         return {
           key: loc.urlSegment,
           title: loc.name,
-          href: `/${loc.urlSegment}`,
+          // Qua listingPath để chế độ enforce có tiền tố /ban, chế độ report giữ dạng
+          // phẳng đang chạy — cùng một build phục vụ cả hai site.
+          href: listingPath({ locationSlug: loc.urlSegment }),
           items,
         };
       }),
@@ -540,8 +594,9 @@ export class PropertyService {
 
     const [
       featuredVip,
-      datNen, nhaRieng, chungCu, duAn, choThue,
+      datNen, nhaRieng, chungCu, duAn,
       matBang, bdsKhac,
+      rentItems,
       totalProperties, totalUsers
     ] = await Promise.all([
       this.getHomepageVipItems(baseWhere, includeOptions),
@@ -549,9 +604,15 @@ export class PropertyService {
       getItems({ propertyType: 'NHA_RIENG' }),
       getItems({ propertyType: 'CHUNG_CU' }),
       getItems({ propertyType: 'DU_AN' }),
-      getItems({ transactionType: 'CHO_THUE' }),
       getItems({ propertyType: 'MAT_BANG' }),
       getItems({ propertyType: 'BDS_KHAC' }),
+      // "Cho thuê" trước đây là MỘT khối gộp mọi loại BĐS. Khách yêu cầu tách thành
+      // tab ngang theo loại, nên lấy song song một truy vấn cho mỗi tab.
+      Promise.all(
+        RENT_TAB_TYPES.map((type) =>
+          getItems({ transactionType: 'CHO_THUE', propertyType: type }),
+        ),
+      ),
       this.prisma.property.count({ where: baseWhere }),
       this.prisma.user.count()
     ]);
@@ -572,119 +633,51 @@ export class PropertyService {
     });
     const newestUpItems = allUpItems.slice(0, 2);
     const remainingUpItems = allUpItems.slice(2);
-    const randomUpItems = remainingUpItems.sort(() => 0.5 - Math.random()).slice(0, 3);
+    const randomUpItems = remainingUpItems
+      .sort(() => 0.5 - Math.random())
+      .slice(0, Math.max(0, HOMEPAGE_ITEMS_PER_BLOCK - newestUpItems.length));
     const upTabItems = [...newestUpItems, ...randomUpItems];
 
-    let personalizedItems: any[] = [];
-    if (userId) {
-      const recentViews = await this.prisma.viewedProperty.findMany({
-        where: { userId },
-        orderBy: { viewedAt: 'desc' },
-        take: 10,
-        include: { property: true }
-      });
-      const recentSearches = await this.prisma.searchHistory.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 5
-      });
-      const savedPosts = await this.prisma.savedPost.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        include: { property: true }
-      });
-
-      const preferredTypes = new Set<string>();
-      const preferredDistricts = new Set<string>();
-
-      recentViews.forEach(v => {
-        if (v.property?.propertyType) preferredTypes.add(v.property.propertyType);
-        if (v.property?.district) preferredDistricts.add(v.property.district);
-      });
-
-      savedPosts.forEach(sp => {
-        if (sp.property?.propertyType) preferredTypes.add(sp.property.propertyType);
-        if (sp.property?.district) preferredDistricts.add(sp.property.district);
-      });
-
-      recentSearches.forEach(s => {
-        if (s.filters) {
-          try {
-            const f = JSON.parse(s.filters);
-            if (f.propertyType) preferredTypes.add(f.propertyType);
-            if (f.district) preferredDistricts.add(f.district);
-          } catch (e) {}
-        }
-      });
-
-      const pWhere: any = { ...baseWhere };
-      if (preferredTypes.size > 0 || preferredDistricts.size > 0) {
-        pWhere.OR = [];
-        if (preferredTypes.size > 0) {
-          pWhere.OR.push({ propertyType: { in: Array.from(preferredTypes) } });
-        }
-        if (preferredDistricts.size > 0) {
-          pWhere.OR.push({ district: { in: Array.from(preferredDistricts) } });
-        }
-      }
-
-      const userItems = await this.prisma.property.findMany({
-        where: pWhere,
-        orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { pushedAt: { sort: 'desc', nulls: 'last' } }],
-        take: 20,
-        include: includeOptions
-      });
-
-      const viewedIds = new Set(recentViews.map(v => v.propertyId));
-      personalizedItems = userItems.filter(p => !viewedIds.has(p.id)).slice(0, 8);
-    }
-
-    if (personalizedItems.length < 8) {
-      const fallbackItems = await this.prisma.property.findMany({
-        where: baseWhere,
-        orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }, { pushedAt: { sort: 'desc', nulls: 'last' } }],
-        take: 30, // Fetch more items to shuffle for random exploration
-        include: includeOptions
-      });
-      
-      // Lấy tin mới nhất thay vì xáo trộn ngẫu nhiên theo yêu cầu
-      const shuffledFallback = fallbackItems;
-      
-      const existingIds = new Set(personalizedItems.map(p => p.id));
-      for (const item of shuffledFallback) {
-        if (!existingIds.has(item.id) && personalizedItems.length < 8) {
-          personalizedItems.push(item);
-        }
-      }
-    }
-
-
-
+    // Khối "Dành cho bạn" đã được KHÁCH YÊU CẦU BỎ HẲN khỏi trang chủ (PHẦN I).
+    // Xoá luôn phần tính toán chứ không chỉ ngừng render: nó chạy 4 truy vấn phụ mỗi
+    // lần tải trang chủ của người đã đăng nhập (lịch sử xem, lịch sử tìm, tin đã lưu,
+    // rồi một truy vấn gợi ý) — giữ lại là tốn công vô ích.
 
     const result = {
       featuredVip: { title: 'Tin nổi bật', href: '/search?tier=VIP', items: featuredVip },
       
       upTab: upTabItems,
-      personalizedRecommendations: personalizedItems,
 
+      // Tiêu đề khối lấy từ PROPERTY_TYPE_LABEL và đường dẫn từ listingPath. Trước đây
+      // cả hai đều viết cứng ở đây: nhãn lệch với 10 nơi khác ("Mặt bằng, kho xưởng"),
+      // còn href là dạng URL cũ (`/dat-nen`) đã bị 301, riêng "Cho thuê" thì trỏ vào
+      // `/search` vốn noindex. Payload này do backend dựng nên sửa ở frontend không tới.
       categoryBlocks: [
-        { key: 'DAT_NEN', title: 'Đất nền', href: '/dat-nen', items: datNen },
-        { key: 'NHA_RIENG', title: 'Nhà riêng', href: '/nha-rieng', items: nhaRieng },
-        { key: 'CHUNG_CU', title: 'Chung cư', href: '/chung-cu', items: chungCu },
-        { key: 'DU_AN', title: 'Dự án', href: '/du-an', items: duAn },
-        { key: 'CHO_THUE', title: 'Cho thuê', href: '/search?transactionType=CHO_THUE', items: choThue }
+        { key: 'DAT_NEN', ...blockMeta('DAT_NEN'), items: datNen },
+        { key: 'NHA_RIENG', ...blockMeta('NHA_RIENG'), items: nhaRieng },
+        { key: 'CHUNG_CU', ...blockMeta('CHUNG_CU'), items: chungCu },
+        { key: 'DU_AN', ...blockMeta('DU_AN'), items: duAn },
       ],
+
+      // Khách yêu cầu Cho thuê thành TAB NGANG gồm: nhà riêng, chung cư, mặt bằng–kho,
+      // đất nền, BĐS khác — đúng thứ tự này.
+      rentTabs: RENT_TAB_TYPES.map((type, i) => ({
+        key: type,
+        ...blockMeta(type, 'cho-thue'),
+        items: rentItems[i],
+      })),
+
       otherRealEstateTabs: [
-        { key: 'MAT_BANG', title: 'Mặt bằng, kho xưởng', href: '/mat-bang-kho-xuong', items: matBang },
-        { key: 'BDS_KHAC', title: 'Bất động sản khác', href: '/bds-khac', items: bdsKhac },
+        { key: 'MAT_BANG', ...blockMeta('MAT_BANG'), items: matBang },
+        { key: 'BDS_KHAC', ...blockMeta('BDS_KHAC'), items: bdsKhac },
       ],
       // Các tab khu vực trên trang chủ giờ lấy từ Location.isFeatured (do importer đặt
       // theo sheet "hot" của khách) thay vì 4 khối gán cứng TP Vinh / Diễn Châu /
       // Thái Hòa / Hà Tĩnh với href trỏ vào slug tự chế.
       mainWardBlocks: mainWardBlocksData,
       otherLocationTabs: [
-        { key: 'khu-vuc-khac', title: 'Khu vực khác', href: '/khu-vuc', items: otherLocationItems }
+        // Khách yêu cầu đổi nhãn "Khu vực khác" -> "Tất cả các khu vực" (PHẦN I).
+        { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems }
       ],
       stats: { properties: totalProperties, users: totalUsers, projects: 15, satisfaction: 99 },
       adsSlots: []
@@ -699,39 +692,66 @@ export class PropertyService {
     const cached = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
 
-    // Top 4 wards with the most approved posts
+    // Gom theo `wardId` (quan hệ) chứ KHÔNG theo chuỗi `ward` (tên phi chuẩn hoá).
+    // Bản cũ gom theo tên nên không có đoạn URL nào để trả về, và frontend phải suy
+    // bằng generateSlug(tên): "Phường Yên Hòa" -> "phuong-yen-hoa" trong khi urlSegment
+    // thật là "yen-hoa" — mọi card "Khu vực hot" trên trang chủ đều dẫn vào 404.
     const topWards = await this.prisma.property.groupBy({
-      by: ['ward', 'district', 'city'],
-      where: { status: { in: [...this.publicStatuses] }, deletedAt: null, ward: { not: '' } },
-      _count: { id: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: 4
-    });
-
-    const wardNames = topWards.map(w => w.ward).filter((w): w is string => typeof w === 'string' && w !== '');
-    const samples = await this.prisma.property.findMany({
+      by: ['wardId'],
       where: {
         status: { in: [...this.publicStatuses] },
         deletedAt: null,
-        ward: { in: wardNames },
-        images: { isEmpty: false },
+        wardId: { not: null },
       },
-      select: { ward: true, images: true, thumbnail: true },
-      orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
-      distinct: ['ward'],
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } },
+      take: 4,
     });
 
-    const result = topWards.map(w => {
-      const sample = samples.find(s => s.ward === w.ward);
-      const image = sample?.thumbnail || sample?.images?.[0] || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+    const wardIds = topWards
+      .map((w) => w.wardId)
+      .filter((id): id is string => typeof id === 'string');
+    if (wardIds.length === 0) return [];
 
-      return {
-        name: w.ward,
-        district: w.district,
-        city: w.city,
+    const [wards, samples] = await Promise.all([
+      this.prisma.location.findMany({
+        where: { id: { in: wardIds } },
+        select: { id: true, name: true, urlSegment: true, parent: { select: { name: true } } },
+      }),
+      this.prisma.property.findMany({
+        where: {
+          status: { in: [...this.publicStatuses] },
+          deletedAt: null,
+          wardId: { in: wardIds },
+          images: { isEmpty: false },
+        },
+        select: { wardId: true, images: true, thumbnail: true },
+        orderBy: { publishedAt: { sort: 'desc', nulls: 'last' } },
+        distinct: ['wardId'],
+      }),
+    ]);
+
+    const wardById = new Map(wards.map((w) => [w.id, w]));
+
+    const result = topWards.flatMap((w) => {
+      const ward = w.wardId ? wardById.get(w.wardId) : undefined;
+      // Khu vực đã bị vô hiệu hoá/xoá thì bỏ hẳn card chứ không dựng link đoán được.
+      if (!ward) return [];
+
+      const sample = samples.find((s) => s.wardId === w.wardId);
+      const image =
+        sample?.thumbnail ||
+        sample?.images?.[0] ||
+        'https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+
+      return [{
+        name: ward.name,
+        district: ward.parent?.name ?? null,
+        slug: ward.urlSegment,
+        href: listingPath({ locationSlug: ward.urlSegment }),
         count: w._count.id,
-        image: this.toPublicMediaUrl(image)
-      };
+        image: this.toPublicMediaUrl(image),
+      }];
     });
 
     await this.cacheManager.set(cacheKey, result, 3600000); // 1 hour TTL
@@ -781,8 +801,10 @@ export class PropertyService {
     const locationFields = {
       select: { id: true, name: true, shortName: true, slug: true, urlSegment: true, type: true },
     };
-    const property = await this.prisma.property.findUnique({
-      where: { id },
+    // Nhận CẢ HAI: `shortCode` (URL mới, 5 ký tự) và `id` UUID (URL cũ đang được
+    // Google index). Frontend so tham số với shortCode để phát 301 về dạng mới.
+    const property = await this.prisma.property.findFirst({
+      where: UUID_PATTERN.test(id) ? { OR: [{ id }, { shortCode: id }] } : { shortCode: id },
       include: {
         user: { select: { id: true, slug: true, name: true, avatar: true, phone: true, isPhoneVisible: true, createdAt: true } },
         imageObjects: true,

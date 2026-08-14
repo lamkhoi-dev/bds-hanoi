@@ -43,6 +43,36 @@ export const TRANSACTION_SLUG: Record<string, Transaction> = {
   CHO_THUE: 'cho-thue',
 };
 
+/**
+ * Đường dẫn trang chi tiết tin: `/tin/{slug}-{shortCode}`.
+ *
+ * Dạng cũ `/tin/{slug}--{uuid}` dài 36 ký tự chỉ riêng phần id; khách yêu cầu rút gọn
+ * (PHẦN I, "Đuôi link tin"). Giữ được bản ghi cũ nên `id` không đổi, và frontend 301
+ * URL cũ về đây. Backend chỉ có mã null với dữ liệu chưa backfill — khi đó lùi về dạng
+ * cũ thay vì phát một URL hỏng.
+ */
+export function listingDetailPath(slug: string, shortCode?: string | null, id?: string): string {
+  if (shortCode) return `/tin/${slug}-${shortCode}`;
+  return `/tin/${slug}--${id ?? ''}`;
+}
+
+/**
+ * Nhãn hiển thị — phải khớp `PROPERTY_TYPES` bên `frontend/src/lib/seo/taxonomy.ts`.
+ *
+ * Backend cần bản riêng vì Docker build context của hai workspace tách nhau nên không
+ * import chéo được. Payload trang chủ do backend dựng cũng chứa tiêu đề khối, nên nếu
+ * chỉ sửa nhãn ở frontend thì trang chủ vẫn hiện nhãn cũ.
+ */
+export const PROPERTY_TYPE_LABEL: Record<string, string> = {
+  DAT_NEN: 'Đất nền',
+  NHA_RIENG: 'Nhà riêng, nhà mặt phố',
+  CHUNG_CU: 'Chung cư',
+  DU_AN: 'Dự án',
+  MAT_BANG: 'Mặt bằng kinh doanh, kho xưởng',
+  BIET_THU: 'Biệt thự',
+  BDS_KHAC: 'Bất động sản khác',
+};
+
 export interface SitemapUrl {
   loc: string;
   lastmod?: Date | string | null;

@@ -3,7 +3,6 @@ import { siteConfig } from '@/lib/site-config';
 import { Home as HomeIcon, Users, Building2, Star, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { generateSlug } from '@/lib/utils';
 import SidebarFilter from '@/components/SidebarFilter';
 import PropertyCard from '@/components/PropertyCard';
 import PropertyBlock from '@/components/PropertyBlock';
@@ -80,7 +79,13 @@ export default async function Home() {
 
   const stats = homepageData?.stats || { properties: 100, users: 50, projects: 10, satisfaction: 99 };
 
-  const allWards = (locations || []).flatMap((district: any) => district.children || []).map((w: any) => ({ name: w.name, slug: w.slug || generateSlug(w.name) }));
+  // Chỉ nhận khu vực CÓ đoạn URL thật từ cây khu vực. Bản cũ dự phòng bằng
+  // generateSlug(tên), cho ra 'phuong-yen-hoa' trong khi urlSegment là 'yen-hoa' —
+  // link dựng ra dẫn vào trang không tồn tại.
+  const allWards = (locations || [])
+    .flatMap((district: any) => district.children || [])
+    .filter((w: any) => w?.name && w?.slug)
+    .map((w: any) => ({ name: w.name, slug: w.slug }));
   
   // Randomize wards dynamically for explore tags
   const shuffledWards = [...allWards].sort(() => 0.5 - Math.random());
@@ -136,30 +141,53 @@ export default async function Home() {
               moreLink="/search?tier=UP" 
             />
           )}
-          {homepageData?.personalizedRecommendations && homepageData.personalizedRecommendations.length > 0 && (
-            <PropertyBlock 
-              title="Dành cho bạn" 
-              items={homepageData.personalizedRecommendations} 
-              moreLink=""
-            />
-          )}
+          {/* Khối "Dành cho bạn" đã bị khách yêu cầu BỎ HẲN (PHẦN I) — phần tính toán
+              phía backend cũng đã gỡ, không chỉ ngừng render. */}
 
           {/* ===== BANNER QUẢNG CÁO ===== */}
           <div className="w-full mb-8">
             <GoogleAdPlaceholder />
           </div>
-          
-          <div className="my-8">
-            
-          </div>
+
+          {/* Khách yêu cầu kéo khối khu vực LÊN TRÊN chuyên mục Đất nền, ngay dưới
+              quảng cáo. Khối "BĐS tại {tỉnh lỵ}" cũ (getVinhProperties viết cứng 6
+              phường TP Vinh) đã được gộp vào đây dưới dạng các tab Location.isFeatured. */}
+          {(homepageData?.mainWardBlocks?.length || homepageData?.otherLocationTabs?.length) ? (
+            <PropertyTabs
+              title="Bất động sản theo khu vực"
+              tabs={[
+                ...(homepageData?.mainWardBlocks || []),
+                ...(homepageData?.otherLocationTabs || []),
+              ].map((b: any) => ({
+                id: b.key,
+                label: b.title,
+                items: b.items,
+                href: b.href,
+              }))}
+            />
+          ) : null}
+
           {homepageData?.categoryBlocks?.map((block: any, idx: number) => (
-            <PropertyBlock 
+            <PropertyBlock
               key={`cat-${idx}`}
-              title={block.title} 
-              items={block.items} 
-              moreLink={block.href} 
+              title={block.title}
+              items={block.items}
+              moreLink={block.href}
             />
           ))}
+
+          {/* Khách yêu cầu Cho thuê thành tab ngang thay vì một khối gộp. */}
+          {homepageData?.rentTabs && homepageData.rentTabs.length > 0 && (
+            <PropertyTabs
+              title="Cho thuê"
+              tabs={homepageData.rentTabs.map((b: any) => ({
+                id: b.key,
+                label: b.title,
+                items: b.items,
+                href: b.href
+              }))}
+            />
+          )}
 
           {homepageData?.otherRealEstateTabs && homepageData.otherRealEstateTabs.length > 0 && (
             <PropertyTabs
@@ -170,26 +198,6 @@ export default async function Home() {
                 items: b.items,
                 href: b.href
               }))}
-            />
-          )}
-
-          {(homepageData?.mainWardBlocks || homepageData?.otherLocationTabs) && (
-            <PropertyTabs
-              title="Bất động sản theo khu vực"
-              tabs={[
-                ...(homepageData?.mainWardBlocks || []).map((b: any) => ({
-                  id: b.key,
-                  label: b.title,
-                  items: b.items,
-                  href: b.href
-                })),
-                ...(homepageData?.otherLocationTabs || []).map((b: any) => ({
-                  id: b.key,
-                  label: b.title,
-                  items: b.items,
-                  href: b.href
-                }))
-              ]}
             />
           )}
         </div>
@@ -251,9 +259,8 @@ export default async function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Dynamic Hot Locations */}
           {hotLocations.map((loc: any, i: number) => {
-            const slug = loc.slug || generateSlug(loc.name);
             return (
-              <Link href={`/${slug}`} key={i} className="group relative rounded-2xl overflow-hidden h-40 shadow-sm border border-gray-100 hover:shadow-md transition-all block">
+              <Link href={loc.href || listingPath({ locationSlug: loc.slug })} key={i} className="group relative rounded-2xl overflow-hidden h-40 shadow-sm border border-gray-100 hover:shadow-md transition-all block">
                 <Image src={loc.image} alt={loc.name} width={400} height={160} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                 <div className="absolute bottom-4 left-4 text-white">
@@ -284,7 +291,7 @@ export default async function Home() {
               <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Tìm kiếm nhiều nhất</h3>
               <ul className="space-y-2 text-sm">
                 {displayWards.map((w: any, i: number) => (
-                  <li key={i}><Link href={`/${w.slug}`} className="text-gray-600 hover:text-primary transition-colors">Nhà đất {w.name}</Link></li>
+                  <li key={i}><Link href={listingPath({ locationSlug: w.slug })} className="text-gray-600 hover:text-primary transition-colors">Nhà đất {w.name}</Link></li>
                 ))}
               </ul>
             </div>
