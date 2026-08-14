@@ -1,0 +1,47 @@
+- Ở file update 30-7 F
++ Mục 26 thiếu hoàn toàn danh sách quận/huyện nào thuộc Trung tâm / Cận trung tâm / Ngoại thành: mình gửi dưới
++ Mục 23 "Dữ liệu người dùng" chỉ có tiêu đề chưa thấy nội dung: Bỏ 1 số nội dung so với dự định ban đầu
++ Mô hình địa giới 2 hay 3 tầng — Hà Nội sau sáp nhập không còn cấp quận/huyện, nhưng tài liệu vẫn dùng quận/huyện cũ làm cấp điều hướng: Thì mô hình vẫn giống trang nhadatxunghe. Nó có 2 lý do: Hiện tại họ vẫn tìm kiếm và quyen như vậy. Để gom 1 số xã lại với nhau, không thì khi tìm xã sẽ rất nhiều
+- Câu "Thực ra thì chỉ 3" ở phần tab động bỏ lửng, không rõ nghĩa:  9 tab có tin mới nhất sẽ hiện thị trên trang chủ - Thực ra thì chỉ 3-4 tab, 5-6 tab sau phải trượt ngang mới thấy. Là mình giải thích cái khu vực quan tâm này có 9 Tab trên trang chủ, trong đó có 3-4 tab sẽ thấy luôn, còn những Tab còn lại trượt ngang qua mới thấy.
+- Thứ tự khối trang chủ tự mâu thuẫn (liệt kê "phường xã mới" 2 lần, thiếu "phường xã cũ"): Cái này mình gõ nhầm, cái phường xã cũ nằm trên phường xã mới, tab thứ 4 phường xã cũ, tab 6 phường xã mới
+- 11 mục bị nhảy số trong PHẦN II (thiếu 4, 8, 9, 12–18, 21): Bỏ 1 số nội dung so với dự định ban đầu
++ Mục 25.5 gán ngược nguồn dữ liệu: dropdown "xã cũ" lại ghi lấy Bảng 5 (xã mới) và ngược lại: Mình gõ nhầm.
+
+
+Ngoài ra: Trên trang chủ mỗi khối/chuyên mục để 3 card tin
+
+Trung tâm
+1.	Cầu Giấy 
+2.	Nam Từ Liêm 
+3.	Hà Đông 
+4.	Thanh Xuân 
+5.	Hoàng Mai 
+6.	Tây Hồ 
+7.	Đống Đa 
+8.	Hai Bà Trưng 
+9.	Ba Đình 
+10.	Hoàn Kiếm 
+
+Cận trung tâm
+1.	Long Biên 
+2.	Bắc Từ Liêm 
+3.	Gia Lâm 
+4.	Đông Anh 
+5.	Hoài Đức 
+6.	Thanh Trì 
+7.	Đan Phượng 
+8.	Mê Linh 
+9.	Thanh Oai 
+10.	Thường Tín 
+
+Ngoại thành
+1.	Sóc Sơn 
+2.	Thạch Thất 
+3.	Quốc Oai 
+4.	Chương Mỹ 
+5.	Sơn Tây 
+6.	Phúc Thọ 
+7.	Ba Vì 
+8.	Phú Xuyên 
+9.	Ứng Hòa 
+10.	Mỹ Đức
