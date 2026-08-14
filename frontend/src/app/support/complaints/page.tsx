@@ -1,3 +1,13 @@
+import { siteConfig } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+// Trước đây 9/10 trang hỗ trợ không có metadata nào — Google tự cắt mô tả từ thân
+// trang (yêu cầu II.5). Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
+export const metadata: Metadata = {
+  title: 'Quy trình giải quyết khiếu nại',
+  description: `Bốn bước tiếp nhận, xác minh, xử lý và phản hồi khiếu nại về tin đăng bất động sản tại ${siteConfig.name}, kèm thời hạn xử lý và cách gửi khiếu nại.`,
+  alternates: { canonical: '/support/complaints' },
+};
 export default function ComplaintsPage() {
   return (
     <div className="min-h-screen bg-background py-10">
@@ -23,7 +33,7 @@ export default function ComplaintsPage() {
 
           <h3 className="text-lg font-bold text-gray-800 mt-10">Lưu ý</h3>
           <p className="mt-2 italic bg-gray-50 p-4 rounded-md border-l-4 border-gray-400">
-            Nhà Đất Xứ Nghệ là nền tảng kết nối thông tin. Website không phải là bên tham gia giao dịch mua bán hoặc cho thuê bất động sản giữa các bên và không chịu trách nhiệm đối với các thỏa thuận dân sự phát sinh giữa người đăng tin và người liên hệ.
+            {siteConfig.name} là nền tảng kết nối thông tin. Website không phải là bên tham gia giao dịch mua bán hoặc cho thuê bất động sản giữa các bên và không chịu trách nhiệm đối với các thỏa thuận dân sự phát sinh giữa người đăng tin và người liên hệ.
           </p>
         </div>
       </div>

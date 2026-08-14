@@ -1,5 +1,6 @@
 import React from 'react';
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Star, MapPin, Calendar, Phone } from 'lucide-react';
 import { serverApiUrl } from '@/lib/server-api';
@@ -15,46 +16,44 @@ function firstParam(value: string | string[] | undefined) {
 }
 
 
+/** Trang thân sẽ trả 404 cho trường hợp này; metadata chỉ cần không cho index. */
+const NOT_FOUND_METADATA: Metadata = {
+  title: 'Không tìm thấy người dùng',
+  robots: { index: false, follow: false },
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params;
   try {
-    const resolvedParams = await params;
     const res = await fetch(serverApiUrl(`/users/public/${resolvedParams.slug}`), {
       next: { revalidate: 0 },
     });
-    
-    if (!res.ok) {
-      return {
-        title: 'User not found',
-      };
-    }
-    
+
+    if (!res.ok) return NOT_FOUND_METADATA;
+
     const user = await res.json();
-    
+
+    // Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
     const title = `${user.name} | Hồ sơ cá nhân`;
     const description = user.bio || `Xem hồ sơ và các tin đăng bất động sản từ ${user.name}`;
-    const ogImage = user.avatar || 'https://i.pravatar.cc/150?img=11';
+    const ogImage = user.avatar || undefined;
 
     return {
       title,
       description,
+      // Trang hồ sơ công khai vốn thiếu canonical, mà `?page=` lại sinh URL biến thể.
+      alternates: { canonical: `/user/${resolvedParams.slug}` },
       openGraph: {
         title,
         description,
         type: 'profile',
-        images: [
-          {
-            url: ogImage,
-            width: 800,
-            height: 600,
-            alt: user.name,
-          },
-        ],
+        ...(ogImage
+          ? { images: [{ url: ogImage, width: 800, height: 600, alt: user.name }] }
+          : {}),
       },
     };
-  } catch (error) {
-    return {
-      title: 'User not found',
-    };
+  } catch {
+    return NOT_FOUND_METADATA;
   }
 }
 
@@ -85,7 +84,7 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-6 shadow-card border border-borderLight text-center sticky top-24">
               <div className="relative w-24 h-24 rounded-full mx-auto mb-4 overflow-hidden border-4 border-primary/20">
-                <img 
+                <img width={96} height={96} 
                   src={user.avatar || 'https://i.pravatar.cc/150?img=11'} 
                   alt={user.name} 
                   className="w-full h-full object-cover"
@@ -144,7 +143,7 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
               {currentItems.map((item: any) => (
                 <Link key={item.id} href={`/tin/${generateSlug(item.title)}--${item.id}`} className="group bg-white rounded-2xl overflow-hidden shadow-card hover:shadow-lg transition-all duration-300 border border-borderLight hover:-translate-y-1 block">
                   <div className="relative h-[240px] overflow-hidden">
-                    <img src={item.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img width={400} height={300} src={item.images?.[0] || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center gap-1 z-10">
                       <Star className="w-3.5 h-3.5 fill-current" /> {item.tier === 'VIP' ? 'VIP' : 'NORMAL'}
                     </div>
@@ -192,14 +191,9 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
       </div>
     );
   } catch {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">404</h1>
-          <p className="text-gray-500 mb-6">Không tìm thấy thông tin người dùng.</p>
-          <Link href="/" className="px-6 py-2 bg-primary text-white rounded-lg font-bold">Về trang chủ</Link>
-        </div>
-      </div>
-    );
+    // Trước đây nhánh này render một trang "404" nhưng vẫn trả HTTP 200 — đúng định
+    // nghĩa soft 404 mà yêu cầu I.9 bắt loại bỏ. Thẻ <h1>404</h1> ở đó cũng là thẻ h1
+    // thứ hai của trang (yêu cầu II.8). notFound() trả 404 thật và dùng app/not-found.tsx.
+    notFound();
   }
 }

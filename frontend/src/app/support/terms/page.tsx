@@ -1,3 +1,13 @@
+import { siteConfig } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+// Trước đây 9/10 trang hỗ trợ không có metadata nào — Google tự cắt mô tả từ thân
+// trang (yêu cầu II.5). Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
+export const metadata: Metadata = {
+  title: 'Điều khoản dịch vụ',
+  description: `Điều khoản sử dụng ${siteConfig.name}: quy định tài khoản, nội dung tin đăng bất động sản, quyền hạn của ban quản trị và cách giải quyết tranh chấp.`,
+  alternates: { canonical: '/support/terms' },
+};
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-background py-10">
@@ -5,7 +15,7 @@ export default function TermsPage() {
         <h1 className="text-3xl font-extrabold text-gray-800 mb-6">Điều khoản dịch vụ (Terms of Service)</h1>
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 prose max-w-none text-gray-600">
           <p className="mb-4 text-sm text-gray-500">Cập nhật lần cuối: Ngày 26 tháng 06 năm 2026</p>
-          <p className="mb-4">Chào mừng bạn đến với Nhà Đất Xứ Nghệ. Việc truy cập và sử dụng trang web (và các ứng dụng liên quan) đồng nghĩa với việc bạn đã đọc, hiểu và đồng ý tuân thủ các Điều khoản dịch vụ dưới đây. Vui lòng đọc kỹ trước khi sử dụng dịch vụ.</p>
+          <p className="mb-4">Chào mừng bạn đến với {siteConfig.name}. Việc truy cập và sử dụng trang web (và các ứng dụng liên quan) đồng nghĩa với việc bạn đã đọc, hiểu và đồng ý tuân thủ các Điều khoản dịch vụ dưới đây. Vui lòng đọc kỹ trước khi sử dụng dịch vụ.</p>
 
           <h3 className="text-lg font-bold text-gray-800 mt-6 border-b pb-2">1. Quy định chung &amp; Tài khoản người dùng</h3>
           <ul className="list-disc pl-5 space-y-2 mt-4">
@@ -22,11 +32,11 @@ export default function TermsPage() {
             <li><strong>Nội dung cấm:</strong> Không đăng tin mua bán các loại đất đai/tài sản đang có tranh chấp, bị kê biên, không có giấy tờ hợp lệ, hoặc các loại tài sản bị cấm giao dịch theo quy định của pháp luật. Không dùng từ ngữ thô tục, phân biệt vùng miền, đả kích chính trị - tôn giáo.</li>
           </ul>
 
-          <h3 className="text-lg font-bold text-gray-800 mt-8 border-b pb-2">3. Quyền hạn và Trách nhiệm của Nhà Đất Xứ Nghệ</h3>
+          <h3 className="text-lg font-bold text-gray-800 mt-8 border-b pb-2">3. Quyền hạn và Trách nhiệm của {siteConfig.name}</h3>
           <ul className="list-disc pl-5 space-y-2 mt-4">
             <li><strong>Kiểm duyệt nội dung:</strong> Ban quản trị có quyền (nhưng không có nghĩa vụ bắt buộc) kiểm tra, chỉnh sửa, ẩn hoặc xóa bỏ các tin đăng vi phạm Điều khoản dịch vụ, hoặc có dấu hiệu lừa đảo mà không cần báo trước.</li>
             <li><strong>Xử lý tài khoản:</strong> Chúng tôi có quyền từ chối cung cấp dịch vụ, tạm khóa hoặc xóa vĩnh viễn tài khoản nếu phát hiện người dùng vi phạm nghiêm trọng các quy định này.</li>
-            <li><strong>Từ chối bảo đảm:</strong> Nhà Đất Xứ Nghệ đóng vai trò là nền tảng trung gian kết nối người mua và người bán. Chúng tôi không đảm bảo, không can thiệp và không chịu trách nhiệm pháp lý đối với các giao dịch thực tế, hợp đồng đặt cọc hay mua bán giữa các bên.</li>
+            <li><strong>Từ chối bảo đảm:</strong> {siteConfig.name} đóng vai trò là nền tảng trung gian kết nối người mua và người bán. Chúng tôi không đảm bảo, không can thiệp và không chịu trách nhiệm pháp lý đối với các giao dịch thực tế, hợp đồng đặt cọc hay mua bán giữa các bên.</li>
           </ul>
 
           <h3 className="text-lg font-bold text-gray-800 mt-8 border-b pb-2">4. Nền tảng bên thứ ba (Facebook, Google)</h3>
@@ -37,7 +47,7 @@ export default function TermsPage() {
           </ul>
 
           <h3 className="text-lg font-bold text-gray-800 mt-8 border-b pb-2">5. Giải quyết tranh chấp</h3>
-          <p className="mb-4 mt-4">Mọi tranh chấp phát sinh giữa người dùng và Nhà Đất Xứ Nghệ trong quá trình sử dụng website sẽ được ưu tiên giải quyết thông qua thương lượng, hòa giải. Nếu không thể thương lượng, vụ việc sẽ được đưa ra cơ quan Tòa án có thẩm quyền tại Việt Nam để giải quyết theo quy định của pháp luật hiện hành.</p>
+          <p className="mb-4 mt-4">Mọi tranh chấp phát sinh giữa người dùng và {siteConfig.name} trong quá trình sử dụng website sẽ được ưu tiên giải quyết thông qua thương lượng, hòa giải. Nếu không thể thương lượng, vụ việc sẽ được đưa ra cơ quan Tòa án có thẩm quyền tại Việt Nam để giải quyết theo quy định của pháp luật hiện hành.</p>
 
           <h3 className="text-lg font-bold text-gray-800 mt-8 border-b pb-2">6. Thay đổi điều khoản</h3>
           <p className="mb-4 mt-4">Chúng tôi giữ quyền thay đổi, bổ sung các Điều khoản dịch vụ này bất cứ lúc nào để phù hợp với quy định của pháp luật và định hướng phát triển của nền tảng. Phiên bản mới sẽ có hiệu lực ngay khi được đăng tải công khai trên trang này. Việc bạn tiếp tục sử dụng dịch vụ đồng nghĩa với việc chấp nhận các thay đổi đó.</p>

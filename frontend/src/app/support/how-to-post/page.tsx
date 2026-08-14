@@ -1,3 +1,13 @@
+import { siteConfig } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+// Trước đây 9/10 trang hỗ trợ không có metadata nào — Google tự cắt mô tả từ thân
+// trang (yêu cầu II.5). Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
+export const metadata: Metadata = {
+  title: 'Hướng dẫn đăng tin',
+  description: `Hướng dẫn đăng tin bất động sản trên ${siteConfig.name} qua bốn bước: đăng nhập, chọn đăng tin mới, điền thông tin chi tiết và chờ kiểm duyệt.`,
+  alternates: { canonical: '/support/how-to-post' },
+};
 export default function HowToPostPage() {
   return (
     <div className="min-h-screen bg-background py-10">

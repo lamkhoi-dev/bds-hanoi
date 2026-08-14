@@ -3,9 +3,15 @@ import Image from 'next/image';
 import { serverApiUrl } from '@/lib/server-api';
 import { Metadata } from 'next';
 
+// Trang đọc tin bằng `revalidate: 0` nên không tĩnh hoá được; khai báo tường minh để
+// `next build` không báo DYNAMIC_SERVER_USAGE và bỏ dở việc sinh trang.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
-  title: 'Tin Tức Bất Động Sản',
-  description: 'Cập nhật tin tức thị trường bất động sản, chia sẻ kinh nghiệm mua bán, đầu tư nhà đất.',
+  title: 'Tin tức bất động sản',
+  description: 'Cập nhật tin tức thị trường bất động sản, chia sẻ kinh nghiệm mua bán và kiến thức đầu tư nhà đất.',
+  // Trang danh sách tin tức vốn thiếu canonical, mà `?page=` lại sinh URL biến thể.
+  alternates: { canonical: '/news' },
 };
 
 async function getNews() {

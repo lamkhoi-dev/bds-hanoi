@@ -1,3 +1,13 @@
+import { siteConfig } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+// Trước đây 9/10 trang hỗ trợ không có metadata nào — Google tự cắt mô tả từ thân
+// trang (yêu cầu II.5). Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
+export const metadata: Metadata = {
+  title: 'Chính sách hoàn tiền',
+  description: `Điều kiện, thời hạn và thủ tục hoàn tiền cho các dịch vụ trả phí đã mua trên ${siteConfig.name}, cùng các trường hợp không được hoàn tiền.`,
+  alternates: { canonical: '/support/refund-policy' },
+};
 export default function RefundPolicyPage() {
   return (
     <div className="min-h-screen bg-background py-10">

@@ -4,7 +4,12 @@ import { serverApiUrl } from '@/lib/server-api';
 import { toMediaUrl } from '@/lib/media';
 import ExploreMoreContextual from '@/components/ExploreMoreContextual';
 import { generateSlug } from '@/lib/utils';
-import { permanentRedirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { siteConfig } from '@/lib/site-config';
+import JsonLd from '@/components/JsonLd';
+import Breadcrumb from '@/components/Breadcrumb';
+import { buildBreadcrumbList, buildRealEstateListing } from '@/lib/seo/schema';
+import { listingBreadcrumb } from '@/lib/seo/breadcrumb-items';
 
 type PageProps = {
   params: Promise<{
@@ -27,10 +32,6 @@ async function getProperty(slugId: string) {
   }
 }
 
-function getSiteUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
-}
-
 function getDescription(property: any) {
   const address = [property?.street, property?.ward, property?.district, property?.city]
     .filter(Boolean)
@@ -45,13 +46,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!property) {
     return {
-      title: 'Khong tim thay tin dang',
+      title: 'Không tìm thấy tin đăng',
       robots: { index: false, follow: true },
     };
   }
 
-  const siteUrl = getSiteUrl();
-  const canonical = `${siteUrl}/tin/${generateSlug(property.title)}--${property.id}`;
+  // Tin đã bán/đã cho thuê: trang vẫn mở được cho người đã lưu link và link nội bộ vẫn
+  // chảy (follow), nhưng không index và không nằm trong sitemap — xem INDEXABLE_STATUSES
+  // ở backend/src/seo/seo.service.ts. Tin EXPIRED/DELETED thì backend đã trả 404.
+  const isClosed = property.status === 'SOLD' || property.status === 'RENTED';
+
+  // Canonical tương đối: metadataBase trong layout.tsx tự ghép domain, nên không còn
+  // chỗ nào tự nối chuỗi domain (và nối nhầm sang domain khác).
+  const canonical = `/tin/${generateSlug(property.title)}--${property.id}`;
   const description = getDescription(property);
   const image = Array.isArray(property.imageObjects) && property.imageObjects.length > 0 
     ? property.imageObjects[0].url 
@@ -60,6 +67,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: property.title,
     description,
+    ...(isClosed ? { robots: { index: false, follow: true } } : {}),
     alternates: {
       canonical,
     },
@@ -83,8 +91,10 @@ export default async function PropertyDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
   const property = await getProperty(resolvedParams.slug_id);
 
+  // Trước đây trả 200 kèm noindex — Google gọi đó là soft 404 và vẫn giữ URL trong
+  // hàng đợi crawl. Tin không tồn tại phải là 404 thật.
   if (!property) {
-    return <PropertyDetailClient initialProperty={null} />;
+    notFound();
   }
 
   const expectedSlug = generateSlug(property.title);
@@ -93,75 +103,29 @@ export default async function PropertyDetailPage({ params }: PageProps) {
     permanentRedirect(`/tin/${expectedSlug}--${actualId}`);
   }
 
-  const siteUrl = getSiteUrl();
-  const canonical = `${siteUrl}/tin/${expectedSlug}--${actualId}`;
-  const image = Array.isArray(property.imageObjects) && property.imageObjects.length > 0 
-    ? property.imageObjects[0].url 
-    : (Array.isArray(property.images) && property.images.length > 0 ? toMediaUrl(property.images[0]) : undefined);
+  // JSON-LD cần URL tuyệt đối — Next không resolve URL bên trong khối ld+json.
+  const canonical = siteConfig.absolute(`/tin/${expectedSlug}--${actualId}`);
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'RealEstateListing',
-    name: property.title,
-    description: getDescription(property),
-    url: canonical,
-    image: image,
-    datePosted: property.createdAt,
-    offers: {
-      '@type': 'Offer',
-      price: property.price || 0,
-      priceCurrency: 'VND',
-      availability: property.status === 'SOLD' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
-    },
-  };
-
-  const breadcrumbList = [
-    {
-      "@type": "ListItem",
-      position: 1,
-      name: "Trang chủ",
-      item: siteUrl
-    },
-    {
-      "@type": "ListItem",
-      position: 2,
-      name: property.transactionType === 'BAN' ? 'Bán' : 'Cho thuê',
-      item: `${siteUrl}${property.transactionType === 'BAN' ? '/tat-ca' : '/search?transactionType=CHO_THUE'}`
-    },
-    {
-      "@type": "ListItem",
-      position: 3,
-      name: property.title,
-      item: canonical
-    }
-  ];
-
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: breadcrumbList
-  };
+  // Breadcrumb đầy đủ: Trang chủ / Giao dịch / Loại BĐS / Quận-Huyện / Phường-Xã / Tiêu đề.
+  // Trước đây chỉ có 3 cấp và trỏ sang /tat-ca (không nằm trong sitemap).
+  const breadcrumbItems = listingBreadcrumb(property);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd)
-            .replace(/</g, '\\u003c')
-            .replace(/>/g, '\\u003e'),
-        }}
+      <JsonLd
+        graph={[
+          buildBreadcrumbList(breadcrumbItems, `${canonical}#breadcrumb`),
+          buildRealEstateListing(property, {
+            url: canonical,
+            description: getDescription(property),
+          }),
+        ]}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbJsonLd)
-            .replace(/</g, '\\u003c')
-            .replace(/>/g, '\\u003e'),
-        }}
-      />
+      <div className="container mx-auto px-4 pt-4">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
       <PropertyDetailClient initialProperty={property} />
-      
+
       {property && (
         <div className="container mx-auto px-4 pb-12">
           <ExploreMoreContextual 

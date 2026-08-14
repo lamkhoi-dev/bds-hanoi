@@ -1,5 +1,15 @@
 import { Check } from 'lucide-react';
 import Link from 'next/link';
+import { siteConfig } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+// Trước đây 9/10 trang hỗ trợ không có metadata nào — Google tự cắt mô tả từ thân
+// trang (yêu cầu II.5). Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
+export const metadata: Metadata = {
+  title: 'Bảng giá dịch vụ',
+  description: `Bảng giá tin thường, tin VIP và dịch vụ đẩy tin trên ${siteConfig.name}. So sánh quyền lợi từng gói để chọn hình thức đăng tin phù hợp.`,
+  alternates: { canonical: '/support/pricing' },
+};
 
 export default function PricingPage() {
   return (

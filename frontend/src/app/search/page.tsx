@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { propertyTypeByEnum, propertyTypeLabel } from '@/lib/seo/taxonomy';
 import { Star } from 'lucide-react';
 import SearchForm from '@/components/SearchForm';
 import { serverApiUrl } from '@/lib/server-api';
@@ -60,14 +61,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const category = firstParam(resolvedSearchParams.propertyType) || firstParam(resolvedSearchParams.category) || '';
   const type = firstParam(resolvedSearchParams.transactionType) || firstParam(resolvedSearchParams.type) || '';
   
-  let catText = 'Bất động sản';
-  if (category === 'DAT_NEN') catText = 'Đất nền';
-  if (category === 'CHUNG_CU') catText = 'Chung cư';
-  if (category === 'NHA_RIENG') catText = 'Nhà riêng, nhà mặt phố';
-  if (category === 'DU_AN') catText = 'Dự án';
-  if (category === 'MAT_BANG') catText = 'Mặt bằng kinh doanh';
-  if (category === 'BIET_THU') catText = 'Biệt thự';
-  if (category === 'BDS_KHAC') catText = 'Bất động sản khác';
+  // propertyTypeLabel đã có fallback 'Bất động sản' nên không cần chuỗi if.
+  let catText = propertyTypeLabel(category);
   
   if (type === 'cho_thue' || type === 'CHO_THUE') catText = 'Cho thuê ' + catText.toLowerCase();
   else if (type === 'ban' || type === 'BAN') catText = 'Bán ' + catText.toLowerCase();
@@ -79,6 +74,13 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   return {
     title,
     description,
+    // Trang tìm kiếm nội bộ sinh ra vô số tổ hợp tham số gần trùng nội dung — đúng
+    // nhóm "Trang trùng lặp, chưa chọn trang chính tắc" đang chiếm 51 URL trong
+    // Search Console. Cho phép crawl (follow) nhưng không index, và không đưa vào sitemap.
+    robots: { index: false, follow: true },
+    // Dù noindex vẫn khai canonical: Google có thể coi tham số lọc là URL riêng, và
+    // canonical gom chúng về một đích thay vì để mỗi tổ hợp tự đứng một mình.
+    alternates: { canonical: '/search' },
     openGraph: {
       title,
       description,
@@ -112,13 +114,7 @@ export default async function SearchPage({
   let seoDescription = '';
   let pageTitle = 'Kết quả tìm kiếm';
   if (category || type || q) {
-    let catText = category === 'DAT_NEN' ? 'Đất nền' : 
-                  category === 'CHUNG_CU' ? 'Chung cư' :
-                  category === 'NHA_RIENG' ? 'Nhà riêng' : 
-                  category === 'DU_AN' ? 'Dự án' : 
-                  category === 'MAT_BANG' ? 'Mặt bằng' :
-                  category === 'BIET_THU' ? 'Biệt thự' :
-                  category === 'BDS_KHAC' ? 'Bất động sản khác' : 'Bất động sản';
+    let catText = propertyTypeLabel(category);
     
     if (type === 'CHO_THUE' || type === 'cho_thue') catText = 'Cho thuê ' + catText.toLowerCase();
     else if (type === 'BAN' || type === 'ban') catText = 'Bán ' + catText.toLowerCase();
@@ -145,14 +141,8 @@ export default async function SearchPage({
 
   if (q) activeFilters.push({ label: `Từ khóa: ${q}`, key: 'q' });
   if (category && category !== 'Tất cả danh mục' && category !== 'all') {
-    const catText = category === 'DAT_NEN' ? 'Đất nền' : 
-                    category === 'CHUNG_CU' ? 'Chung cư' :
-                    category === 'NHA_RIENG' ? 'Nhà riêng' : 
-                    category === 'CHO_THUE' ? 'Cho thuê' : 
-                    category === 'DU_AN' ? 'Dự án' :
-                    category === 'MAT_BANG' ? 'Mặt bằng' :
-                    category === 'BIET_THU' ? 'Biệt thự' :
-                    category === 'BDS_KHAC' ? 'Bất động sản khác' : category;
+    // `CHO_THUE` lọt vào ô category ở dữ liệu cũ — không phải loại BĐS nên xử riêng.
+    const catText = category === 'CHO_THUE' ? 'Cho thuê' : (propertyTypeByEnum(category)?.label ?? category);
     activeFilters.push({ label: `Loại BĐS: ${catText}`, key: 'category' });
   }
   if (flatSearchParams.transactionType && flatSearchParams.transactionType !== 'all') {

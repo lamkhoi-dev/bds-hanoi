@@ -1,3 +1,13 @@
+import { siteConfig } from '@/lib/site-config';
+import type { Metadata } from 'next';
+
+// Trước đây 9/10 trang hỗ trợ không có metadata nào — Google tự cắt mô tả từ thân
+// trang (yêu cầu II.5). Tiêu đề KHÔNG kèm tên site: template ở layout.tsx đã nối sẵn.
+export const metadata: Metadata = {
+  title: 'Chính sách đăng tin',
+  description: `Quy định về tin đăng miễn phí và tin trả phí trên ${siteConfig.name}, cùng danh sách các trường hợp tin bị từ chối kiểm duyệt.`,
+  alternates: { canonical: '/support/posting-policy' },
+};
 export default function PostingPolicyPage() {
   return (
     <div className="min-h-screen bg-background py-10">

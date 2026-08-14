@@ -1,6 +1,10 @@
+import { siteConfig } from '@/lib/site-config';
+// `layout.tsx` đã đặt template `%s | {tên site}` nên nối thêm tên site ở đây làm tiêu đề
+// lặp thương hiệu hai lần (yêu cầu II.3).
 export const metadata = {
-  title: 'Yêu cầu xóa dữ liệu | Nhà Đất Xứ Nghệ',
-  description: 'Hướng dẫn yêu cầu xóa dữ liệu cá nhân tại Nhà Đất Xứ Nghệ',
+  title: 'Yêu cầu xóa dữ liệu',
+  description: `Hướng dẫn yêu cầu xóa dữ liệu cá nhân đã lưu tại ${siteConfig.name} khi bạn đăng nhập bằng Facebook, kèm các cách gửi yêu cầu và thời gian xử lý.`,
+  alternates: { canonical: '/support/data-deletion' },
 };
 
 export default function DataDeletionPage() {
@@ -10,7 +14,7 @@ export default function DataDeletionPage() {
         <h1 className="text-3xl font-extrabold text-gray-800 mb-6">Yêu cầu xóa dữ liệu</h1>
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 prose max-w-none text-gray-600">
           <p>
-            Nếu bạn đã đăng nhập <strong>Nhà Đất Xứ Nghệ</strong> bằng Facebook và muốn xóa dữ liệu của mình, vui lòng thực hiện theo một trong các cách sau:
+            Nếu bạn đã đăng nhập <strong>{siteConfig.name}</strong> bằng Facebook và muốn xóa dữ liệu của mình, vui lòng thực hiện theo một trong các cách sau:
           </p>
 
           <h3 className="text-lg font-bold text-gray-800 mt-6">Cách 1: Xóa trực tiếp trên Website</h3>
@@ -23,7 +27,7 @@ export default function DataDeletionPage() {
           <h3 className="text-lg font-bold text-gray-800 mt-6">Cách 2: Gửi Email Yêu cầu</h3>
           <p className="mt-2">Hoặc bạn có thể gửi email yêu cầu xóa dữ liệu tới địa chỉ email quản trị viên:</p>
           <ul className="list-disc pl-5 space-y-2 mt-2">
-            <li><strong>Email:</strong> <a href="mailto:contact@nhadatxunghe.vn" className="text-primary hover:underline">contact@nhadatxunghe.vn</a></li>
+            <li><strong>Email:</strong> <a href={`mailto:${siteConfig.contact.email}`} className="text-primary hover:underline">{siteConfig.contact.email}</a></li>
           </ul>
           
           <p className="mt-4">
