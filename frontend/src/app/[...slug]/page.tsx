@@ -1,5 +1,5 @@
 import React from 'react';
-import { redirect, notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 import { Metadata } from 'next';
@@ -13,130 +13,55 @@ import SearchForm from '@/components/SearchForm';
 import SidebarFilter from '@/components/SidebarFilter';
 import GoogleAdPlaceholder from '@/components/GoogleAdPlaceholder';
 import Breadcrumb from '@/components/Breadcrumb';
+import JsonLd from '@/components/JsonLd';
+import { buildBreadcrumbList } from '@/lib/seo/schema';
+import type { BreadcrumbItem } from '@/lib/seo/schema';
+import { siteConfig } from '@/lib/site-config';
+import { getLocationDictionary, formatSegmentPath } from '@/lib/seo/locations';
+import type { LocationDictionary } from '@/lib/seo/locations';
+import { PROPERTY_TYPES, propertyTypeBySlug } from '@/lib/seo/taxonomy';
+import { parseListingPath } from '@/lib/seo/route';
+import type { ListingRoute } from '@/lib/seo/route';
+import { parseListingQuery, buildListingUrl, totalPages, listingPath, LISTING_PAGE_SIZE } from '@/lib/seo/canonical';
+import { decideIndexability, applyMode, getSeoMode } from '@/lib/seo/indexability';
+import { getRouteFacts } from '@/lib/seo/facts';
 
 export const dynamic = 'force-dynamic';
 
-const formatSlugToName = (slug: string) => {
-  // Tách các phần nếu có dấu / (VD: ban/nghe-an)
-  const parts = slug.split('/');
-  const formattedParts = parts.map(part => {
-    try {
-      part = decodeURIComponent(part);
-    } catch (e) {}
-    let name = part.replace(/-/g, ' ');
-    // Từ điển thay thế
-    const map: Record<string, string> = {
-      'ha tinh': 'Hà Tĩnh',
-      'nghe an': 'Nghệ An',
-      'thanh pho vinh': 'Thành phố Vinh',
-      'thi xa cua lo': 'Thị xã Cửa Lò',
-      'thi xa thai hoa': 'Thị xã Thái Hòa',
-      'thi xa hoang mai': 'Thị xã Hoàng Mai',
-      'thi xa hong linh': 'Thị xã Hồng Lĩnh',
-      'thi xa ky anh': 'Thị xã Kỳ Anh',
-      'huyen dien chau': 'Huyện Diễn Châu',
-      'huyen hung nguyen': 'Huyện Hưng Nguyên',
-      'huyen nghi loc': 'Huyện Nghi Lộc',
-      'huyen do luong': 'Huyện Đô Lương',
-      'huyen quynh luu': 'Huyện Quỳnh Lưu',
-      'huyen nam dan': 'Huyện Nam Đàn',
-      'huyen thanh chuong': 'Huyện Thanh Chương',
-      'h dien chau': 'Huyện Diễn Châu',
-      'h hung nguyen': 'Huyện Hưng Nguyên',
-      'h nghi loc': 'Huyện Nghi Lộc',
-      'h do luong': 'Huyện Đô Lương',
-      'tx cua lo': 'Thị xã Cửa Lò',
-      'tx thai hoa': 'Thị xã Thái Hòa',
-      'tx hoang mai': 'Thị xã Hoàng Mai',
-      'ban': 'Bán',
-      'cho thue': 'Cho thuê',
-      'cho-thue': 'Cho thuê',
-      'dat nen': 'Đất nền',
-      'nha rieng': 'Nhà riêng',
-      'nha mat pho': 'Nhà mặt phố',
-      'biet thu': 'Biệt thự',
-      'chung cu': 'Chung cư',
-      'mat bang kho xuong': 'Mặt bằng kho xưởng',
-      'bds khac': 'Bất động sản khác',
-      'du an': 'Dự án',
-      'tat ca': 'Tất cả'
-    };
-    
-    Object.keys(map)
-      .sort((a, b) => b.length - a.length)
-      .forEach(key => {
-      if (name.toLowerCase() === key) {
-        name = map[key];
-      } else if (name.toLowerCase().includes(key)) {
-        name = name.replace(new RegExp(key, 'gi'), map[key]);
-      }
-    });
-    
-    // Capitalize remaining lower case parts like "phuong truong vinh" -> "phường Trường Vinh"
-    if (name.toLowerCase().startsWith('phuong ')) {
-      name = 'phường ' + name.slice(7).replace(/\b\w/g, l => l.toUpperCase());
-    } else if (name.toLowerCase().startsWith('tx ')) {
-      name = 'Thị xã ' + name.slice(3).replace(/\b\w/g, l => l.toUpperCase());
-    } else if (name.toLowerCase().startsWith('tp ')) {
-      name = 'TP ' + name.slice(3).replace(/\b\w/g, l => l.toUpperCase());
-    } else if (name.toLowerCase().startsWith('h ')) {
-      name = name.slice(2).replace(/\b\w/g, l => l.toUpperCase()) + ', Nghệ An';
-    }
+/**
+ * Sinh title/H1/description cho trang danh mục.
+ *
+ * Thay cho `formatSlugToName` cũ — một từ điển hard-code 35 dòng chỉ phủ Nghệ An/Hà Tĩnh,
+ * và với khu vực không có trong từ điển thì viết hoa thô nên ra "phường Truong Vinh",
+ * còn description thì nối cứng ", Nghệ An". Tên có dấu giờ tra từ `/locations/segments`.
+ *
+ * Đồng thời sửa lỗi `isRent = false` hard-code: `cho-thue` vốn nằm trong danh sách
+ * danh mục nên mọi URL /cho-thue/* đều ra title "Bán cho thuê ..." trên ~800 URL sitemap.
+ */
+function getListingCopy(route: ListingRoute, dict: LocationDictionary) {
+  const provinceName = siteConfig.province.name;
 
-    return name;
-  });
-  
-  return formattedParts.join(' - ');
-};
+  // `cho-thue` giờ là đoạn giao dịch chứ không phải danh mục, nên không còn cảnh
+  // `isRent = false` gán cứng sinh title "Bán cho thuê ..." trên ~800 URL sitemap.
+  const action = route.transaction === 'cho-thue' ? 'cho thuê' : 'bán';
 
-function getSeoMetadataTexts(loaiBds: string, khuVuc: string) {
-  const formattedLoaiBds = formatSlugToName(loaiBds);
-  const formattedKhuVuc = khuVuc !== 'toan-quoc' ? formatSlugToName(khuVuc) : 'Nghệ An';
-  
-  const isRent = false; // SEO URLs are exclusively for BAN
-  
-  let coreCat = '';
-  if (loaiBds === 'tat-ca' || formattedLoaiBds.toLowerCase() === 'bất động sản' || formattedLoaiBds.toLowerCase() === 'tất cả') {
-    coreCat = 'nhà đất bán';
-  } else {
-    coreCat = formattedLoaiBds.toLowerCase();
-    if (!coreCat.startsWith('bán ')) {
-      coreCat = `bán ${coreCat}`;
-    }
-  }
+  const typeLabel = propertyTypeBySlug(route.propertyTypeSlug)?.label ?? '';
+  const locationName = route.locationSlug ? (dict[route.locationSlug]?.name ?? null) : null;
 
-  // Capitalize first letter
-  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  const titleCore = capitalize(coreCat);
-  
-  let h1Text = '';
-  let title = '';
-  let description = '';
+  const coreCat = typeLabel ? `${action} ${typeLabel.toLowerCase()}` : `nhà đất ${action}`;
+  const titleCore = coreCat.charAt(0).toUpperCase() + coreCat.slice(1);
 
-  if (khuVuc === 'toan-quoc') {
-    // Nhóm 1: /{loai-bds} -> e.g. /dat-nen
-    h1Text = `${titleCore} Nghệ An`;
-    title = `${titleCore} Nghệ An | Nhà Đất Xứ Nghệ`;
-    description = `Cập nhật tin ${coreCat} Nghệ An. Xem giá, diện tích, vị trí, pháp lý và thông tin liên hệ người đăng tin.`;
-  } else if (loaiBds === 'tat-ca') {
-    // Nhóm 2: /{khu-vuc} -> e.g. /phuong-truong-vinh
-    h1Text = `${titleCore} ${formattedKhuVuc}`;
-    title = `${titleCore} ${formattedKhuVuc} | Nhà Đất Xứ Nghệ`;
-    description = `Cập nhật tin ${coreCat} ${formattedKhuVuc}. Xem giá, diện tích, vị trí, pháp lý và thông tin liên hệ người đăng tin.`;
-  } else {
-    // Nhóm 3: /{loai-bds}/{khu-vuc} -> e.g. /dat-nen/phuong-truong-vinh
-    h1Text = `${titleCore} ${formattedKhuVuc}`;
-    title = `${titleCore} ${formattedKhuVuc} | Nhà Đất Xứ Nghệ`;
-    
-    // Add Nghệ An if missing in description for better local SEO
-    const descKhuVuc = formattedKhuVuc.toLowerCase().includes('nghệ an') || formattedKhuVuc.toLowerCase().includes('hà tĩnh') 
-      ? formattedKhuVuc 
-      : `${formattedKhuVuc}, Nghệ An`;
-      
-    description = `Cập nhật tin ${coreCat} ${descKhuVuc}. Xem giá, diện tích, vị trí, pháp lý và thông tin liên hệ người đăng tin.`;
-  }
+  const place = locationName ?? provinceName;
+  const h1Text = `${titleCore} ${place}`;
+  const title = `${h1Text} | ${siteConfig.name}`;
 
-  return { h1Text, title, description, formattedLoaiBds, formattedKhuVuc };
+  // Chỉ thêm tên tỉnh khi khu vực chưa tự chứa nó, tránh "Cầu Giấy, Hà Nội, Hà Nội".
+  const descPlace = place.toLowerCase().includes(provinceName.toLowerCase())
+    ? place
+    : `${place}, ${provinceName}`;
+  const description = `Cập nhật tin ${coreCat} ${descPlace}. Xem giá, diện tích, vị trí, pháp lý và thông tin liên hệ người đăng tin.`;
+
+  return { h1Text, title, description, typeLabel, locationName, place };
 }
 
 type PageProps = {
@@ -144,129 +69,114 @@ type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-const parseSlug = (slugParts: string[]) => {
-  const CATEGORIES = ['dat-nen', 'nha-rieng', 'nha-mat-pho', 'biet-thu', 'chung-cu', 'du-an', 'mat-bang-kho-xuong', 'bds-khac', 'tat-ca', 'cho-thue'];
-  
-  let loaiBds = 'tat-ca';
-  let loaiBdsSlug = 'tat-ca';
-  let khuVuc = 'toan-quoc';
-  
-  let i = 0;
-  
-  if (i < slugParts.length && CATEGORIES.includes(slugParts[i])) {
-    i++;
+/**
+ * Chạy trọn lớp quyết định SEO cho một request.
+ *
+ * generateMetadata và thân trang cùng gọi hàm này; phần parse là thuần còn phần fetch
+ * đã bọc React cache(), nên gọi hai lần không phát sinh round-trip thứ hai.
+ */
+async function resolveListingPage(
+  slugParts: string[],
+  rawSearchParams: Record<string, string | string[] | undefined>,
+) {
+  const parse = parseListingPath(slugParts);
+  const query = parseListingQuery(rawSearchParams);
+  const dict = await getLocationDictionary();
+
+  if (parse.kind !== 'listing') {
+    const decision = applyMode(
+      decideIndexability({ parse, query, facts: { location: null, total: 0 } }),
+      getSeoMode(),
+    );
+    return { parse, query, dict, route: null, facts: null, data: null, decision };
   }
 
-  if (i > 0) {
-    loaiBds = slugParts.slice(0, i).join('-');
-    loaiBdsSlug = slugParts.slice(0, i).join('/');
-  }
+  const mode = getSeoMode();
+  const { facts, data } = await getRouteFacts(parse.route, query, dict);
+  // Bảng tĩnh trong next.config.mjs lo được /{loại} và /{loại}/{khu-vực}. Riêng dạng
+  // một đoạn /{khu-vực} thì phải biết đoạn đó CÓ PHẢI khu vực không — cần tra CSDL,
+  // nên xử lý ở đây.
+  const decision = applyMode(
+    decideIndexability({ parse, query, facts, redirectLegacyShape: mode === 'enforce' }),
+    mode,
+  );
 
-  if (i < slugParts.length) {
-    khuVuc = slugParts.slice(i).join('/');
-  }
-  
-  return { loaiBds, khuVuc, loaiBdsSlug };
-};
+  return { parse, query, dict, route: parse.route, facts, data, decision };
+}
 
-export async function generateMetadata({ params, searchParams }: { params: Promise<{ slug?: string[] }>; searchParams: Promise<{ [key: string]: string | string[] | undefined }> }): Promise<Metadata> {
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams;
   const slugParts = Array.isArray(resolvedParams.slug) ? resolvedParams.slug : [];
-  
-  const { loaiBds, khuVuc } = parseSlug(slugParts);
-  
-  const { title, description } = getSeoMetadataTexts(loaiBds, khuVuc);
+  const { route, query, dict, decision } = await resolveListingPage(slugParts, await searchParams);
 
-  const page = resolvedSearchParams?.page ? `?page=${resolvedSearchParams.page}` : '';
+  if (!route) {
+    return { title: 'Không tìm thấy trang', robots: { index: false, follow: true } };
+  }
+
+  const { title, description } = getListingCopy(route, dict);
+
+  // Trang có bộ lọc trỏ canonical về URL không lọc; trang thường tự trỏ (giữ cả số trang).
+  const canonical = query.hasFilters
+    ? route.currentPath
+    : buildListingUrl(route.currentPath, query.page, {});
 
   return {
     title,
     description,
-    alternates: {
-      canonical: `https://nhadatxunghe.vn/${slugParts.join('/')}${page}`,
-    },
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-    },
+    // Một chỗ duy nhất quyết định index/noindex, dùng chung với thân trang và sitemap.
+    ...(decision.action === 'index' ? {} : { robots: { index: false, follow: true } }),
+    alternates: { canonical },
+    openGraph: { title, description, type: 'website' },
   };
 }
 
-async function getSeoData(loaiBds: string, khuVuc: string, queryString: string) {
-  try {
-    const res = await fetch(serverApiUrl(`/properties/seo?loaiBds=${loaiBds}&khuVuc=${khuVuc}&${queryString}`), { cache: 'no-store' });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
 
 // Category/Location SEO Landing Pages
 export default async function CategoryLandingPage({ params, searchParams }: PageProps) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   const slugParts = Array.isArray(resolvedParams.slug) ? resolvedParams.slug : [];
-  const fullSlug = slugParts.join('/');
-  
-  if (fullSlug === 'sitemap') {
-    redirect('/sitemap.xml');
-  }
-  
-  if (fullSlug === 'sitemap.xml') {
-    // If Next.js catch-all accidentally catches sitemap.xml, return 404 to let Next.js handle it natively
-    notFound();
-  }
-  
-  const { loaiBds, khuVuc, loaiBdsSlug } = parseSlug(slugParts);
-  const pageValue = Array.isArray(resolvedSearchParams.page) ? resolvedSearchParams.page[0] : resolvedSearchParams.page;
-  const page = pageValue ? parseInt(pageValue, 10) : 1;
-  
-  const queryParams = new URLSearchParams();
-  Object.entries(resolvedSearchParams).forEach(([key, value]) => {
-    if (value !== undefined) {
-      if (Array.isArray(value)) {
-        value.forEach(v => queryParams.append(key, v));
-      } else {
-        queryParams.append(key, value);
-      }
-    }
-  });
-  
-  const data = await getSeoData(loaiBds, khuVuc, queryParams.toString());
-  
-  const { h1Text, formattedLoaiBds, formattedKhuVuc } = getSeoMetadataTexts(loaiBds, khuVuc);
-  
-  const breadcrumbs = [];
-  if (loaiBds !== 'tat-ca') {
-    breadcrumbs.push({ name: formattedLoaiBds, url: `/${loaiBdsSlug}` });
-  }
-  if (khuVuc !== 'toan-quoc') {
-    breadcrumbs.push({ name: formattedKhuVuc, url: `/${fullSlug}` });
-  }
-  
-  const popularLocations = [
-    { name: 'Thành phố Vinh', slug: 'thanh-pho-vinh' },
-    { name: 'Thị xã Cửa Lò', slug: 'thi-xa-cua-lo' },
-    { name: 'Huyện Diễn Châu', slug: 'huyen-dien-chau' },
-    { name: 'Huyện Hưng Nguyên', slug: 'huyen-hung-nguyen' },
-    { name: 'Huyện Nghi Lộc', slug: 'huyen-nghi-loc' },
-    { name: 'Thị xã Thái Hòa', slug: 'thi-xa-thai-hoa' },
-    { name: 'Thị xã Hoàng Mai', slug: 'thi-xa-hoang-mai' },
-    { name: 'Huyện Đô Lương', slug: 'huyen-do-luong' },
-  ];
 
-  const seoCategories = [
-    { name: 'Đất nền', slug: 'dat-nen' },
-    { name: 'Nhà riêng', slug: 'nha-rieng' },
-    { name: 'Chung cư', slug: 'chung-cu' },
-    { name: 'Dự án', slug: 'du-an' },
-    { name: 'Mặt bằng, kho xưởng', slug: 'mat-bang-kho-xuong' },
-    { name: 'BĐS Khác', slug: 'bds-khac' },
-    { name: 'Cho thuê', slug: 'cho-thue' },
-  ];
+  const { route, query, dict, data, decision } = await resolveListingPage(slugParts, resolvedSearchParams);
+
+  // Thi hành quyết định. Ở chế độ report (mặc định), applyMode đã hạ notFound/redirect
+  // xuống noindex nên hai nhánh dưới không chạy — deploy an toàn, quan sát log trước.
+  if (decision.action === 'notFound') notFound();
+  if (decision.action === 'redirect') permanentRedirect(decision.to);
+  if (!route) notFound();
+
+  const { h1Text, typeLabel, locationName } = getListingCopy(route, dict);
+  const page = query.page;
+  const pageCount = totalPages(data?.total ?? 0);
+
+  // Breadcrumb: phần tử cuối là trang hiện tại nên không gắn url.
+  const breadcrumbs: BreadcrumbItem[] = [];
+  if (typeLabel) {
+    breadcrumbs.push({
+      name: typeLabel,
+      url: route.locationSlug ? `/${route.propertyTypeSlug}` : undefined,
+    });
+  }
+  if (locationName) {
+    breadcrumbs.push({ name: locationName });
+  }
+
+  const loaiBds = route.propertyTypeSlug ?? 'tat-ca';
+  const loaiBdsSlug = loaiBds;
+  const khuVuc = route.locationSlug ?? 'toan-quoc';
+  const fullSlug = slugParts.join('/');
+  const formattedLoaiBds = typeLabel;
+  const formattedKhuVuc = locationName ?? siteConfig.province.name;
+  
+  // Danh sách quận/huyện lấy từ chính từ điển khu vực thay vì mảng cứng 8 huyện Nghệ An.
+  // Chỉ lấy cấp DISTRICT, giới hạn 12 mục để khối link nội bộ không phình ra.
+  const popularLocations = Object.entries(dict)
+    .filter(([, info]) => info.type === 'DISTRICT')
+    .slice(0, 12)
+    .map(([segment, info]) => ({ name: info.name, slug: segment }));
+
+  const seoCategories = PROPERTY_TYPES.map((t) => ({ name: t.label, slug: t.slug }));
 
   const isGlobalCategoryPage = loaiBds !== 'tat-ca' && khuVuc === 'toan-quoc';
   const isLocationPage = loaiBds === 'tat-ca' && khuVuc !== 'toan-quoc';
@@ -275,6 +185,19 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
   return (
     <div className="min-h-screen bg-background py-10 px-4">
       <div className="w-full max-w-[1600px] xl:px-8 mx-auto">
+        {breadcrumbs.length > 0 && (
+          <>
+            <JsonLd
+              graph={[
+                buildBreadcrumbList(
+                  breadcrumbs,
+                  siteConfig.absolute(`/${slugParts.join('/')}#breadcrumb`),
+                ),
+              ]}
+            />
+            <Breadcrumb items={breadcrumbs} />
+          </>
+        )}
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-textMain capitalize">
             {h1Text}
@@ -303,7 +226,9 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
           <div className="flex-1 min-w-0">
         {!data ? (
           <div className="bg-white rounded-2xl p-8 shadow-card text-center text-gray-500">
-            <p>Hệ thống đang đồng bộ dữ liệu bài đăng cho chuyên mục <strong>{fullSlug}</strong>...</p>
+            {/* Trước đây dội nguyên slug người dùng gõ vào HTML — với URL rác thì đó là
+                nội dung do người lạ điều khiển, lại nằm trên trang index được. */}
+            <p>Không tải được danh sách tin. Vui lòng thử lại.</p>
           </div>
         ) : (
           <div className="space-y-12">
@@ -350,20 +275,42 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                     ))}
                   </div>
 
-                  {/* Pagination */}
-                  <div className="mt-10 flex justify-center gap-2">
-                    {page > 1 && (
-                      <Link href={`/${fullSlug}?${new URLSearchParams({...resolvedSearchParams as Record<string, string>, page: (page - 1).toString()}).toString()}`} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                        Trang trước
-                      </Link>
-                    )}
-                    <span className="px-4 py-2 bg-primary text-white rounded-lg">Trang {page}</span>
-                    {data.normals.length === data.limit && (
-                      <Link href={`/${fullSlug}?${new URLSearchParams({...resolvedSearchParams as Record<string, string>, page: (page + 1).toString()}).toString()}`} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                        Trang sau
-                      </Link>
-                    )}
-                  </div>
+                  {/*
+                    Phân trang.
+                    - Trước đây "còn trang sau" đoán bằng `normals.length === limit`, nên
+                      trang cuối vừa đầy vẫn hiện nút "Trang sau" dẫn tới trang rỗng.
+                      Nay dùng tổng số trang thật (backend đã luôn trả `total`).
+                    - Link trước đây trải nguyên `...resolvedSearchParams` nên mọi tham số
+                      rác được nhân bản sang từng trang. buildListingUrl chỉ phát tham số
+                      trong danh sách trắng.
+                  */}
+                  {pageCount > 1 && (
+                    <>
+                      {/* Next Metadata API không có trường prev/next — phát thẻ link thô,
+                          Next sẽ nâng chúng lên <head>. */}
+                      {page > 1 && (
+                        <link rel="prev" href={buildListingUrl(route.currentPath, page - 1, query.filters)} />
+                      )}
+                      {page < pageCount && (
+                        <link rel="next" href={buildListingUrl(route.currentPath, page + 1, query.filters)} />
+                      )}
+                      <div className="mt-10 flex justify-center gap-2">
+                        {page > 1 && (
+                          <Link href={buildListingUrl(route.currentPath, page - 1, query.filters)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                            Trang trước
+                          </Link>
+                        )}
+                        <span className="px-4 py-2 bg-primary text-white rounded-lg">
+                          Trang {page} / {pageCount}
+                        </span>
+                        {page < pageCount && (
+                          <Link href={buildListingUrl(route.currentPath, page + 1, query.filters)} className="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                            Trang sau
+                          </Link>
+                        )}
+                      </div>
+                    </>
+                  )}
                   
                   {/* Promote Banner - Bottom */}
                   <div className="bg-gradient-to-r from-primary-dark via-primary to-primary-light rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between text-white shadow-lg animate-fade-in relative overflow-hidden mt-12">
@@ -379,8 +326,19 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                 </>
               ) : (
                 data.normals && data.normals.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-8 shadow-card text-center text-gray-500">
-                    <p className="mb-4">Chưa có bài đăng nào.</p>
+                  <div className="bg-white rounded-2xl p-8 shadow-card text-center">
+                    {/* Khách yêu cầu: đổi "Chưa có bài đăng nào" thành "không có kết quả
+                        tìm kiếm phù hợp", bỏ tiêu đề/mô tả, thêm gợi ý về trang chủ và
+                        gợi ý dùng bộ lọc. */}
+                    <p className="text-gray-600 mb-5">Không có kết quả tìm kiếm phù hợp.</p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <Link href="/" className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
+                        Về trang chủ
+                      </Link>
+                      <Link href="/search" className="px-5 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">
+                        Mở bộ lọc tìm kiếm
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <div className="py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
@@ -425,7 +383,7 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                 {isGlobalCategoryPage && popularLocations.map(loc => (
                   <Link 
                     key={loc.slug} 
-                    href={`/${loaiBds}/${loc.slug}`}
+                    href={listingPath({ transaction: route.transaction, propertyTypeSlug: route.propertyTypeSlug, locationSlug: loc.slug })}
                     className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors"
                   >
                     {formattedLoaiBds} {loc.name}
@@ -435,7 +393,7 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                 {isLocationPage && seoCategories.map(cat => (
                   <Link 
                     key={cat.slug} 
-                    href={`/${cat.slug}/${khuVuc}`}
+                    href={listingPath({ transaction: route.transaction, propertyTypeSlug: cat.slug, locationSlug: route.locationSlug })}
                     className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors"
                   >
                     {cat.name} {formattedKhuVuc}
