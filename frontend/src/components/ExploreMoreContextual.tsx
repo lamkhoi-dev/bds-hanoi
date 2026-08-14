@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { generateSlug } from '@/lib/utils';
+import { listingPath } from '@/lib/seo/canonical';
+import { PROPERTY_TYPES, propertyTypeByEnum } from '@/lib/seo/taxonomy';
 import { serverApiUrl } from '@/lib/server-api';
 
 interface ExploreMoreContextualProps {
@@ -11,13 +12,14 @@ interface ExploreMoreContextualProps {
   limit?: number;
 }
 
-const CATEGORIES = [
-  { key: 'DAT_NEN', label: 'Đất nền', path: 'dat-nen' },
-  { key: 'CHUNG_CU', label: 'Chung cư', path: 'chung-cu' },
-  { key: 'NHA_RIENG', label: 'Nhà riêng', path: 'nha-rieng' },
-  { key: 'MAT_BANG', label: 'Mặt bằng', path: 'mat-bang-kho-xuong' },
-  { key: 'BIET_THU', label: 'Biệt thự', path: 'biet-thu-lien-ke' }
-];
+/**
+ * Bảng danh mục cũ ở đây tự khai `path: 'biet-thu-lien-ke'` — slug KHÔNG tồn tại trong
+ * taxonomy nên link biệt thự dẫn vào 404. Lấy thẳng từ taxonomy, bỏ đúng `DU_AN` và
+ * `BDS_KHAC` cho gọn khối gợi ý.
+ */
+const SUGGESTED_TYPES = PROPERTY_TYPES.filter(
+  (t) => !['DU_AN', 'BDS_KHAC'].includes(t.enum),
+);
 
 async function getLocations() {
   try {
@@ -76,40 +78,39 @@ export default async function ExploreMoreContextual({
   const links: { label: string, href: string }[] = [];
 
   const isRent = transactionType === 'CHO_THUE' || transactionType === 'cho_thue';
+  const transaction = isRent ? 'cho-thue' : 'ban';
   const prefix = isRent ? 'Cho thuê' : 'Bán';
   const resolvedCategory = currentCategory || 'DAT_NEN';
-  const currentCatObj = CATEGORIES.find(c => c.key === resolvedCategory) || CATEGORIES[0];
+  const currentCatObj = propertyTypeByEnum(resolvedCategory) ?? SUGGESTED_TYPES[0];
 
+  // Đoạn URL phải là `urlSegment` thật từ cây khu vực (API trả dưới tên `slug`).
+  // generateSlug(tên) cho ra 'phuong-yen-hoa' trong khi urlSegment là 'yen-hoa' —
+  // cách cũ khiến mọi link gợi ý dẫn vào trang không tồn tại. Không có slug thì bỏ
+  // hẳn đoạn khu vực chứ không đoán.
   // 1. Same category, different wards in the same district
   selectedWards.forEach(w => {
-    if (w.name !== ward) {
-      const href = isRent 
-        ? `/search?transactionType=CHO_THUE&khuVuc=${w.slug || generateSlug(w.name)}`
-        : `/${currentCatObj.path}/${w.slug || generateSlug(w.name)}`;
-      
+    if (w.name !== ward && w.slug) {
       const labelName = w.name.replace('Phường ', '').replace('Xã ', '');
       links.push({
         label: `${prefix} ${currentCatObj.label.toLowerCase()} tại ${labelName}`,
-        href
+        href: listingPath({ transaction, propertyTypeSlug: currentCatObj.slug, locationSlug: w.slug }),
       });
     }
   });
 
   // 2. Different categories in the SAME district/ward
-  const locationName = ward || district || (currentDistrictObj ? currentDistrictObj.name : '');
-  const locationSlug = locationName ? generateSlug(locationName) : '';
+  const locationNode =
+    (ward ? relevantWards.find((w: any) => w?.name === ward) : null) ?? currentDistrictObj ?? null;
+  const locationName = locationNode?.name || '';
+  const locationSlug: string | undefined = locationNode?.slug || undefined;
   const cleanLocName = locationName.replace('Phường ', '').replace('Xã ', '').replace('Thành phố ', '');
 
-  if (locationName) {
-    CATEGORIES.forEach(cat => {
-      if (cat.key !== resolvedCategory) {
-        const href = isRent 
-          ? `/search?transactionType=CHO_THUE&khuVuc=${locationSlug}`
-          : `/${cat.path}/${locationSlug}`;
-        
+  if (locationSlug) {
+    SUGGESTED_TYPES.forEach(cat => {
+      if (cat.enum !== resolvedCategory) {
         links.push({
           label: `${prefix} ${cat.label.toLowerCase()} tại ${cleanLocName}`,
-          href
+          href: listingPath({ transaction, propertyTypeSlug: cat.slug, locationSlug }),
         });
       }
     });

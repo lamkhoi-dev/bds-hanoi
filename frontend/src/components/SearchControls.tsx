@@ -6,7 +6,7 @@ import SidebarFilter from './SidebarFilter';
 import { SlidersHorizontal, X, Trash2 } from 'lucide-react';
 
 import { useLocations } from '@/hooks/useLocations';
-import { generateSlug } from '@/lib/utils';
+import { parseListingPath } from '@/lib/seo/route';
 
 export default function SearchControls() {
   const router = useRouter();
@@ -22,41 +22,27 @@ export default function SearchControls() {
     let matchedDistrict = searchParams.get('district') || '';
     let matchedWard = searchParams.get('ward') || '';
     
+    // Dùng chung bộ phân tích URL với generateMetadata và sitemap. Bản tự chế trước đây
+    // giả định đoạn đầu là loại BĐS, nên với URL mới `/ban/dat-nen/cau-giay` nó coi cả
+    // chuỗi "ban/dat-nen/cau-giay" là khu vực và bộ lọc hiện trống trên mọi trang.
     const slug = routeParams?.slug;
-    if (Array.isArray(slug) && locations.length > 0) {
-      const CATEGORIES = ['dat-nen', 'nha-rieng', 'nha-mat-pho', 'biet-thu', 'chung-cu', 'du-an', 'mat-bang-kho-xuong', 'bds-khac', 'tat-ca'];
-      let i = 0;
-      if (i < slug.length && CATEGORIES.includes(slug[i].toLowerCase())) {
-        i++;
-      }
-      let parsedLoc = '';
-      if (i < slug.length) {
-        try {
-          parsedLoc = decodeURIComponent(slug.slice(i).join('/')).toLowerCase();
-        } catch(e) {
-          parsedLoc = slug.slice(i).join('/').toLowerCase();
-        }
-      }
+    const route = Array.isArray(slug) ? parseListingPath(slug) : null;
+    const parsedLoc = route?.kind === 'listing' ? route.route.locationSlug : null;
 
-      if (parsedLoc && parsedLoc !== 'toan-quoc' && !matchedDistrict && !matchedWard) {
-        let found = false;
-        for (const dist of locations) {
-          if (generateSlug(dist.name) === parsedLoc) {
+    if (parsedLoc && locations.length > 0 && !matchedDistrict && !matchedWard) {
+      // So khớp theo `slug` backend trả về (= urlSegment), KHÔNG suy từ tên:
+      // generateSlug('Phường Yên Hòa') ra 'phuong-yen-hoa' còn urlSegment là 'yen-hoa'.
+      matchLoop: for (const dist of locations) {
+        if (dist.slug === parsedLoc) {
+          matchedDistrict = dist.name;
+          break;
+        }
+        for (const w of dist.children ?? []) {
+          if (w.slug === parsedLoc) {
             matchedDistrict = dist.name;
-            found = true;
-            break;
+            matchedWard = w.name;
+            break matchLoop;
           }
-          if (dist.children) {
-            for (const w of dist.children) {
-              if (generateSlug(w.name) === parsedLoc) {
-                matchedDistrict = dist.name;
-                matchedWard = w.name;
-                found = true;
-                break;
-              }
-            }
-          }
-          if (found) break;
         }
       }
     }

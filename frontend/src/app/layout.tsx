@@ -16,33 +16,52 @@ import ConditionalVisibility from "@/components/ConditionalVisibility";
 import { Phone, Mail, Plus } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { serverApiUrl } from '@/lib/server-api';
+import { siteConfig } from '@/lib/site-config';
+import JsonLd from '@/components/JsonLd';
+import { buildOrganization, buildWebSite } from '@/lib/seo/schema';
+import { listingPath } from '@/lib/seo/canonical';
+import { propertyTypesByEnum } from '@/lib/seo/taxonomy';
 
 const beVietnamPro = Be_Vietnam_Pro({ 
   subsets: ["latin", "vietnamese"], 
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   variable: '--font-be-vietnam-pro',
 });
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+// Tách tên thương hiệu thành 2 dòng cho logo: "Nhà Đất Hà Nội" -> "Nhà Đất" / "Hà Nội".
+// Không tách được thì dồn về 1 dòng.
+const brandSuffix = siteConfig.name.endsWith(siteConfig.province.name)
+  ? siteConfig.province.name
+  : '';
+const brandPrefix = brandSuffix
+  ? siteConfig.name.slice(0, siteConfig.name.length - brandSuffix.length).trim()
+  : '';
+const brandLine1 = brandPrefix || siteConfig.name;
+const brandLine2 = brandPrefix ? brandSuffix : '';
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
-  const verification = settings?.googleSearchConsoleId 
-    ? { google: settings.googleSearchConsoleId } 
+  const verification = settings?.googleSearchConsoleId
+    ? { google: settings.googleSearchConsoleId }
     : undefined;
 
+  const defaultTitle = `${siteConfig.name} - Nền tảng Bất Động Sản hàng đầu`;
+  const titleTemplate = `%s | ${siteConfig.name}`;
+
   return {
-    metadataBase: new URL(siteUrl),
+    // metadataBase cho phép mọi nơi khác dùng canonical TƯƠNG ĐỐI; Next tự ghép
+    // domain. Nhờ đó không còn chỗ nào tự nối chuỗi domain và nối sai.
+    metadataBase: new URL(siteConfig.url),
     title: {
-      template: "%s | Nhà Đất Xứ Nghệ",
-      default: "Nhà Đất Xứ Nghệ - Nền tảng Bất Động Sản hàng đầu",
+      template: titleTemplate,
+      default: defaultTitle,
     },
-    description: "Tìm kiếm mua bán nhà đất, căn hộ, chung cư trên nền tảng bất động sản số 1 Nghệ An",
-    keywords: ["Bất động sản", "Nhà Đất Xứ Nghệ", "Mua bán nhà đất", "Bất động sản Nghệ An", "Bất động sản Vinh"],
+    description: siteConfig.description,
+    keywords: [...siteConfig.keywords],
     manifest: "/manifest.json",
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
-      title: "Nhà Đất XN",
+      title: siteConfig.shortName,
     },
     icons: {
       apple: "/icons/icon-192x192.png",
@@ -50,31 +69,31 @@ export async function generateMetadata(): Promise<Metadata> {
     verification,
     openGraph: {
       title: {
-        template: "%s | Nhà Đất Xứ Nghệ",
-        default: "Nhà Đất Xứ Nghệ - Nền tảng Bất Động Sản hàng đầu",
+        template: titleTemplate,
+        default: defaultTitle,
       },
-      description: "Tìm kiếm mua bán nhà đất, căn hộ, chung cư trên nền tảng bất động sản số 1 Nghệ An",
-      url: siteUrl,
-      siteName: "Nhà Đất Xứ Nghệ",
+      description: siteConfig.description,
+      url: siteConfig.url,
+      siteName: siteConfig.name,
       images: [
         {
-          url: `${siteUrl}/og-image.png`,
+          url: siteConfig.ogImage,
           width: 1200,
           height: 630,
-          alt: "Nhà Đất Xứ Nghệ",
+          alt: siteConfig.name,
         }
       ],
-      locale: "vi_VN",
+      locale: siteConfig.locale,
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title: {
-        template: "%s | Nhà Đất Xứ Nghệ",
-        default: "Nhà Đất Xứ Nghệ - Nền tảng Bất Động Sản hàng đầu",
+        template: titleTemplate,
+        default: defaultTitle,
       },
-      description: "Tìm kiếm mua bán nhà đất, căn hộ, chung cư trên nền tảng bất động sản số 1 Nghệ An",
-      images: [`${siteUrl}/og-image.png`],
+      description: siteConfig.description,
+      images: [siteConfig.ogImage],
     },
   };
 }
@@ -108,10 +127,15 @@ export default async function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Nhà Đất XN" />
+        <meta name="apple-mobile-web-app-title" content={siteConfig.shortName} />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={`${beVietnamPro.className} ${beVietnamPro.variable} bg-background text-textMain antialiased overflow-x-clip`} suppressHydrationWarning>
+        {/*
+          Organization + WebSite/SearchAction đặt ở layout nên có mặt trên MỌI trang.
+          Các trang con phát @graph riêng của mình và tham chiếu ngược 2 node này qua @id.
+        */}
+        <JsonLd graph={[buildOrganization(), buildWebSite()]} />
         {(() => {
           const gaId = settings?.googleAnalyticsId || process.env.NEXT_PUBLIC_GA_ID;
           if (!gaId) return null;
@@ -172,10 +196,12 @@ export default async function RootLayout({
                     <Phone className="w-3.5 h-3.5" />
                     Hotline: {process.env.NEXT_PUBLIC_SUPPORT_PHONE || '0868126826'}
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5" />
-                    {process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'contact@nhadatxunghe.vn'}
-                  </span>
+                  {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5" />
+                      {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <Link href="/support/how-to-post" className="hover:text-primary transition">Hướng dẫn</Link>
@@ -193,14 +219,22 @@ export default async function RootLayout({
                   </div>
                   {/* Logo */}
                   <Link href="/" className="flex items-center gap-1 sm:gap-3 group min-w-0 pr-0 xl:pr-4">
-                    <img src="/logo/ngoi_nha.svg" alt="Nhà Đất Xứ Nghệ" className="h-7 sm:h-12 md:h-14 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
-                    <div className="flex flex-col justify-center min-w-0">
-                      <img src="/logo/nha_dat_xu_nghe.svg" alt="Nhà Đất Xứ Nghệ" className="hidden sm:block h-8 md:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-105 sm:mt-1 flex-shrink min-w-0" />
-                      {/* Mobile 2-line Text */}
-                      <div className="sm:hidden flex flex-col items-start leading-[1.1] font-black uppercase tracking-tight text-[11px] xs:text-[13px] drop-shadow-sm min-w-0">
-                        <span className="text-[#1E88E5] truncate max-w-full">Nhà Đất</span>
-                        <span className="text-[#FFB300] truncate max-w-full">Xứ Nghệ</span>
-                      </div>
+                    <img width={223} height={145} src="/logo/ngoi_nha.svg" alt={siteConfig.name} className="h-7 sm:h-12 md:h-14 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
+                    {/*
+                      Wordmark cũ là ảnh /logo/nha_dat_xu_nghe.svg — chữ "NHÀ ĐẤT XỨ NGHỆ"
+                      vẽ cứng trong file SVG nên không dùng lại được cho site Hà Nội.
+                      Tạm render bằng chữ từ siteConfig cho tới khi khách gửi bộ logo mới
+                      (mục C2 trong danh sách câu hỏi).
+                    */}
+                    <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black uppercase tracking-tight drop-shadow-sm">
+                      <span className="text-[#1E88E5] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
+                        {brandLine1}
+                      </span>
+                      {brandLine2 && (
+                        <span className="text-[#FFB300] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
+                          {brandLine2}
+                        </span>
+                      )}
                     </div>
                   </Link>
                 </div>
@@ -208,15 +242,20 @@ export default async function RootLayout({
                 {/* PC Menu */}
                 <nav className="hidden xl:flex flex-1 min-w-0 overflow-x-auto scrollbar-hide gap-x-3 xl:gap-x-5 px-2 mx-auto items-center flex-nowrap whitespace-nowrap mask-edges">
                   {[
+                    // Đường dẫn dựng qua listingPath để đổi dạng URL chỉ cần đổi một cờ,
+                    // và link nội bộ không bao giờ trỏ vào một 301.
                     { label: 'Trang chủ', href: '/' },
-                    { label: 'Đất nền', href: '/dat-nen' },
-                    { label: 'Nhà riêng', href: '/nha-rieng' },
-                    { label: 'Chung cư', href: '/chung-cu' },
-                    { label: 'Dự án', href: '/du-an' },
-                    { label: 'BĐS Nghệ An', href: '/nghe-an' },
-                    { label: 'BĐS Hà Tĩnh', href: '/ha-tinh' },
-                    { label: 'BĐS TP Vinh', href: '/thanh-pho-vinh' },
-                    { label: 'Cho thuê', href: '/search?transactionType=CHO_THUE' },
+                    ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN']).map((t) => ({
+                      label: t.label,
+                      href: listingPath({ propertyTypeSlug: t.slug }),
+                    })),
+                    // 3 mục cũ (/nghe-an, /ha-tinh, /thanh-pho-vinh) là link chết trên
+                    // site Hà Nội. Gom về một mục theo tỉnh đang cấu hình; P7 sẽ thay
+                    // bằng 3 menu xổ Trung tâm / Cận trung tâm / Ngoại thành khi khách
+                    // gửi bảng phân nhóm quận huyện.
+                    { label: `BĐS ${siteConfig.province.name}`, href: listingPath({ locationSlug: siteConfig.province.slug }) },
+                    // Trang cho thuê giờ có URL SEO riêng thay vì đẩy về /search.
+                    { label: 'Cho thuê', href: listingPath({ transaction: 'cho-thue' }) },
                     { label: 'Tin tức', href: '/news' },
                   ].map((item) => (
                     <Link

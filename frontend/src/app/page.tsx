@@ -1,4 +1,5 @@
 import React from 'react';
+import { siteConfig } from '@/lib/site-config';
 import { Home as HomeIcon, Users, Building2, Star, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,6 +11,7 @@ import PropertyTabs from '@/components/PropertyTabs';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import FavoriteTags from '@/components/FavoriteTags';
 import SearchForm from '@/components/SearchForm';
+import { listingPath } from '@/lib/seo/canonical';
 import Adsense from '@/components/Adsense';
 import GoogleAdPlaceholder from '@/components/GoogleAdPlaceholder';
 import OnlineStatsGridItem from '@/components/OnlineStatsGridItem';
@@ -64,56 +66,16 @@ async function getLocations() {
   }
 }
 
-async function getVinhProperties() {
-  const areas = ['Phường Trường Vinh', 'Phường Thành Vinh', 'Phường Vinh Phú', 'Phường Vinh Hưng', 'Phường Vinh Lộc', 'Phường Cửa Lò'];
-  try {
-    const promises = areas.map(area => {
-      const queryParams = area.startsWith('Thị xã') || area === 'Cửa Lò' 
-        ? `district=${encodeURIComponent(area)}`
-        : `ward=${encodeURIComponent(area)}`;
-      return fetch(serverApiUrl(`/properties/search?${queryParams}&limit=10`), { next: { revalidate: 300 } })
-        .then(res => res.ok ? res.json() : null);
-    });
-    const results = await Promise.all(promises);
-    return areas.map((area, idx) => {
-      const data = results[idx];
-      let items: any[] = [];
-      if (data) {
-        const allItems = [...(data.vips || []), ...(data.ups || []), ...(data.normals || [])];
-        const uniqueMap = new Map();
-        allItems.forEach(item => {
-          if (!uniqueMap.has(item.id)) uniqueMap.set(item.id, item);
-        });
-        items = Array.from(uniqueMap.values());
-        
-        items.sort((a, b) => {
-          const dateA = new Date(a.pushedAt || a.publishedAt || a.createdAt || 0).getTime();
-          const dateB = new Date(b.pushedAt || b.publishedAt || b.createdAt || 0).getTime();
-          return dateB - dateA;
-        });
-        items = items.slice(0, 10);
-      }
-      const label = area.replace('Phường ', '').replace('Thị xã ', '');
-      const slug = area === 'Phường Cửa Lò' ? 'thi-xa-cua-lo' : generateSlug(area);
-      return {
-        id: area,
-        label,
-        items,
-        href: `/${slug}`
-      };
-    });
-  } catch {
-    return [];
-  }
-}
+// getVinhProperties() đã bị xoá: nó gọi 6 lượt fetch SSR cho 6 phường của TP Vinh
+// viết cứng, kèm slug tự chế. Khối "BĐS theo khu vực" giờ lấy từ Location.isFeatured
+// do importer đặt theo sheet "hot" của khách.
 
 export default async function Home() {
-  const [homepageData, hotLocations, locations, settings, vinhTabs] = await Promise.all([
+  const [homepageData, hotLocations, locations, settings] = await Promise.all([
     getHomepageData(),
     getHotLocations(),
     getLocations(),
-    getPublicSettings(),
-    getVinhProperties()
+    getPublicSettings()
   ]);
 
   const stats = homepageData?.stats || { properties: 100, users: 50, projects: 10, satisfaction: 99 };
@@ -122,12 +84,8 @@ export default async function Home() {
   
   // Randomize wards dynamically for explore tags
   const shuffledWards = [...allWards].sort(() => 0.5 - Math.random());
-  const displayWards = shuffledWards.length >= 4 ? shuffledWards.slice(0, 4) : [
-    { name: 'Phường Hưng Bình', slug: 'phuong-hung-binh' },
-    { name: 'Phường Hưng Phúc', slug: 'phuong-hung-phuc' },
-    { name: 'Phường Vinh Lộc', slug: 'phuong-vinh-loc' },
-    { name: 'Phường Vinh Phú', slug: 'phuong-vinh-phu' }
-  ];
+  // Không còn danh sách phường Nghệ An dự phòng: chưa có dữ liệu thì ẩn khối đi.
+  const displayWards = shuffledWards.slice(0, 4);
 
   return (
     <div>
@@ -136,12 +94,12 @@ export default async function Home() {
       {/* ===== HERO SECTION ===== */}
       <section className="relative w-full bg-[#0a1930] overflow-hidden flex justify-center">
         <h1 className="sr-only">
-          Đăng bán, tìm mua và cho thuê Bất động sản tại Nghệ An - Hà Tĩnh
+          Đăng bán, tìm mua và cho thuê bất động sản tại {siteConfig.province.name}
         </h1>
         <div className="w-full max-w-[1920px] relative">
           <Image 
             src="/banner.svg" 
-            alt="Banner Nhà Đất Xứ Nghệ" 
+            alt={`Banner ${siteConfig.name}`} 
             width={1920}
             height={400}
             className="w-full h-auto block md:max-h-[500px] md:object-cover md:object-center"
@@ -212,13 +170,6 @@ export default async function Home() {
                 items: b.items,
                 href: b.href
               }))}
-            />
-          )}
-
-          {vinhTabs && vinhTabs.length > 0 && (
-            <PropertyTabs
-              title="BĐS tại Vinh"
-              tabs={vinhTabs}
             />
           )}
 
@@ -322,10 +273,11 @@ export default async function Home() {
             <div>
               <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Bất động sản nổi bật</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/dat-nen" className="text-gray-600 hover:text-primary transition-colors">Đất nền dự án</Link></li>
-                <li><Link href="/nha-rieng" className="text-gray-600 hover:text-primary transition-colors">Nhà đất thổ cư</Link></li>
-                <li><Link href="/chung-cu" className="text-gray-600 hover:text-primary transition-colors">Căn hộ chung cư</Link></li>
-                <li><Link href="/search?transactionType=CHO_THUE" className="text-gray-600 hover:text-primary transition-colors">Nhà đất cho thuê</Link></li>
+                <li><Link href={listingPath({ propertyTypeSlug: "dat-nen" })} className="text-gray-600 hover:text-primary transition-colors">Đất nền dự án</Link></li>
+                <li><Link href={listingPath({ propertyTypeSlug: "nha-rieng" })} className="text-gray-600 hover:text-primary transition-colors">Nhà đất thổ cư</Link></li>
+                <li><Link href={listingPath({ propertyTypeSlug: "chung-cu" })} className="text-gray-600 hover:text-primary transition-colors">Căn hộ chung cư</Link></li>
+                {/* `/search` là trang noindex — hub cho thuê được index là `/cho-thue`. */}
+                <li><Link href={listingPath({ transaction: 'cho-thue' })} className="text-gray-600 hover:text-primary transition-colors">Nhà đất cho thuê</Link></li>
               </ul>
             </div>
             <div>
@@ -340,7 +292,7 @@ export default async function Home() {
               <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Đất nền theo phường</h3>
               <ul className="space-y-2 text-sm">
                 {displayWards.map((w: any, i: number) => (
-                  <li key={i}><Link href={`/dat-nen/${w.slug}`} className="text-gray-600 hover:text-primary transition-colors">Đất nền {w.name}</Link></li>
+                  <li key={i}><Link href={listingPath({ propertyTypeSlug: 'dat-nen', locationSlug: w.slug })} className="text-gray-600 hover:text-primary transition-colors">Đất nền {w.name}</Link></li>
                 ))}
               </ul>
             </div>

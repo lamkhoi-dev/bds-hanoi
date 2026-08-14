@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from 'react';
+import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
 import { useRouter } from 'next/navigation';
+import { listingPath } from '@/lib/seo/canonical';
+import { useLocations } from '@/hooks/useLocations';
 import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
 
 export default function SearchForm({ 
@@ -17,6 +20,7 @@ export default function SearchForm({
   initialDistrict?: string;
   initialArea?: string;
 }) {
+  const { locations: districts } = useLocations();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const router = useRouter();
 
@@ -37,7 +41,7 @@ export default function SearchForm({
       };
       const catSlug = mapEnumToCategory(category);
       if (catSlug) {
-        router.push(`/${catSlug}`);
+        router.push(listingPath({ propertyTypeSlug: catSlug }));
         return;
       }
     }
@@ -91,29 +95,24 @@ export default function SearchForm({
         {/* Filters (Desktop Always visible, Mobile Collapsible) */}
         <div className={`${isFilterOpen ? 'flex' : 'hidden'} md:flex flex-col md:flex-row gap-2 mt-2 md:mt-0 animate-fade-in`}>
           <select name="category" defaultValue={initialCategory === "Tất cả danh mục" ? "" : initialCategory} className="font-sans px-4 py-3 outline-none bg-gray-50 text-gray-700 rounded-lg cursor-pointer font-medium text-sm min-w-[140px] border border-gray-200 focus:border-primary focus:bg-white">
+            {/* Nhãn từ taxonomy: "Mặt bằng KD" trước đây là 1 trong 5 biến thể của
+                cùng enum MAT_BANG. Khách yêu cầu "Mặt bằng kinh doanh, kho xưởng". */}
             <option value="">Tất cả danh mục</option>
-            <option value="DAT_NEN">Đất nền</option>
-            <option value="NHA_RIENG">Nhà riêng</option>
-            <option value="CHUNG_CU">Chung cư</option>
-            <option value="MAT_BANG">Mặt bằng KD</option>
-            <option value="DU_AN">Dự án</option>
-            <option value="BIET_THU">Biệt thự</option>
-            <option value="BDS_KHAC">BĐS khác</option>
+            {PROPERTY_TYPES.map((t) => (
+              <option key={t.enum} value={t.enum}>{t.label}</option>
+            ))}
           </select>
 
           <select name="district" defaultValue={initialDistrict} className="font-sans px-4 py-3 outline-none bg-gray-50 text-gray-700 rounded-lg cursor-pointer font-medium text-sm min-w-[140px] border border-gray-200 focus:border-primary focus:bg-white">
+            {/* Trước đây là 11 quận/huyện Nghệ An + Hà Tĩnh viết cứng, và còn thiếu
+                nhiều huyện mà bộ lọc bên cạnh vẫn có. useLocations đã cache theo phiên
+                nên dùng ở đây không phát sinh request thừa. */}
             <option value="">Khu vực</option>
-            <option value="Thành phố Vinh">TP Vinh</option>
-            <option value="Thị xã Cửa Lò">Cửa Lò</option>
-            <option value="Thị xã Hoàng Mai">Hoàng Mai</option>
-            <option value="Thị xã Thái Hòa">Thái Hòa</option>
-            <option value="Huyện Diễn Châu">Diễn Châu</option>
-            <option value="Huyện Đô Lương">Đô Lương</option>
-            <option value="Huyện Hưng Nguyên">Hưng Nguyên</option>
-            <option value="Huyện Nghi Lộc">Nghi Lộc</option>
-            <option value="Thành phố Hà Tĩnh">TP Hà Tĩnh</option>
-            <option value="Thị xã Hồng Lĩnh">Hồng Lĩnh</option>
-            <option value="Thị xã Kỳ Anh">Thị xã Kỳ Anh</option>
+            {districts.map((d) => (
+              <option key={d.id ?? d.name} value={d.name}>
+                {d.shortName || d.name}
+              </option>
+            ))}
           </select>
 
           <select name="areaRangeKey" defaultValue={initialArea} className="font-sans px-4 py-3 outline-none bg-gray-50 text-gray-700 rounded-lg cursor-pointer font-medium text-sm min-w-[140px] border border-gray-200 focus:border-primary focus:bg-white">

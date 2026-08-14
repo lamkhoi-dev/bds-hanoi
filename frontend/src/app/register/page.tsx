@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -130,7 +131,7 @@ export default function Register() {
             Tạo tài khoản mới
           </h1>
           <p className="text-lg text-blue-200/70 leading-relaxed mb-8">
-            Tham gia cộng đồng bất động sản lớn nhất Xứ Nghệ. Đăng tin, tìm kiếm và kết nối dễ dàng.
+            Tham gia cộng đồng bất động sản lớn nhất {siteConfig.province.name}. Đăng tin, tìm kiếm và kết nối dễ dàng.
           </p>
           {/* Benefits */}
           <div className="space-y-4 text-left">

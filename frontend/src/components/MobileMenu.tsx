@@ -1,10 +1,18 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { listingPath } from '@/lib/seo/canonical';
+import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X, Home, Building2, MapPin, User, Plus } from 'lucide-react';
 import { useLocations } from '@/hooks/useLocations';
 import { useAuth } from '@/contexts/AuthContext';
+
+/** Loại BĐS hiện trên menu, theo thứ tự. Nhãn/slug vẫn lấy từ taxonomy. */
+const MENU_TYPE_ORDER: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN', 'MAT_BANG'];
+const MENU_TYPES = MENU_TYPE_ORDER
+  .map((e) => PROPERTY_TYPES.find((t) => t.enum === e))
+  .filter((t): t is (typeof PROPERTY_TYPES)[number] => Boolean(t));
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,11 +32,12 @@ export default function MobileMenu() {
       title: 'Bán',
       icon: <Building2 className="w-5 h-5 text-gray-500" />,
       links: [
-        { label: 'Đất nền', href: '/dat-nen' },
-        { label: 'Nhà riêng', href: '/nha-rieng' },
-        { label: 'Chung cư', href: '/chung-cu' },
-        { label: 'Dự án', href: '/du-an' },
-        { label: 'Mặt bằng / kho xưởng', href: '/mat-bang-kho-xuong' },
+        // Trước đây 5 link viết cứng dạng URL cũ (`/dat-nen`…), P5 đã 301 chúng sang
+        // `/ban/{loại}` nên menu đang đẩy người dùng qua một bước chuyển hướng.
+        ...MENU_TYPES.map((t) => ({
+          label: t.label,
+          href: listingPath({ transaction: 'ban', propertyTypeSlug: t.slug }),
+        })),
         { label: 'Khu vực BĐS', href: '/khu-vuc' },
       ]
     },
@@ -36,31 +45,25 @@ export default function MobileMenu() {
       title: 'Cho thuê',
       icon: <Home className="w-5 h-5 text-gray-500" />,
       links: [
-        { label: 'Cho thuê đất nền', href: '/search?transactionType=CHO_THUE&propertyType=DAT_NEN' },
-        { label: 'Cho thuê nhà riêng', href: '/search?transactionType=CHO_THUE&propertyType=NHA_RIENG' },
-        { label: 'Cho thuê chung cư', href: '/search?transactionType=CHO_THUE&propertyType=CHUNG_CU' },
-        { label: 'Cho thuê dự án', href: '/search?transactionType=CHO_THUE&propertyType=DU_AN' },
-        { label: 'Cho thuê mặt bằng', href: '/search?transactionType=CHO_THUE&propertyType=MAT_BANG' },
-        { label: 'Cho thuê BĐS khác', href: '/search?transactionType=CHO_THUE&propertyType=BDS_KHAC' },
+        // Cả 6 link trước đây trỏ vào `/search?...` — trang noindex, không có canonical
+        // và không sinh landing. `/cho-thue/{loại}` mới là hub được index.
+        ...MENU_TYPES.map((t) => ({
+          label: `Cho thuê ${t.label.toLowerCase()}`,
+          href: listingPath({ transaction: 'cho-thue', propertyTypeSlug: t.slug }),
+        })),
       ]
     },
     {
       title: 'Khu vực',
       icon: <MapPin className="w-5 h-5 text-gray-500" />,
       links: [
-        { label: 'TP Vinh', href: '/thanh-pho-vinh' },
-        { label: 'TX Cửa Lò', href: '/thi-xa-cua-lo' },
-        { label: 'Huyện Diễn Châu', href: '/huyen-dien-chau' },
-        { label: 'BĐS Hà Tĩnh', href: '/ha-tinh' },
-        { label: 'TX Thái Hòa', href: '/thi-xa-thai-hoa' },
-        { label: 'TX Hoàng Mai', href: '/thi-xa-hoang-mai' },
-        { label: 'Huyện Đô Lương', href: '/huyen-do-luong' },
-        { label: 'Huyện Quỳnh Lưu', href: '/huyen-quynh-luu' },
-        { label: 'Huyện Nam Đàn', href: '/huyen-nam-dan' },
-        { label: 'Huyện Hưng Nguyên', href: '/huyen-hung-nguyen' },
-        { label: 'Huyện Nghi Lộc', href: '/huyen-nghi-loc' },
-        { label: 'Huyện Thanh Chương', href: '/huyen-thanh-chuong' },
-        { label: 'Khu vực khác...', href: '/khu-vuc' },
+        // Trước đây là 11 quận/huyện Nghệ An viết cứng với slug tự chế. Lấy 10 quận
+        // đầu từ cây khu vực; P-sau sẽ chia thành 3 menu Trung tâm/Cận trung tâm/
+        // Ngoại thành khi khách gửi bảng phân nhóm (câu B1).
+        ...locations.slice(0, 10).map((d: any) => ({
+          label: d.shortName || d.name,
+          href: listingPath({ locationSlug: d.slug }),
+        })),
       ]
     },
     {
@@ -115,7 +118,7 @@ export default function MobileMenu() {
           <nav className="flex flex-col space-y-4 px-3">
             <div className="mb-2">
               <Link
-                href="/toan-bo-tin"
+                href="/ban"
                 onClick={toggleMenu}
                 className="flex items-center gap-2 px-4 py-2 font-bold text-gray-800 text-sm uppercase tracking-wider hover:text-primary transition-colors"
               >

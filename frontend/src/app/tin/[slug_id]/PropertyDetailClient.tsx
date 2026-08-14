@@ -1,10 +1,12 @@
 "use client";
 import { formatNumberString } from '@/lib/utils';
+import { siteConfig } from '@/lib/site-config';
+import { listingPath } from '@/lib/seo/canonical';
+import { propertyTypeByEnum, transactionByEnum } from '@/lib/seo/taxonomy';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import Breadcrumb from '@/components/Breadcrumb';
 import ShareButtons from '@/components/ShareButtons';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -270,6 +272,9 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
   if (loading) return <div className="min-h-screen flex items-center justify-center">Đang tải...</div>;
   if (!property) return <div className="min-h-screen flex items-center justify-center">Không tìm thấy bất động sản</div>;
 
+  const txDef = transactionByEnum(property.transactionType);
+  const typeDef = propertyTypeByEnum(property.propertyType);
+
   const rangePriceLabel = getPriceLabel(property.priceRangeKey, property.transactionType);
   const exactPrice = (property.price && property.price > 0) ? formatPrice(property.price) : '';
   
@@ -338,18 +343,14 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
     formattedPricePerM2 = 'Giá thương lượng';
   }
 
-  // Combine ward with oldWard if available
-  const wardAliases: Record<string, string> = {
-    'Phường Thành Vinh': 'Vinh Tân',
-  };
+  // Bảng alias phường cứng cho một phường ở Vinh đã bỏ — dữ liệu Hà Nội có cột
+  // oldWard thật cho mọi tin.
   
   let wardDisplay = '';
   if (property.ward) {
     let baseWard = property.ward.trim();
     if (property.oldWard) {
       wardDisplay = `${baseWard} (${property.oldWard.trim()})`;
-    } else if (wardAliases[baseWard]) {
-      wardDisplay = `${baseWard} (${wardAliases[baseWard]})`;
     } else {
       wardDisplay = baseWard;
     }
@@ -370,11 +371,9 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
     ? property.imageObjects.map((img: any) => toMediaUrl(img.url))
     : (property.images && property.images.length > 0 ? property.images.map((u: string) => toMediaUrl(u)) : []);
 
-  const breadcrumbs = [
-    { name: property.transactionType === 'BAN' ? 'Bán' : 'Cho thuê', url: property.transactionType === 'BAN' ? '/tat-ca' : '/search?transactionType=CHO_THUE' },
-    { name: property.propertyType === 'DAT_NEN' ? 'Đất nền' : property.propertyType === 'NHA_RIENG' ? 'Nhà riêng' : property.propertyType === 'CHUNG_CU' ? 'Chung cư' : property.propertyType === 'MAT_BANG' ? 'Mặt bằng kho xưởng' : 'Bất động sản khác', url: property.transactionType === 'BAN' ? '/' + (property.propertyType === 'MAT_BANG' ? 'mat-bang-kho-xuong' : property.propertyType.toLowerCase().replace('_', '-')) : '/search?transactionType=CHO_THUE&propertyType=' + property.propertyType },
-    { name: property.title }
-  ];
+  // Mảng breadcrumb cũ ở đây chưa từng được render (component Breadcrumb không hề
+  // được gọi ở file này). Breadcrumb giờ dựng ở page.tsx bằng listingBreadcrumb(),
+  // nơi có sẵn quan hệ wardLocation/districtLocation để ra đủ 6 cấp.
 
   return (
     <div className="min-h-screen bg-background py-10 px-4">
@@ -442,19 +441,25 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
           {/* Details */}
           <div className="bg-white rounded-2xl p-6 shadow-card">
             {/* Category Tags */}
+            {/* Hai thẻ này trước đây là 5 nhánh ternary viết cứng URL dạng cũ (`/tat-ca`,
+                `/dat-nen`…) và link cho thuê thì trỏ vào `/search` vốn noindex. Nay lấy
+                nhãn từ taxonomy và đường dẫn từ listingPath — cùng nguồn với canonical
+                và sitemap, nên link nội bộ trỏ thẳng vào 200 chứ không ăn 301. */}
             <div className="flex items-center gap-2 mb-3">
-              <Link href={property.transactionType === 'BAN' ? '/tat-ca' : '/search?transactionType=CHO_THUE'} className="px-3 py-1 bg-accent/10 text-accent hover:bg-accent hover:text-white transition-colors rounded-full text-xs font-bold uppercase cursor-pointer">
-                {property.transactionType === 'BAN' ? 'Bán' : 'Cho thuê'}
+              <Link href={listingPath({ transaction: txDef?.slug === 'cho-thue' ? 'cho-thue' : 'ban' })} className="px-3 py-1 bg-accent/10 text-accent hover:bg-accent hover:text-white transition-colors rounded-full text-xs font-bold uppercase cursor-pointer">
+                {txDef?.label ?? 'Bán'}
               </Link>
-              <Link href={
-                  property.propertyType === 'DAT_NEN' ? (property.transactionType === 'BAN' ? '/dat-nen' : '/search?transactionType=CHO_THUE&propertyType=DAT_NEN') : 
-                  property.propertyType === 'NHA_RIENG' ? (property.transactionType === 'BAN' ? '/nha-rieng' : '/search?transactionType=CHO_THUE&propertyType=NHA_RIENG') : 
-                  property.propertyType === 'CHUNG_CU' ? (property.transactionType === 'BAN' ? '/chung-cu' : '/search?transactionType=CHO_THUE&propertyType=CHUNG_CU') : 
-                  property.propertyType === 'MAT_BANG' ? (property.transactionType === 'BAN' ? '/mat-bang-kho-xuong' : '/search?transactionType=CHO_THUE&propertyType=MAT_BANG') : 
-                  (property.transactionType === 'BAN' ? '/bds-khac' : '/search?transactionType=CHO_THUE&propertyType=BDS_KHAC')
-              } className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors rounded-full text-xs font-bold uppercase cursor-pointer">
-                {property.propertyType === 'DAT_NEN' ? 'Đất nền' : property.propertyType === 'NHA_RIENG' ? 'Nhà riêng' : property.propertyType === 'CHUNG_CU' ? 'Chung cư' : property.propertyType === 'MAT_BANG' ? 'Mặt bằng' : 'Khác'}
-              </Link>
+              {typeDef && (
+                <Link
+                  href={listingPath({
+                    transaction: txDef?.slug === 'cho-thue' ? 'cho-thue' : 'ban',
+                    propertyTypeSlug: typeDef.slug,
+                  })}
+                  className="px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors rounded-full text-xs font-bold uppercase cursor-pointer"
+                >
+                  {typeDef.label}
+                </Link>
+              )}
               {property.tier === 'VIP' && (
                 <span className="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs font-bold uppercase">
                   VIP
@@ -851,48 +856,39 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
             if (!property) return null;
             const isRent = property.transactionType === 'CHO_THUE';
             const actionText = isRent ? 'Cho thuê' : 'Bán';
-            const locSlug = generateSlug(property.ward || property.district || property.city || 'toan-quoc');
-            const locName = property.ward || property.district || property.city || 'Nghệ An';
-            
-            const typeMap: Record<string, string> = {
-              'DAT_NEN': 'dat-nen',
-              'NHA_RIENG': 'nha-rieng',
-              'CHUNG_CU': 'chung-cu',
-              'DU_AN': 'du-an',
-              'MAT_BANG_KHO_XUONG': 'mat-bang-kho-xuong',
-              'BDS_KHAC': 'bds-khac'
-            };
-            const typeNameMap: Record<string, string> = {
-              'DAT_NEN': 'đất nền',
-              'NHA_RIENG': 'nhà riêng',
-              'CHUNG_CU': 'chung cư',
-              'DU_AN': 'dự án',
-              'MAT_BANG_KHO_XUONG': 'mặt bằng',
-              'BDS_KHAC': 'BĐS khác'
-            };
-            const mappedTypeSlug = typeMap[property.propertyType] || 'dat-nen';
-            const mappedTypeName = typeNameMap[property.propertyType] || 'đất nền';
+            // Lấy urlSegment THẬT từ quan hệ khu vực của tin. generateSlug(tên) cho
+            // ra 'phuong-yen-hoa' trong khi urlSegment là 'yen-hoa', nên 4 link SEO
+            // bên dưới sẽ trỏ vào trang không tồn tại.
+            const locNode = property.wardLocation || property.districtLocation || property.province || null;
+            const locSlug: string | null = locNode?.urlSegment ?? locNode?.slug ?? null;
+            const locName = locNode?.name || property.ward || property.district || property.city || siteConfig.province.name;
+
+            // Hai bảng ánh xạ viết tay trước đây khai khoá 'MAT_BANG_KHO_XUONG' trong
+            // khi enum thật là 'MAT_BANG', nên MỌI tin mặt bằng rơi vào fallback và 4
+            // link dưới đây trỏ sang danh mục đất nền. Lấy từ taxonomy thì hết lệch.
+            const mappedTypeSlug = typeDef?.slug ?? 'dat-nen';
+            const mappedTypeName = (typeDef?.label ?? 'Đất nền').toLowerCase();
             const isNhaRieng = mappedTypeSlug === 'nha-rieng';
 
             return (
               <>
                 {/* 1. Category + Location: Bán đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh */}
-                <Link href={isRent ? `/search?transactionType=CHO_THUE&propertyType=${property.propertyType}&khuVuc=${locSlug}` : `/${mappedTypeSlug}/${locSlug}`} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
+                <Link href={listingPath({ transaction: isRent ? 'cho-thue' : 'ban', propertyTypeSlug: mappedTypeSlug, locationSlug: locSlug })} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
                   {actionText} {mappedTypeName} {locName}
                 </Link>
 
-                {/* 2. Global Category: Bán đất nền Nghệ An -> /dat-nen */}
-                <Link href={isRent ? `/search?transactionType=CHO_THUE&propertyType=${property.propertyType}` : `/${mappedTypeSlug}`} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
-                  {actionText} {mappedTypeName} Nghệ An
+                {/* 2. Danh mục toàn tỉnh */}
+                <Link href={listingPath({ transaction: isRent ? 'cho-thue' : 'ban', propertyTypeSlug: mappedTypeSlug })} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
+                  {actionText} {mappedTypeName} {siteConfig.province.name}
                 </Link>
 
                 {/* 3. Global Location: Nhà đất bán phường Trường Vinh -> /phuong-truong-vinh */}
-                <Link href={isRent ? `/search?transactionType=CHO_THUE&khuVuc=${locSlug}` : `/${locSlug}`} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
+                <Link href={listingPath({ transaction: isRent ? 'cho-thue' : 'ban', locationSlug: locSlug })} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
                   Nhà đất {isRent ? 'cho thuê' : 'bán'} {locName}
                 </Link>
 
                 {/* 4. Alternative Category + Location: Bán nhà riêng phường Trường Vinh -> /nha-rieng/phuong-truong-vinh */}
-                <Link href={isRent ? `/search?transactionType=CHO_THUE&propertyType=${isNhaRieng ? 'DAT_NEN' : 'NHA_RIENG'}&khuVuc=${locSlug}` : `/${isNhaRieng ? 'dat-nen' : 'nha-rieng'}/${locSlug}`} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
+                <Link href={listingPath({ transaction: isRent ? 'cho-thue' : 'ban', propertyTypeSlug: isNhaRieng ? 'dat-nen' : 'nha-rieng', locationSlug: locSlug })} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-full text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors shadow-sm">
                   {actionText} {isNhaRieng ? 'đất nền' : 'nhà riêng'} {locName}
                 </Link>
               </>

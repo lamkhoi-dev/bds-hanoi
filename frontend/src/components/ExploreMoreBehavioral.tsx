@@ -1,17 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { listingPath } from '@/lib/seo/canonical';
 import Link from 'next/link';
-import { generateSlug } from '@/lib/utils';
+import { propertyTypeByEnum, propertyTypesByEnum } from '@/lib/seo/taxonomy';
 
-const CATEGORIES = [
-  { key: 'DAT_NEN', label: 'Đất nền', path: 'dat-nen' },
-  { key: 'CHUNG_CU', label: 'Chung cư', path: 'chung-cu' },
-  { key: 'NHA_RIENG', label: 'Nhà riêng', path: 'nha-rieng' },
-  { key: 'MAT_BANG', label: 'Mặt bằng', path: 'mat-bang-kho-xuong' },
-  { key: 'BIET_THU', label: 'Biệt thự', path: 'biet-thu-lien-ke' },
-  { key: 'CHO_THUE', label: 'Cho thuê', path: 'search?transactionType=CHO_THUE' }
-];
+/**
+ * Bảng danh mục cũ ở đây tự khai `path: 'biet-thu-lien-ke'` — slug KHÔNG tồn tại trong
+ * taxonomy, nên link biệt thự dẫn vào 404 dưới routing chặt của P4. `CHO_THUE` thì trỏ
+ * vào `/search` (noindex). Nay slug và nhãn đều lấy từ taxonomy.
+ */
+const RENT_KEY = 'CHO_THUE';
 
 export default function ExploreMoreBehavioral() {
   const [links, setLinks] = useState<{ label: string, href: string }[]>([]);
@@ -28,15 +27,20 @@ export default function ExploreMoreBehavioral() {
       const categoryCounts: Record<string, number> = {};
       const districtCounts: Record<string, number> = {};
 
-      recent.forEach((item: any) => {
-        if (item.transactionType === 'CHO_THUE') {
-          categoryCounts['CHO_THUE'] = (categoryCounts['CHO_THUE'] || 0) + 1;
-        } else if (item.category) {
-          categoryCounts[item.category] = (categoryCounts[item.category] || 0) + 1;
-        }
+      // Đoạn URL của quận phải là `urlSegment` thật lấy từ quan hệ khu vực của tin.
+      // Cách cũ dùng generateSlug(tên) cho ra 'huyen-gia-lam' trong khi urlSegment là
+      // 'gia-lam', nên mọi link chéo dẫn vào trang không tồn tại.
+      const districtSegment: Record<string, string> = {};
 
-        if (item.district) {
-          districtCounts[item.district] = (districtCounts[item.district] || 0) + 1;
+      recent.forEach((item: any) => {
+        const type = item.transactionType === 'CHO_THUE' ? RENT_KEY : (item.propertyType || item.category);
+        if (type) categoryCounts[type] = (categoryCounts[type] || 0) + 1;
+
+        const seg = item.districtLocation?.urlSegment;
+        const name = item.districtLocation?.name || item.district;
+        if (seg && name) {
+          districtCounts[name] = (districtCounts[name] || 0) + 1;
+          districtSegment[name] = seg;
         }
       });
 
@@ -45,37 +49,39 @@ export default function ExploreMoreBehavioral() {
 
       // Generate cross links
       topCategories.forEach(catKey => {
-        const catObj = CATEGORIES.find(c => c.key === catKey);
-        if (catObj) {
-          topDistricts.forEach(dist => {
-            const cleanDist = dist.replace('Thành phố ', '').replace('Huyện ', '').replace('Thị xã ', '');
-            const distSlug = generateSlug(dist);
-            
-            if (catKey === 'CHO_THUE') {
-              generatedLinks.push({
-                label: `Cho thuê bất động sản tại ${cleanDist}`,
-                href: `/search?transactionType=CHO_THUE&khuVuc=${distSlug}`
-              });
-            } else {
-              generatedLinks.push({
-                label: `Bán ${catObj.label.toLowerCase()} tại ${cleanDist}`,
-                href: `/${catObj.path}/${distSlug}`
-              });
-            }
+        const isRent = catKey === RENT_KEY;
+        const typeDef = isRent ? undefined : propertyTypeByEnum(catKey);
+        if (!isRent && !typeDef) return;
+
+        topDistricts.forEach(dist => {
+          const cleanDist = dist.replace('Thành phố ', '').replace('Huyện ', '').replace('Thị xã ', '');
+          const locationSlug = districtSegment[dist];
+
+          generatedLinks.push({
+            label: isRent
+              ? `Cho thuê bất động sản tại ${cleanDist}`
+              : `Bán ${typeDef!.label.toLowerCase()} tại ${cleanDist}`,
+            href: listingPath({
+              transaction: isRent ? 'cho-thue' : 'ban',
+              propertyTypeSlug: typeDef?.slug ?? null,
+              locationSlug,
+            }),
           });
-        }
+        });
       });
     }
 
-    // Fallback if not enough links
+    // Fallback không còn gắn địa danh Nghệ An; chỉ dùng danh mục theo loại BĐS,
+    // đúng với mọi tỉnh.
     if (generatedLinks.length < 4) {
       const fallbackLinks = [
-        { label: 'Đất nền Thành phố Vinh', href: '/dat-nen/thanh-pho-vinh' },
-        { label: 'Nhà riêng Thành phố Vinh', href: '/nha-rieng/thanh-pho-vinh' },
-        { label: 'Cho thuê nhà Thành phố Vinh', href: '/search?transactionType=CHO_THUE&khuVuc=thanh-pho-vinh' },
-        { label: 'Mặt bằng kinh doanh Thành phố Vinh', href: '/mat-bang-kho-xuong/thanh-pho-vinh' }
+        ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU']).map((t) => ({
+          label: t.label,
+          href: listingPath({ propertyTypeSlug: t.slug }),
+        })),
+        { label: 'Cho thuê', href: listingPath({ transaction: 'cho-thue' }) }
       ];
-      
+
       const missing = 4 - generatedLinks.length;
       generatedLinks = [...generatedLinks, ...fallbackLinks.slice(0, missing)];
     }

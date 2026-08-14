@@ -1,18 +1,22 @@
 "use client";
 
 import { useRef, useState, useEffect } from 'react';
+import { listingPath } from '@/lib/seo/canonical';
+import { propertyTypesByEnum } from '@/lib/seo/taxonomy';
+import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
+// Bỏ 2 mục địa danh Nghệ An ('Nhà đất Vinh', 'BĐS Hà Tĩnh') — link chết trên site
+// Hà Nội. Đường dẫn dựng qua listingPath để đổi dạng URL chỉ ở một chỗ.
 const navItems = [
   { label: 'Trang chủ', href: '/' },
-  { label: 'Nhà đất Vinh', href: '/thanh-pho-vinh' },
-  { label: 'Đất nền', href: '/dat-nen' },
-  { label: 'Nhà riêng', href: '/nha-rieng' },
-  { label: 'Chung cư', href: '/chung-cu' },
-  { label: 'Dự án', href: '/du-an' },
-  { label: 'BĐS Hà Tĩnh', href: '/ha-tinh' },
-  { label: 'Cho thuê', href: '/search?transactionType=CHO_THUE' },
+  { label: `BĐS ${siteConfig.province.name}`, href: listingPath({ locationSlug: siteConfig.province.slug }) },
+  ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN']).map((t) => ({
+    label: t.label,
+    href: listingPath({ propertyTypeSlug: t.slug }),
+  })),
+  { label: 'Cho thuê', href: listingPath({ transaction: 'cho-thue' }) },
   { label: 'Tin tức', href: '/news' },
 ];
 

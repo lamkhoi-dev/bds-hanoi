@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { siteConfig } from '@/lib/site-config';
 import { Phone, MessageCircle, ArrowUp, Home, Search, Facebook } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -21,9 +22,10 @@ export default function FloatingButtons() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const supportPhone = "0868126826";
-  const supportZaloUrl = "https://zalo.me/0868126826";
-  const supportFacebookUrl = "https://www.facebook.com/nhadatxunghe2026";
+  // Trước đây số điện thoại / Zalo / Facebook của site Nghệ An bị viết cứng ở đây.
+  const supportPhone = siteConfig.contact.phone;
+  const supportZaloUrl = `https://zalo.me/${supportPhone}`;
+  const supportFacebookUrl = siteConfig.contact.facebook;
 
   return (
     <>
