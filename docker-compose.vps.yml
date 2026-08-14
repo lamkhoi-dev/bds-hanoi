@@ -121,7 +121,9 @@ services:
       ACTIVE_PROVINCE_SLUG: ${PROVINCE_SLUG:-ha-noi}
       # Backend dựng URL sitemap phải khớp dạng URL frontend đang phục vụ.
       SEO_MODE: ${SEO_MODE:-report}
-      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
+      # Mặc định TẮT — xem chú thích trong backend/start.sh. Bật đúng một lần cho
+      # lần deploy có migration, rồi trả về false.
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
       TRUST_PROXY: 'true'
       ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
       ENABLE_SCHEDULED_BACKUP: ${ENABLE_SCHEDULED_BACKUP:-false}
