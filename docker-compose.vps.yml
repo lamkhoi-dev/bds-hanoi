@@ -8,7 +8,15 @@ services:
       POSTGRES_DB: ${DB_NAME:-bds_db}
     volumes:
       - pgdata_prod:/var/lib/postgresql/data
-  
+    # Thiếu restart policy: VPS reboot là DB không lên, cả site chết.
+    restart: always
+    # Healthcheck này trước đây bị dán nhầm sang service caddy.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bds_user} -d ${DB_NAME:-bds_db}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
   caddy:
     image: caddy:2-alpine
     container_name: bds-caddy
@@ -16,6 +24,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?SITE_DOMAIN is required}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data_prod:/data
@@ -24,9 +34,8 @@ services:
       - backend
       - minio
       - frontend
-
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bds_user} -d ${DB_NAME:-bds_db}"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2019/config/ >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -57,12 +66,30 @@ services:
   frontend:
     build:
       context: ./frontend
+      # NEXT_PUBLIC_* được bake vào bundle lúc build, nên phải truyền qua args
+      # (truyền qua environment thôi là không đủ).
       args:
-        - NEXT_PUBLIC_SITE_URL=https://nhadatxunghe.vn
+        NEXT_PUBLIC_SITE_URL: https://${SITE_DOMAIN}
+        NEXT_PUBLIC_API_URL: https://${SITE_DOMAIN}/api/v1
+        NEXT_PUBLIC_UPLOAD_BASE_URL: https://${SITE_DOMAIN}/bds-uploads
+        NEXT_PUBLIC_SITE_NAME: ${SITE_NAME:-Nhà Đất Hà Nội}
+        NEXT_PUBLIC_PROVINCE_NAME: ${PROVINCE_NAME:-Hà Nội}
+        NEXT_PUBLIC_PROVINCE_SLUG: ${PROVINCE_SLUG:-ha-noi}
+        # staging => robots.ts chặn index toàn site. Chỉ đổi sang "production"
+        # khi đã có dữ liệu Hà Nội và domain chính thức, nếu không site mới sẽ bị
+        # Google coi là bản trùng nội dung của nhadatxunghe.vn.
+        NEXT_PUBLIC_APP_ENV: ${APP_ENV:-staging}
+        # Giữ 'report' khi mới deploy: lớp quyết định SEO chỉ ghi log và áp noindex,
+        # chưa trả 404/301. Đối chiếu Search Console 1 tuần rồi đổi sang 'enforce'.
+        NEXT_PUBLIC_SEO_MODE: ${SEO_MODE:-report}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+        INTERNAL_API_URL: http://backend:4000/api/v1
+        NEXT_BUILD_CPUS: ${NEXT_BUILD_CPUS:-2}
     container_name: bds-frontend-prod
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: https://nhadatxunghe.vn/api/v1
+      NEXT_PUBLIC_API_URL: https://${SITE_DOMAIN}/api/v1
+      INTERNAL_API_URL: http://backend:4000/api/v1
     depends_on:
       - backend
     restart: always
@@ -76,13 +103,25 @@ services:
       TZ: Asia/Ho_Chi_Minh
       DATABASE_URL: postgresql://${DB_USER:-bds_user}:${DB_PASSWORD:?DB_PASSWORD is required}@postgres:5432/${DB_NAME:-bds_db}?schema=public
       REDIS_HOST: redis
+      REDIS_PORT: '6379'
       REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      # Không có biến này thì app.module.ts rơi về cache in-memory và BullModule không
+      # đăng ký: container Redis vẫn chạy nhưng vô dụng, và refresh token nằm trong RAM
+      # nên mỗi lần restart là toàn bộ user bị đăng xuất.
+      REDIS_ENABLED: ${REDIS_ENABLED:-true}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      # Nạp bằng biến môi trường thay vì commit private key vào repo.
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
       MEILISEARCH_HOST: http://meilisearch:7700
       MEILISEARCH_KEY: ${MEILISEARCH_MASTER_KEY:?MEILISEARCH_MASTER_KEY is required}
-      FRONTEND_URL: https://nhadatxunghe.vn
-      PUBLIC_API_URL: https://nhadatxunghe.vn/api/v1
+      FRONTEND_URL: https://${SITE_DOMAIN}
+      PUBLIC_API_URL: https://${SITE_DOMAIN}/api/v1
+      SITE_NAME: ${SITE_NAME:-Nhà Đất Hà Nội}
+      ACTIVE_PROVINCE_SLUG: ${PROVINCE_SLUG:-ha-noi}
+      # Backend dựng URL sitemap phải khớp dạng URL frontend đang phục vụ.
+      SEO_MODE: ${SEO_MODE:-report}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
       TRUST_PROXY: 'true'
       ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
       ENABLE_SCHEDULED_BACKUP: ${ENABLE_SCHEDULED_BACKUP:-false}
@@ -99,35 +138,45 @@ services:
       FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
       FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL:-}
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-admin123}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
       MINIO_BUCKET: bds-uploads
-      PUBLIC_UPLOAD_BASE_URL: https://nhadatxunghe.vn/bds-uploads
+      PUBLIC_UPLOAD_BASE_URL: https://${SITE_DOMAIN}/bds-uploads
     depends_on:
       - postgres
       - redis
       - meilisearch
       - minio
     ports:
-      - "4000:4000"
+      # Chỉ bind loopback. Trước đây publish 0.0.0.0:4000 nên toàn bộ API truy cập được
+      # qua HTTP thẳng, bỏ qua Caddy/TLS — JWT và mật khẩu đi cleartext.
+      # Muốn debug từ máy khác thì dùng SSH tunnel.
+      - "127.0.0.1:4000:4000"
     volumes:
       - uploads_prod:/app/uploads
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health >/dev/null || exit 1"]
+      # Route thật là /api/v1/health (global prefix), không phải /health. Và phải dùng
+      # 127.0.0.1 vì "localhost" resolve sang ::1 trong khi Node bind 0.0.0.0.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/api/v1/health >/dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 40s
     restart: always
 
   minio:
     image: minio/minio:RELEASE.2024-06-13T22-53-53Z-cpuv1
     container_name: bds-minio-prod
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      # Chỉ loopback. Trước đây console 9001 mở ra internet với mật khẩu mặc định
+      # admin/admin123 — ai cũng đọc/xoá/thay được toàn bộ ảnh upload.
+      # Ảnh công khai vẫn phục vụ qua Caddy tại /bds-uploads/*, không cần publish cổng.
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123}
+      # Bắt buộc khai báo, không cho phép rơi về giá trị mặc định.
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     command: server /data --console-address ":9001"
     volumes:
       - miniodata_prod:/data
@@ -138,8 +187,8 @@ services:
     depends_on:
       - minio
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     entrypoint: >
       /bin/sh -c "
       sleep 5;

@@ -10,11 +10,13 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 FROM node:20-alpine
+WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/firebase-service-account.json ./firebase-service-account.json
+# Firebase credential nạp qua biến môi trường FIREBASE_SERVICE_ACCOUNT (xem .env.prod.example),
+# không bake private key vào image.
 COPY --from=builder /app/start.sh ./start.sh
 RUN sed -i 's/\r$//' ./start.sh && chmod +x ./start.sh
 EXPOSE 4000
