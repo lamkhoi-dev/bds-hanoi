@@ -46,3 +46,37 @@ export function getAreaLabel(key: string) {
   const match = AREA_RANGES.find(r => r.key === key);
   return match ? match.label : null;
 }
+
+export interface NumericRange {
+  min: number | null;
+  max: number | null;
+}
+
+/**
+ * Trả về khoảng giá dạng số cho một priceRangeKey.
+ *
+ * Dùng cho JSON-LD: khi tin không có giá chính xác, ta khai `priceSpecification`
+ * với minPrice/maxPrice thay vì bịa ra `price: 0`. Khoảng hở một đầu (LT_500M chỉ có
+ * max, GT_20B chỉ có min) ánh xạ thẳng sang PriceSpecification.
+ *
+ * `THOA_THUAN` trả null vì không có thông tin giá nào để khai báo.
+ */
+export function getPriceRange(
+  key?: string | null,
+  type: 'CHO_THUE' | 'BAN' | string = 'BAN',
+): NumericRange | null {
+  if (!key) return null;
+  const ranges = type === 'CHO_THUE' ? PRICE_RANGES_RENT : PRICE_RANGES_SELL;
+  const match = ranges.find(r => r.key === key);
+  if (!match) return null;
+  if (match.min === null && match.max === null) return null;
+  return { min: match.min, max: match.max };
+}
+
+export function getAreaRange(key?: string | null): NumericRange | null {
+  if (!key) return null;
+  const match = AREA_RANGES.find(r => r.key === key);
+  if (!match) return null;
+  if (match.min === null && match.max === null) return null;
+  return { min: match.min, max: match.max };
+}
