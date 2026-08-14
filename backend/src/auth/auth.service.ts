@@ -7,18 +7,38 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
+import * as fs from 'fs';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 // Khởi tạo Firebase Admin (chỉ chạy 1 lần)
-const serviceAccountPath = path.resolve(process.cwd(), 'firebase-service-account.json');
+// Ưu tiên biến môi trường FIREBASE_SERVICE_ACCOUNT (JSON thô hoặc base64) để không phải
+// commit private key vào repo; fallback về file firebase-service-account.json cho dev.
+function loadFirebaseCredential() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (raw && raw.trim()) {
+    const json = raw.trim().startsWith('{') ? raw : Buffer.from(raw, 'base64').toString('utf8');
+    return JSON.parse(json);
+  }
+  const serviceAccountPath = path.resolve(process.cwd(), 'firebase-service-account.json');
+  if (fs.existsSync(serviceAccountPath)) {
+    return require(serviceAccountPath);
+  }
+  return null;
+}
+
 try {
   if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(require(serviceAccountPath))
-    });
+    const serviceAccount = loadFirebaseCredential();
+    if (serviceAccount) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } else {
+      console.log('Firebase Admin SDK: chưa cấu hình credential, bỏ qua (đăng nhập OTP sẽ không hoạt động).');
+    }
   }
 } catch (e) {
   console.log("Firebase Admin SDK failed to initialize:", e);

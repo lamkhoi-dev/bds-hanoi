@@ -99,15 +99,14 @@ export class PropertyInteractionService {
       throw new NotFoundException('Bất động sản không tồn tại hoặc chưa được hiển thị');
     }
 
-    const data: any = {};
-    if (channel === 'CALL') data.callClicks = { increment: 1 };
-    else if (channel === 'ZALO') data.zaloClicks = { increment: 1 };
-
-    if (Object.keys(data).length > 0) {
-      await this.prisma.property.update({
-        where: { id: propertyId },
-        data
-      });
+    // Raw SQL để Prisma không áp @updatedAt: bộ đếm tương tác không phải là thay đổi
+    // nội dung, mà updatedAt lại là nguồn <lastmod> của sitemap.
+    if (channel === 'CALL') {
+      await this.prisma
+        .$executeRaw`UPDATE "Property" SET "callClicks" = "callClicks" + 1 WHERE "id" = ${propertyId}`;
+    } else if (channel === 'ZALO') {
+      await this.prisma
+        .$executeRaw`UPDATE "Property" SET "zaloClicks" = "zaloClicks" + 1 WHERE "id" = ${propertyId}`;
     }
 
     // Track via PropertyHistory
@@ -147,9 +146,11 @@ export class PropertyInteractionService {
   }
 
   async incrementView(id: string) {
-    return this.prisma.property.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
+    // Xem chi tiết 3.3 trong plan: `prisma.property.update` áp @updatedAt, nên mỗi lượt
+    // xem trang đẩy Property.updatedAt và làm <lastmod> của mọi tin đổi liên tục —
+    // Google coi lastmod đó là vô nghĩa. Raw SQL bỏ qua @updatedAt.
+    await this.prisma
+      .$executeRaw`UPDATE "Property" SET "views" = "views" + 1 WHERE "id" = ${id}`;
+    return { success: true };
   }
 }

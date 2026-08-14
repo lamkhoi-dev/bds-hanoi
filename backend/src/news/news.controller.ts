@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { NewsService } from './news.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -22,8 +22,12 @@ export class NewsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.newsService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const news = await this.newsService.findOne(id);
+    // Trước đây trả null kèm HTTP 200 -> frontend res.json() ném lỗi -> error.tsx
+    // dựng trang 500. Bài không tồn tại phải là 404 thật (mục Soft 404 trong fix seo).
+    if (!news) throw new NotFoundException('Không tìm thấy bài viết');
+    return news;
   }
 
   @Patch(':id')

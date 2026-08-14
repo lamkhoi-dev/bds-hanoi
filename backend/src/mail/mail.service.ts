@@ -36,8 +36,8 @@ export class MailService {
     }
 
     try {
-      const fromName = process.env.SMTP_FROM_NAME || 'Nhà Đất Xứ Nghệ';
-      const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || 'support@nhadatxunghe.vn';
+      const fromName = process.env.SMTP_FROM_NAME || process.env.SITE_NAME || 'Nhà Đất';
+      const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || '';
       const subject = type === 'ACTIVATION' ? 'Mã xác nhận OTP - Kích hoạt tài khoản' : 'Mã xác nhận OTP - Quên mật khẩu';
       const info = await this.transporter.sendMail({
         from: `"${fromName}" <${fromEmail}>`,
@@ -62,8 +62,8 @@ export class MailService {
     }
 
     try {
-      const fromName = process.env.SMTP_FROM_NAME || 'Nhà Đất Xứ Nghệ';
-      const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || 'support@nhadatxunghe.vn';
+      const fromName = process.env.SMTP_FROM_NAME || process.env.SITE_NAME || 'Nhà Đất';
+      const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || '';
       
       const escapedContent = content
         .replace(/&/g, '&amp;')

@@ -116,7 +116,7 @@ export class PropertyService {
       this.logger.log(`Downgraded ${ids.length} properties to NORMAL.`);
     }
 
-    // 6.2: APPROVED -> EXPIRED sau 1 nĒm, giữ dữ li�!u �Ồ còn l�9ch sử/khôi phục.
+    // 6.2: APPROVED -> EXPIRED sau 1 năm, giữ dữ liệu để còn lịch sử/khôi phục.
     const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
     const propertiesToExpire = await this.prisma.property.findMany({
       where: {
@@ -232,17 +232,17 @@ export class PropertyService {
   async createDraft(userId: string, data: any) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.emailVerified) {
-      throw new ForbiddenException('Vui lòng xác thực email trư�:c khi tạo nháp.');
+      throw new ForbiddenException('Vui lòng xác thực email trước khi tạo nháp.');
     }
 
     const normalizedData = normalizePropertyPayload(data);
     this.validatePropertyPayload(normalizedData, true);
 
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {
-      throw new BadRequestException('Không thỒ �Ēng tin v�:i hình thức CẦN MUA hoặc CẦN THU�`.');
+      throw new BadRequestException('Không thể đăng tin với hình thức CẦN MUA hoặc CẦN THUÊ.');
     }
 
-    // Ch�ng spam tạo draft vô hạn: áp dụng cùng gi�:i hạn �Ēng bài/ngày
+    // Chống spam tạo draft vô hạn: áp dụng cùng giới hạn đăng bài/ngày
     await this.checkDailyPostLimit(userId);
     
     // propertyCode
@@ -265,7 +265,7 @@ export class PropertyService {
     };
     applyRangeKeys(propertyData);
     delete propertyData.images; // Prisma property has string[] images but we migrate to imageObjects if using new schema. Actually, schema still has string[] images. Let's keep both for now if needed. Or just leave it as it works. Wait, schema.prisma has `images String[]`.
-    return this.prisma.property.create({ data: propertyData });
+    return this.prisma.property.create({ data: { ...propertyData, contentUpdatedAt: new Date() } });
   }
 
   private async generateUniquePropertyCode(): Promise<string> {
@@ -283,12 +283,12 @@ export class PropertyService {
 
   private async generateUniqueSlug(title: string, excludeId?: string): Promise<string> {
     const baseSlug = slugify(title);
-    // Thử slug g�c trư�:c
+    // Thử slug gốc trước
     const existing = await this.prisma.property.findUnique({ where: { slug: baseSlug } });
     if (!existing || (excludeId && existing.id === excludeId)) {
       return baseSlug;
     }
-    // Nếu trùng, gắn chu�i ngẫu nhiên 6 ký tự thay vì vòng lặp while(true)
+    // Nếu trùng, gắn chuỗi ngẫu nhiên 6 ký tự thay vì vòng lặp while(true)
     // Tránh DoS khi kẻ tấn công tạo hàng ngàn bài cùng title gây N+1 queries
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     return `${baseSlug}-${randomSuffix}`;
@@ -297,14 +297,14 @@ export class PropertyService {
   async create(userId: string, data: any): Promise<any> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.emailVerified) {
-      throw new ForbiddenException('Vui lòng xác thực email trư�:c khi �Ēng tin.');
+      throw new ForbiddenException('Vui lòng xác thực email trước khi đăng tin.');
     }
 
     const normalizedData = normalizePropertyPayload(data);
     this.validatePropertyPayload(normalizedData);
 
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {
-      throw new BadRequestException('Không thỒ �Ēng tin v�:i hình thức CẦN MUA hoặc CẦN THU�`.');
+      throw new BadRequestException('Không thể đăng tin với hình thức CẦN MUA hoặc CẦN THUÊ.');
     }
 
     await this.checkDailyPostLimit(userId);
@@ -324,19 +324,19 @@ export class PropertyService {
 
     const userBalance = Number(user.balance);
     if (userBalance < postCostInPoints) {
-      throw new BadRequestException({ message: `S� dư trong ví không �ủ �Ồ �Ēng tin (Phí: ${postCost}�). Vui lòng nạp thêm tiền.`, requiresPayment: true });
+      throw new BadRequestException({ message: `Số dư trong ví không đủ để đăng tin (Phí: ${postCost}đ). Vui lòng nạp thêm tiền.`, requiresPayment: true });
     }
 
     // 1. Lọc từ khóa nhạy cảm (Bad Words Filter)
-    const forbiddenWordsStr = settings?.forbiddenWords || 'chửi bậy,nhạy cảm,spam,lừa �ảo,phản ��"ng';
+    const forbiddenWordsStr = settings?.forbiddenWords || 'chửi bậy,nhạy cảm,spam,lừa đảo,phản động';
     const badWords = forbiddenWordsStr.split(',').map(w => w.trim().toLowerCase());
     const contentToCheck = `${normalizedData.title} ${normalizedData.description}`.toLowerCase();
     const hasBadWord = badWords.some(word => contentToCheck.includes(word));
     if (hasBadWord) {
-      throw new BadRequestException('N�"i dung bài �Ēng chứa từ khóa không hợp l�! hoặc nhạy cảm.');
+      throw new BadRequestException('Nội dung bài đăng chứa từ khóa không hợp lệ hoặc nhạy cảm.');
     }
 
-    // 2. Ch�ng trùng lặp n�"i dung (Duplicate Content Check)
+    // 2. Chống trùng lặp nội dung (Duplicate Content Check)
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
@@ -351,7 +351,7 @@ export class PropertyService {
     for (const post of recentPosts) {
       if (post.title.trim().toLowerCase() === normalizedData.title.trim().toLowerCase() ||
           post.description.trim().toLowerCase() === normalizedData.description.trim().toLowerCase()) {
-        throw new BadRequestException('N�"i dung bài viết trùng lặp v�:i m�"t bài bạn �ã �Ēng gần �ây.');
+        throw new BadRequestException('Nội dung bài viết trùng lặp với một bài bạn đã đăng gần đây.');
       }
     }
 
@@ -382,13 +382,13 @@ export class PropertyService {
 
     const createdProperty = await this.prisma.$transaction(async (tx) => {
       if (postCostInPoints > 0) {
-        // Trừ tiền �Ēng tin
+        // Trừ tiền đăng tin
         const charged = await tx.user.updateMany({
           where: { id: userId, balance: { gte: postCostInPoints } },
           data: { balance: { decrement: postCostInPoints } },
         });
         if (charged.count === 0) {
-          throw new BadRequestException({ message: 'S� dư không �ủ �Ồ thanh toán phí �Ēng tin.', requiresPayment: true });
+          throw new BadRequestException({ message: 'Số dư không đủ để thanh toán phí đăng tin.', requiresPayment: true });
         }
 
         await tx.transaction.create({
@@ -398,13 +398,13 @@ export class PropertyService {
             balanceAfter: userBalance - postCostInPoints,
             type: 'DEDUCT',
             amount: postCostInPoints,
-            description: `Phí �Ēng tin: ${normalizedData.title}`,
+            description: `Phí đăng tin: ${normalizedData.title}`,
             status: 'SUCCESS',
           },
         });
       }
 
-      return tx.property.create({ data: propertyData });
+      return tx.property.create({ data: { ...propertyData, contentUpdatedAt: new Date() } });
     });
 
     if (status === 'APPROVED') {
@@ -516,36 +516,27 @@ export class PropertyService {
       take: 6
     });
 
-    const fallbackWards = ['Phường Trường Vinh', 'Phường Thành Vinh', 'Phường Vinh Hưng', 'Phường Vinh Phú', 'Phường Vinh L�"c', 'Phường Cửa Lò'];
-    
-    let mainWardBlocksData: any[] = [];
-    if (featuredLocations.length > 0) {
-      mainWardBlocksData = await Promise.all(
-        featuredLocations.map(async loc => {
-          const items = await getItems(loc.type === 'WARD' ? { wardId: loc.id } : loc.type === 'DISTRICT' ? { districtId: loc.id } : { provinceId: loc.id });
-          return {
-            key: loc.slug || loc.id,
-            title: loc.name,
-            href: `/${loc.slug || ''}`,
-            items
-          };
-        })
-      );
-    } else {
-      mainWardBlocksData = await Promise.all(
-        fallbackWards.map(async ward => {
-          const items = await getItems({ ward: { equals: ward, mode: 'insensitive' } });
-          const slugify = (text: string) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[đĐ]/g, "d").replace(/([^0-9a-z-\s])/g, '').replace(/(\s+)/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-          const slug = ward === 'Phường Cửa Lò' ? 'tx-cua-lo' : slugify(ward.replace('Phường ', '').replace('Thị xã ', ''));
-          return {
-            key: ward,
-            title: ward,
-            href: `/${slug}`,
-            items
-          };
-        })
-      );
-    }
+    // Trước đây có mảng fallback 6 phường của TP Vinh kèm một hàm slugify viết nội tuyến
+    // và trường hợp đặc biệt 'Phường Cửa Lò' -> 'tx-cua-lo'. Slug tự chế đó lệch với
+    // urlSegment thật trong DB, và mảng cứng thì vô nghĩa khi đổi tỉnh.
+    // Không có khu vực nào được đánh dấu nổi bật thì trả rỗng, trang chủ tự ẩn khối.
+    const mainWardBlocksData = await Promise.all(
+      featuredLocations.map(async (loc) => {
+        const items = await getItems(
+          loc.type === 'WARD' || loc.type === 'OLD_WARD'
+            ? { wardId: loc.id }
+            : loc.type === 'DISTRICT'
+              ? { districtId: loc.id }
+              : { provinceId: loc.id },
+        );
+        return {
+          key: loc.urlSegment,
+          title: loc.name,
+          href: `/${loc.urlSegment}`,
+          items,
+        };
+      }),
+    );
 
     const [
       featuredVip,
@@ -565,15 +556,9 @@ export class PropertyService {
       this.prisma.user.count()
     ]);
 
-    const tpVinhItems = await this.prisma.property.findMany({
-      where: { ...baseWhere, district: { contains: 'Vinh' }, tier: 'NORMAL' },
-      orderBy: [{ status: 'asc' }, { publishedAt: { sort: 'desc', nulls: 'last' } }, { pushedAt: { sort: 'desc', nulls: 'last' } }],
-      take: 12,
-      include: includeOptions
-    });
     
     const otherLocationItems = await this.prisma.property.findMany({
-      where: { ...baseWhere, district: { notIn: ['Vinh', 'Diễn Châu', 'Thái Hòa'] }, city: { not: { contains: 'Hà Tĩnh' } }, tier: 'NORMAL' },
+      where: { ...baseWhere, tier: 'NORMAL' },
       orderBy: [{ status: 'asc' }, { publishedAt: { sort: 'desc', nulls: 'last' } }, { pushedAt: { sort: 'desc', nulls: 'last' } }],
       take: 12,
       include: includeOptions
@@ -674,26 +659,8 @@ export class PropertyService {
       }
     }
 
-    const dienChauItems = await this.prisma.property.findMany({
-      where: { ...baseWhere, district: { contains: 'Diễn Châu', mode: 'insensitive' }, tier: 'NORMAL' },
-      orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }],
-      take: 12,
-      include: includeOptions
-    });
 
-    const thaiHoaItems = await this.prisma.property.findMany({
-      where: { ...baseWhere, district: { contains: 'Thái Hòa', mode: 'insensitive' }, tier: 'NORMAL' },
-      orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }],
-      take: 12,
-      include: includeOptions
-    });
 
-    const haTinhItems = await this.prisma.property.findMany({
-      where: { ...baseWhere, city: { contains: 'Hà Tĩnh', mode: 'insensitive' }, tier: 'NORMAL' },
-      orderBy: [{ publishedAt: { sort: 'desc', nulls: 'last' } }],
-      take: 12,
-      include: includeOptions
-    });
 
     const result = {
       featuredVip: { title: 'Tin nổi bật', href: '/search?tier=VIP', items: featuredVip },
@@ -712,13 +679,11 @@ export class PropertyService {
         { key: 'MAT_BANG', title: 'Mặt bằng, kho xưởng', href: '/mat-bang-kho-xuong', items: matBang },
         { key: 'BDS_KHAC', title: 'Bất động sản khác', href: '/bds-khac', items: bdsKhac },
       ],
-      mainWardBlocks: [
-        { key: 'tp-vinh', title: 'TP Vinh', href: '/thanh-pho-vinh', items: tpVinhItems },
-        { key: 'dien-chau', title: 'Diễn Châu', href: '/huyen-dien-chau', items: dienChauItems },
-        { key: 'ha-tinh', title: 'Hà Tĩnh', href: '/ha-tinh', items: haTinhItems }
-      ],
+      // Các tab khu vực trên trang chủ giờ lấy từ Location.isFeatured (do importer đặt
+      // theo sheet "hot" của khách) thay vì 4 khối gán cứng TP Vinh / Diễn Châu /
+      // Thái Hòa / Hà Tĩnh với href trỏ vào slug tự chế.
+      mainWardBlocks: mainWardBlocksData,
       otherLocationTabs: [
-        { key: 'thai-hoa', title: 'Thái Hòa', href: '/thi-xa-thai-hoa', items: thaiHoaItems },
         { key: 'khu-vuc-khac', title: 'Khu vực khác', href: '/khu-vuc', items: otherLocationItems }
       ],
       stats: { properties: totalProperties, users: totalUsers, projects: 15, satisfaction: 99 },
@@ -810,16 +775,35 @@ export class PropertyService {
     const cached = await this.cacheManager.get<any>(cacheKey);
     if (cached) return cached;
 
+    // `urlSegment` mới là cột dựng URL — nó `@unique` toàn cục, còn `slug` chỉ duy nhất
+    // trong phạm vi cha (dữ liệu Hà Nội có 125 nhóm tên trùng, chạm 275/736 bản ghi).
+    // Trả cả hai: frontend ưu tiên `urlSegment`, `slug` giữ lại cho chỗ gọi cũ.
+    const locationFields = {
+      select: { id: true, name: true, shortName: true, slug: true, urlSegment: true, type: true },
+    };
     const property = await this.prisma.property.findUnique({
       where: { id },
-      include: { user: { select: { id: true, slug: true, name: true, avatar: true, phone: true, isPhoneVisible: true, createdAt: true } }, imageObjects: true },
+      include: {
+        user: { select: { id: true, slug: true, name: true, avatar: true, phone: true, isPhoneVisible: true, createdAt: true } },
+        imageObjects: true,
+        // Cần đoạn URL thật của tỉnh/quận/phường để dựng breadcrumb. Không suy được từ
+        // tên: slugify("Phường Trường Vinh") = "phuong-truong-vinh" trong khi urlSegment
+        // là "truong-vinh". Quan hệ có thể null (dữ liệu cũ) — frontend sẽ lược cấp đó.
+        province: locationFields,
+        districtLocation: locationFields,
+        wardLocation: locationFields,
+      },
     });
     if (!property) throw new NotFoundException('Không tìm thấy bất động sản');
-    
+
     if (property.user && property.user.isPhoneVisible === false) {
       property.user.phone = 'Đã ẩn';
     }
-    
+
+    // Trước đây chỉ ĐỌC cache mà không bao giờ GHI, nên cacheKey và clearPropertyCache
+    // đều vô tác dụng và mọi lượt xem đều truy vấn DB.
+    await this.cacheManager.set(cacheKey, property, 60_000).catch(() => undefined);
+
     return property;
   }
 
@@ -833,12 +817,12 @@ export class PropertyService {
 
   async promote(userId: string, propertyId: string, type: 'VIP' | 'UP', packageId?: string, customDays?: number) {
     const updatedProperty = await this.prisma.$transaction(async (tx) => {
-      // Sử dụng pessimistic locking �Ồ ngĒn chặn Race Condition (trừ ti� n âm, vượt gi�:i hạn)
+      // Sử dụng pessimistic locking để ngăn chặn Race Condition (trừ tiền âm, vượt giới hạn)
       const userRaw: any[] = await tx.$queryRaw`SELECT * FROM "User" WHERE id = ${userId} FOR UPDATE`;
       const user = userRaw[0];
       const property = await tx.property.findUnique({ where: { id: propertyId } });
 
-      if (!property || property.userId !== userId) throw new ForbiddenException('Bạn không có quy� n thực hi�!n thao tác này');
+      if (!property || property.userId !== userId) throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này');
       if (property.status !== 'APPROVED') throw new BadRequestException('Chỉ tin đã duyệt mới có thể UP hoặc lên VIP');
 
       const settings = await tx.systemSettings.findUnique({ where: { id: 'default_settings' } });
@@ -882,7 +866,7 @@ export class PropertyService {
 
         const maxUpPerPostPerDay = (currentSettings as any).maxUpPerPostPerDay ?? 10;
         if (todayUpForPost >= maxUpPerPostPerDay) {
-          throw new BadRequestException(`BẠN ĐÒ ĐẠT GI�aI HẠN: T�i �a ${maxUpPerPostPerDay} lượt UP/ngày cho m�i tin �Ēng.`);
+          throw new BadRequestException(`BẠN ĐÃ ĐẠT GIỚI HẠN: Tối đa ${maxUpPerPostPerDay} lượt UP/ngày cho mỗi tin đăng.`);
         }
 
         const todayUpTransactions = await tx.transaction.count({
@@ -896,7 +880,7 @@ export class PropertyService {
 
         const maxUpsPerDay = (currentSettings as any).maxUpsPerDay ?? 50;
         if (todayUpTransactions >= maxUpsPerDay) {
-          throw new BadRequestException(`BẠN ĐÒ ĐẠT GI�aI HẠN: T�i �a ${maxUpsPerDay} lượt UP/ngày.`);
+          throw new BadRequestException(`BẠN ĐÃ ĐẠT GIỚI HẠN: Tối đa ${maxUpsPerDay} lượt UP/ngày.`);
         }
 
         const freeUpsPerDay = (currentSettings as any).freeUpsPerUserPerDay ?? 1;
@@ -909,12 +893,12 @@ export class PropertyService {
         throw new BadRequestException('Loại dịch vụ không hợp lệ');
       }
 
-      if (!user) throw new ForbiddenException('Người dùng không t�n tại');
+      if (!user) throw new ForbiddenException('Người dùng không tồn tại');
 
       const costInPoints = Math.floor(cost / 1000);
       const userBalance = Number(user.balance);
       if (userBalance < costInPoints) {
-        throw new BadRequestException({ message: 'S� dư trong ví không �ủ. Vui lòng nạp thêm tiền.', requiresPayment: true });
+        throw new BadRequestException({ message: 'Số dư trong ví không đủ. Vui lòng nạp thêm tiền.', requiresPayment: true });
       }
 
       if (costInPoints > 0) {
@@ -951,7 +935,7 @@ export class PropertyService {
         newTier = 'VIP';
         newExpiration = property.tierExpiresAt;
       } else if (property.tierExpiresAt && property.tierExpiresAt > new Date() && property.tier === type) {
-        // C�"ng d�n thời gian nếu cùng loại tier
+        // Cộng dồn thời gian nếu cùng loại tier
         newExpiration = new Date(property.tierExpiresAt.getTime() + durationMs);
       }
 
@@ -980,7 +964,7 @@ export class PropertyService {
   async unpromote(userId: string, propertyId: string) {
     const property = await this.prisma.property.findUnique({ where: { id: propertyId } });
     if (!property) throw new NotFoundException('Không tìm thấy bất động sản');
-    if (property.userId !== userId) throw new ForbiddenException('Bạn không có quyền thực hi�!n thao tác này');
+    if (property.userId !== userId) throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này');
     
     const updatedProperty = await this.prisma.property.update({
       where: { id: propertyId },
@@ -1006,7 +990,7 @@ export class PropertyService {
 
     const updated = await this.prisma.property.update({
       where: { id },
-      data: { status }
+      data: { status, contentUpdatedAt: new Date() }
     });
 
     if (status === 'APPROVED') {
@@ -1027,12 +1011,12 @@ export class PropertyService {
     }
 
     if (property.status !== 'EXPIRED' && property.status !== 'APPROVED') {
-      throw new BadRequestException('Ch�0 có thỒ gia hạn bài viết �ã hết hạn hoặc �ang hiỒn th�9');
+      throw new BadRequestException('Chỉ có thể gia hạn bài viết đã hết hạn hoặc đang hiển thị');
     }
 
     const extended = await this.prisma.property.update({
       where: { id },
-      data: { status: 'APPROVED', createdAt: new Date() }
+      data: { status: 'APPROVED', createdAt: new Date(), contentUpdatedAt: new Date() }
     });
     
     await this.searchService.addDocument(extended).catch(() => null);
@@ -1050,19 +1034,19 @@ export class PropertyService {
     this.validatePropertyPayload(normalizedData, true);
 
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {
-      throw new BadRequestException('Không thỒ �Ēng tin v�:i hình thức CẦN MUA hoặc CẦN THU�`.');
+      throw new BadRequestException('Không thể đăng tin với hình thức CẦN MUA hoặc CẦN THUÊ.');
     }
 
     // 1. Lọc từ khóa nhạy cảm (Bad Words Filter)
     const settings = await this.prisma.systemSettings.findUnique({ where: { id: 'default_settings' } });
-    const forbiddenWordsStr = settings?.forbiddenWords || 'chửi bậy,nhạy cảm,spam,lừa �ảo,phản ��"ng';
+    const forbiddenWordsStr = settings?.forbiddenWords || 'chửi bậy,nhạy cảm,spam,lừa đảo,phản động';
     const badWords = forbiddenWordsStr.split(',').map(w => w.trim().toLowerCase());
     const title = normalizedData.title || property.title;
     const desc = normalizedData.description || property.description;
     const contentToCheck = `${title} ${desc}`.toLowerCase();
     
     if (badWords.some(word => contentToCheck.includes(word))) {
-      throw new BadRequestException('N�"i dung bài �Ēng chứa từ khóa không hợp l�! hoặc nhạy cảm.');
+      throw new BadRequestException('Nội dung bài đăng chứa từ khóa không hợp lệ hoặc nhạy cảm.');
     }
 
     const isPreModerationEnabled = settings?.isPreModerationEnabled ?? true;
@@ -1168,7 +1152,8 @@ export class PropertyService {
   
       return tx.property.update({
         where: { id },
-        data: updateData,
+        // contentUpdatedAt là mốc "nội dung thực sự đổi" dùng cho <lastmod> của sitemap.
+        data: { ...updateData, contentUpdatedAt: new Date() },
       });
     });
 
@@ -1251,7 +1236,7 @@ export class PropertyService {
     
     const removed = await this.prisma.property.update({
       where: { id },
-      data: { status: 'DELETED', deletedAt: new Date() }
+      data: { status: 'DELETED', deletedAt: new Date(), contentUpdatedAt: new Date() }
     });
     await this.searchService.deleteDocument(id).catch(() => null);
     if (user?.role === 'ADMIN') {
@@ -1277,12 +1262,12 @@ export class PropertyService {
     }
 
     if (property.status !== 'DELETED' && property.status !== 'EXPIRED') {
-      throw new BadRequestException('Ch�0 có thỒ khôi phục bài viết �ã xoá hoặc hết hạn');
+      throw new BadRequestException('Chỉ có thể khôi phục bài viết đã xoá hoặc hết hạn');
     }
 
     const restored = await this.prisma.property.update({
       where: { id },
-      data: { status: 'HIDDEN', deletedAt: null } // Restore to HIDDEN so user can review and publish again
+      data: { status: 'HIDDEN', deletedAt: null, contentUpdatedAt: new Date() } // Restore to HIDDEN so user can review and publish again
     });
     await this.searchService.deleteDocument(id).catch(() => null);
     if (user?.role === 'ADMIN') {
@@ -1334,14 +1319,18 @@ export class PropertyService {
         status: { in: [...this.publicStatuses] },
         deletedAt: null,
       },
+      // Sắp xếp và lấy lastmod theo contentUpdatedAt: updatedAt bị đẩy bởi lượt xem,
+      // đếm click và cron gia hạn VIP nên không phản ánh thay đổi nội dung.
       orderBy: [
-        { updatedAt: 'desc' },
+        { contentUpdatedAt: 'desc' },
       ],
       take: 50000,
       select: {
         id: true,
         title: true,
-        updatedAt: true,
+        contentUpdatedAt: true,
+        publishedAt: true,
+        createdAt: true,
         tier: true,
       },
     });
@@ -1374,11 +1363,11 @@ export class PropertyService {
     ]);
 
     if (totalPostsCount >= maxTotalPostsPerUser) {
-      throw new BadRequestException(`BẠN ĐÒ ĐẠT GI�aI HẠN: T�i �a ${maxTotalPostsPerUser} tin/tài khoản.`);
+      throw new BadRequestException(`BẠN ĐÃ ĐẠT GIỚI HẠN: Tối đa ${maxTotalPostsPerUser} tin/tài khoản.`);
     }
 
     if (todayPostsCount >= maxPostsPerDay) {
-      throw new BadRequestException(`BẠN � Ò � ẠT GI�aI HẠN: T�i �a ${maxPostsPerDay} tin/ngày.`);
+      throw new BadRequestException(`BẠN ĐÃ ĐẠT GIỚI HẠN: Tối đa ${maxPostsPerDay} tin/ngày.`);
     }
 
     const freePostsLimit = settings?.freePostsPerDay ?? 2;
@@ -1393,25 +1382,44 @@ export class PropertyService {
     filters.page = filters.page || 1;
     filters.limit = filters.limit || 20;
 
-    let transactionType = 'BAN';
-    if (loaiBdsSlug === 'cho-thue' || khuVucSlug === 'cho-thue' || loaiBdsSlug?.includes('cho-thue')) {
-      transactionType = 'CHO_THUE';
+    // Caller (P4) đã resolve sẵn transactionType/propertyType từ taxonomy dùng chung.
+    // Chỉ đoán từ slug khi caller chưa truyền — giữ tương thích một release.
+    const hasResolvedTransaction = Boolean(filters.transactionType);
+    const hasResolvedPropertyType = Boolean(filters.propertyType);
+
+    if (!hasResolvedTransaction) {
+      filters.transactionType =
+        loaiBdsSlug === 'cho-thue' || khuVucSlug === 'cho-thue' || loaiBdsSlug?.includes('cho-thue')
+          ? 'CHO_THUE'
+          : 'BAN';
     }
-    filters.transactionType = transactionType;
 
     let actualLoaiBdsSlug = loaiBdsSlug;
     let actualKhuVucSlug = khuVucSlug;
 
     if (khuVucSlug === 'toan-quoc') {
-      const locMatch = await this.prisma.location.findFirst({ where: { slug: loaiBdsSlug } });
+      // Tra theo urlSegment, KHÔNG theo slug: sau khi có dữ liệu Hà Nội, `slug` chỉ còn
+      // duy nhất trong phạm vi cha (125 nhóm tên trùng nhau), nên findFirst theo slug
+      // có thể trả về nhầm khu vực của quận khác.
+      const locMatch = await this.prisma.location.findFirst({
+        where: { urlSegment: loaiBdsSlug, isActive: true },
+      });
       if (locMatch) {
         actualKhuVucSlug = loaiBdsSlug;
         actualLoaiBdsSlug = 'tat-ca';
       }
     }
 
-    if (actualLoaiBdsSlug && actualLoaiBdsSlug !== 'tat-ca' && actualLoaiBdsSlug !== 'ban' && !actualLoaiBdsSlug.includes('cho-thue')) {
-      const categoryCandidates = ['dat-nen', 'nha-rieng', 'chung-cu', 'du-an', 'mat-bang-kho-xuong', 'bds-khac'];
+    // Danh sách này thiếu 'biet-thu' nên trang /biet-thu chạy ở frontend mà backend
+    // không lọc đúng loại. Nay chỉ dùng làm đường lui khi caller chưa resolve.
+    if (
+      !hasResolvedPropertyType &&
+      actualLoaiBdsSlug &&
+      actualLoaiBdsSlug !== 'tat-ca' &&
+      actualLoaiBdsSlug !== 'ban' &&
+      !actualLoaiBdsSlug.includes('cho-thue')
+    ) {
+      const categoryCandidates = ['dat-nen', 'nha-rieng', 'chung-cu', 'du-an', 'mat-bang-kho-xuong', 'biet-thu', 'bds-khac'];
       const matchedCategory = categoryCandidates.find((candidate) => actualLoaiBdsSlug.includes(candidate));
       filters.propertyType = normalizePropertyType(matchedCategory || actualLoaiBdsSlug) as any;
     }
@@ -1419,16 +1427,28 @@ export class PropertyService {
     // 2. Map `khu-vuc` slug to Location
     if (actualKhuVucSlug && actualKhuVucSlug !== 'toan-quoc') {
       const matchedLocation = await this.prisma.location.findFirst({
-        where: { slug: actualKhuVucSlug }
+        where: { urlSegment: actualKhuVucSlug, isActive: true }
       });
 
       if (matchedLocation) {
+        // Lọc theo TÊN vì các cột city/district/ward/oldWard trên Property là văn bản
+        // tự do và là nguồn sự thật cho hiển thị lẫn tìm kiếm.
         if (matchedLocation.type === 'WARD') filters.ward = matchedLocation.name;
+        if (matchedLocation.type === 'OLD_WARD') filters.oldWard = matchedLocation.name;
         if (matchedLocation.type === 'DISTRICT') filters.district = matchedLocation.name;
         if (matchedLocation.type === 'CITY') filters.city = matchedLocation.name;
       } else {
-        // If not a recognized location, treat it as a dynamic search query
-        filters.q = actualKhuVucSlug.replace(/-/g, ' ');
+        // Trước đây rơi về tìm kiếm toàn văn `filters.q = slug.replace(/-/g,' ')`, nên
+        // MỌI URL rác (/nha-rieng/$, /chung-cu/&) đều ra một trang 200 index được.
+        // Nay trả rỗng kèm cờ để frontend quyết định 404.
+        return {
+          vips: [],
+          normals: [],
+          total: 0,
+          page: filters.page,
+          limit: filters.limit,
+          unknownLocation: actualKhuVucSlug,
+        };
       }
     }
     
