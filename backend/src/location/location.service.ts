@@ -12,6 +12,9 @@ export interface LocationNodeDto {
   path: string;
   depth: number;
   sortOrder: number;
+  /** Nhãn nhóm điều hướng ("Trung tâm"…). null = tỉnh này không phân nhóm. */
+  group: string | null;
+  groupOrder: number;
   isFeatured: boolean;
   isSeoEnabled: boolean;
 }
@@ -46,9 +49,17 @@ export class LocationService {
 
   constructor(private prisma: PrismaService) {}
 
-  /** Tỉnh/thành mà site này phục vụ. Dữ liệu ngoài phạm vi bị lọc bỏ ở mọi truy vấn. */
-  private get provinceSlug(): string {
-    return process.env.ACTIVE_PROVINCE_SLUG || 'ha-noi';
+  /**
+   * Tỉnh/thành mà site này phục vụ. Dữ liệu ngoài phạm vi bị lọc bỏ ở mọi truy vấn.
+   *
+   * Nhận DANH SÁCH ngăn cách bằng dấu phẩy: site "Nhà đất xứ Nghệ" phục vụ cả Nghệ An
+   * lẫn Hà Tĩnh, nên một giá trị đơn sẽ cắt mất nửa dữ liệu đang chạy.
+   * Ví dụ: ACTIVE_PROVINCE_SLUG="nghe-an,ha-tinh"
+   */
+  private get provinceSlugs(): string[] {
+    const raw = process.env.ACTIVE_PROVINCE_SLUG || 'ha-noi';
+    const list = raw.split(',').map((s) => s.trim()).filter(Boolean);
+    return list.length > 0 ? list : ['ha-noi'];
   }
 
   /** Gọi sau khi import hoặc khi admin sửa khu vực. */
@@ -61,7 +72,10 @@ export class LocationService {
     const rows = await this.prisma.location.findMany({
       where: {
         isActive: true,
-        OR: [{ path: this.provinceSlug }, { path: { startsWith: `${this.provinceSlug}/` } }],
+        OR: this.provinceSlugs.flatMap((slug) => [
+          { path: slug },
+          { path: { startsWith: `${slug}/` } },
+        ]),
       },
       select: {
         id: true,
@@ -73,6 +87,8 @@ export class LocationService {
         path: true,
         depth: true,
         sortOrder: true,
+        group: true,
+        groupOrder: true,
         isFeatured: true,
         isSeoEnabled: true,
       },
@@ -94,7 +110,7 @@ export class LocationService {
       else childrenOf.set(key, [row]);
     }
 
-    this.logger.log(`Đã nạp ${rows.length} khu vực cho tỉnh "${this.provinceSlug}"`);
+    this.logger.log(`Đã nạp ${rows.length} khu vực cho: ${this.provinceSlugs.join(", ")}`);
     return { bySegment, byId, childrenOf, all: rows, loadedAt: Date.now() };
   }
 
@@ -214,6 +230,10 @@ export class LocationService {
       type: district.type,
       slug: district.urlSegment,
       parentId: district.parentId,
+      // Nhãn nhóm menu ngang. null với tỉnh không phân nhóm (Nghệ An) -> frontend
+      // giữ menu phẳng, nên cùng một build phục vụ được cả hai site.
+      group: district.group,
+      groupOrder: district.groupOrder,
       parent: { id: province.id, name: province.name },
       children: (snap.childrenOf.get(district.id) ?? []).map((child) => ({
         id: child.id,

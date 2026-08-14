@@ -29,6 +29,8 @@ interface WardNode {
 }
 interface DistrictNode extends Omit<WardNode, 'externalRef'> {
   sortOrder: number;
+  group?: string | null;
+  groupOrder?: number;
   wards: WardNode[];
   oldWards: WardNode[];
 }
@@ -59,6 +61,9 @@ type Desired = {
   path: string;
   depth: number;
   sortOrder: number;
+  /** Nhãn nhóm điều hướng, chỉ đặt ở cấp quận/huyện. null = không phân nhóm. */
+  group?: string | null;
+  groupOrder?: number;
   externalRef: string | null;
 };
 
@@ -100,6 +105,8 @@ async function upsertNode(d: Desired, segmentOwners: Map<string, string>): Promi
     existing.path !== d.path ||
     existing.depth !== d.depth ||
     existing.sortOrder !== d.sortOrder ||
+    existing.group !== (d.group ?? null) ||
+    existing.groupOrder !== (d.groupOrder ?? 0) ||
     existing.externalRef !== d.externalRef ||
     existing.isActive !== true;
 
@@ -158,6 +165,8 @@ async function main() {
         path: districtPath,
         depth: 1,
         sortOrder: district.sortOrder,
+        group: district.group ?? null,
+        groupOrder: district.groupOrder ?? 0,
         externalRef: null,
       },
       segmentOwners,

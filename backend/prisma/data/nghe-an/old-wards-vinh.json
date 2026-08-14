@@ -1,0 +1,145 @@
+{
+  "note": "Phường/xã CŨ của TP Vinh, dùng cho site nhadatxunghe.vn. urlSegment do import-vinh-old-wards.ts sinh lúc chạy để tránh đụng dữ liệu Nghệ An sẵn có.",
+  "parentDistrict": {
+    "matchNames": [
+      "thanh pho vinh",
+      "tp vinh",
+      "vinh"
+    ],
+    "displayName": "Thành phố Vinh"
+  },
+  "oldWards": [
+    {
+      "name": "Phường Đông Vĩnh",
+      "externalRef": "VINH-O1"
+    },
+    {
+      "name": "Phường Hà Huy Tập",
+      "externalRef": "VINH-O2"
+    },
+    {
+      "name": "Phường Lê Lợi",
+      "externalRef": "VINH-O3"
+    },
+    {
+      "name": "Phường Quán Bàu",
+      "externalRef": "VINH-O4"
+    },
+    {
+      "name": "Phường Hưng Bình",
+      "externalRef": "VINH-O5"
+    },
+    {
+      "name": "Phường Hưng Phúc",
+      "externalRef": "VINH-O6"
+    },
+    {
+      "name": "Phường Hưng Dũng",
+      "externalRef": "VINH-O7"
+    },
+    {
+      "name": "Phường Cửa Nam",
+      "externalRef": "VINH-O8"
+    },
+    {
+      "name": "Phường Quang Trung",
+      "externalRef": "VINH-O9"
+    },
+    {
+      "name": "Phường Trường Thi",
+      "externalRef": "VINH-O10"
+    },
+    {
+      "name": "Phường Bến Thủy",
+      "externalRef": "VINH-O11"
+    },
+    {
+      "name": "Phường Trung Đô",
+      "externalRef": "VINH-O12"
+    },
+    {
+      "name": "Phường Nghi Phú",
+      "externalRef": "VINH-O13"
+    },
+    {
+      "name": "Phường Hưng Đông",
+      "externalRef": "VINH-O14"
+    },
+    {
+      "name": "Phường Hưng Lộc",
+      "externalRef": "VINH-O15"
+    },
+    {
+      "name": "Xã Hưng Hòa",
+      "externalRef": "VINH-O16"
+    },
+    {
+      "name": "Phường Vinh Tân",
+      "externalRef": "VINH-O17"
+    },
+    {
+      "name": "Phường Nghi Thủy",
+      "externalRef": "VINH-O18"
+    },
+    {
+      "name": "Phường Nghi Tân",
+      "externalRef": "VINH-O19"
+    },
+    {
+      "name": "Phường Thu Thủy",
+      "externalRef": "VINH-O20"
+    },
+    {
+      "name": "Phường Nghi Hòa",
+      "externalRef": "VINH-O21"
+    },
+    {
+      "name": "Phường Nghi Hải",
+      "externalRef": "VINH-O22"
+    },
+    {
+      "name": "Phường Nghi Hương",
+      "externalRef": "VINH-O23"
+    },
+    {
+      "name": "Phường Nghi Thu",
+      "externalRef": "VINH-O24"
+    },
+    {
+      "name": "Xã Nghi Phong",
+      "externalRef": "VINH-O25"
+    },
+    {
+      "name": "Xã Nghi Xuân",
+      "externalRef": "VINH-O26"
+    },
+    {
+      "name": "Xã Nghi Liên",
+      "externalRef": "VINH-O27"
+    },
+    {
+      "name": "Xã Nghi Ân",
+      "externalRef": "VINH-O28"
+    },
+    {
+      "name": "Xã Phúc Thọ",
+      "externalRef": "VINH-O29"
+    },
+    {
+      "name": "Xã Nghi Kim",
+      "externalRef": "VINH-O30"
+    },
+    {
+      "name": "Phường Nghi Đức",
+      "externalRef": "VINH-O31"
+    },
+    {
+      "name": "Xã Nghi Thái",
+      "externalRef": "VINH-O32"
+    },
+    {
+      "name": "Xã Hưng Chính",
+      "externalRef": "VINH-O33"
+    }
+  ]
+}

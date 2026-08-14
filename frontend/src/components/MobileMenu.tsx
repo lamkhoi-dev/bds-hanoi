@@ -5,7 +5,7 @@ import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X, Home, Building2, MapPin, User, Plus } from 'lucide-react';
-import { useLocations } from '@/hooks/useLocations';
+import { useLocations, groupLocations } from '@/hooks/useLocations';
 import { useAuth } from '@/contexts/AuthContext';
 
 /** Loại BĐS hiện trên menu, theo thứ tự. Nhãn/slug vẫn lấy từ taxonomy. */
@@ -19,6 +19,7 @@ export default function MobileMenu() {
   const [mounted, setMounted] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<number[]>([0]);
   const { locations } = useLocations();
+  const locationGroups = groupLocations(locations);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -53,19 +54,28 @@ export default function MobileMenu() {
         })),
       ]
     },
-    {
-      title: 'Khu vực',
-      icon: <MapPin className="w-5 h-5 text-gray-500" />,
-      links: [
-        // Trước đây là 11 quận/huyện Nghệ An viết cứng với slug tự chế. Lấy 10 quận
-        // đầu từ cây khu vực; P-sau sẽ chia thành 3 menu Trung tâm/Cận trung tâm/
-        // Ngoại thành khi khách gửi bảng phân nhóm (câu B1).
-        ...locations.slice(0, 10).map((d: any) => ({
-          label: d.shortName || d.name,
-          href: listingPath({ locationSlug: d.slug }),
-        })),
-      ]
-    },
+    // Khách đã gửi bảng phân nhóm (câu B1): Hà Nội chia Trung tâm / Cận trung tâm /
+    // Ngoại thành, mỗi nhóm 10 quận. Nhóm lấy từ `Location.group` chứ không viết cứng,
+    // nên Nghệ An (không phân nhóm) tự động giữ một mục "Khu vực" phẳng như cũ.
+    ...(locationGroups.length > 0
+      ? locationGroups.map((g) => ({
+          title: g.label,
+          icon: <MapPin className="w-5 h-5 text-gray-500" />,
+          links: g.items.map((d) => ({
+            label: d.shortName || d.name,
+            href: listingPath({ locationSlug: d.slug }),
+          })),
+        }))
+      : [
+          {
+            title: 'Khu vực',
+            icon: <MapPin className="w-5 h-5 text-gray-500" />,
+            links: locations.slice(0, 10).map((d: any) => ({
+              label: d.shortName || d.name,
+              href: listingPath({ locationSlug: d.slug }),
+            })),
+          },
+        ]),
     {
       title: 'Dành cho bạn',
       icon: <User className="w-5 h-5 text-gray-500" />,

@@ -22,7 +22,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as XLSX from 'xlsx';
 import { slugify, stripAccents } from '../property/property-utils';
-import { HANOI_DISTRICTS, stripUnitPrefix } from './locations-hanoi-districts';
+import {
+  HANOI_DISTRICTS,
+  buildDistrictGroupIndex,
+  stripUnitPrefix,
+} from './locations-hanoi-districts';
 
 const PROVINCE = { name: 'Thành phố Hà Nội', shortName: 'Hà Nội', slug: 'ha-noi' };
 
@@ -39,6 +43,9 @@ interface DistrictNode {
   slug: string;
   urlSegment: string;
   sortOrder: number;
+  /** Nhãn nhóm menu ngang ("Trung tâm"…) — khách gửi ở câu B1. */
+  group: string | null;
+  groupOrder: number;
   wards: WardNode[];
   oldWards: WardNode[];
 }
@@ -96,6 +103,8 @@ function main() {
       slug: slugify(d.shortName),
       urlSegment: '',
       sortOrder: 1000 + i, // ghi đè bằng thứ tự trong sheet "quận huyện" nếu có
+      group: null,
+      groupOrder: 0,
       wards: [],
       oldWards: [],
     });
@@ -173,11 +182,31 @@ function main() {
     oldCount++;
   }
 
+  // Phân nhóm menu ngang. buildDistrictGroupIndex() NÉM LỖI nếu danh sách khách gửi
+  // lệch với bảng 30 quận chuẩn — thà dừng còn hơn âm thầm bỏ sót một quận khỏi menu.
+  const groupIndex = buildDistrictGroupIndex();
+  for (const d of districts.values()) {
+    const g = groupIndex.get(d.shortName);
+    if (!g) continue;
+    d.group = g.group;
+    d.groupOrder = g.groupOrder;
+    // Thứ tự hiển thị bám theo thứ tự khách liệt kê trong nhóm, không theo sheet.
+    d.sortOrder = g.groupOrder * 100 + g.orderInGroup;
+  }
+
   const ordered = [...districts.values()].sort((a, b) => a.sortOrder - b.sortOrder);
-  ordered.forEach((d, i) => (d.sortOrder = i));
 
   // ---------- Gán urlSegment duy nhất toàn cục ----------
   // Thứ tự cố định để kết quả tái lập được: CITY -> DISTRICT -> WARD -> OLD_WARD.
+  //
+  // QUAN TRỌNG: duyệt theo thứ tự BẢNG CHUẨN `HANOI_DISTRICTS`, KHÔNG theo `sortOrder`.
+  // Việc gán segment là "ai đến trước lấy slug gốc", nên nếu bám theo thứ tự hiển thị
+  // thì mỗi lần khách đổi cách phân nhóm menu là 4 phường trùng tên đổi chủ URL
+  // (đã kiểm chứng: Phù Đổng/Phú Đông, Tiền Phong/Tiên Phong, Đồng Quang/Đông Quang).
+  // URL phải độc lập với cách sắp xếp menu.
+  const segmentOrder = HANOI_DISTRICTS.map((d) => districts.get(matchKey(d.shortName))!).filter(
+    Boolean,
+  );
   const used = new Set<string>([PROVINCE.slug]);
   const take = (candidates: string[]): string => {
     for (const c of candidates) {
@@ -193,15 +222,15 @@ function main() {
     return `${base}-${i}`;
   };
 
-  for (const d of ordered) d.urlSegment = take([d.slug]);
-  for (const d of ordered) {
+  for (const d of segmentOrder) d.urlSegment = take([d.slug]);
+  for (const d of segmentOrder) {
     for (const w of d.wards) {
       // Phường trùng tên quận (vd "Phường Hoàn Kiếm" trong "Quận Hoàn Kiếm") lấy
       // dạng "phuong-hoan-kiem" thay vì "hoan-kiem-hoan-kiem".
       w.urlSegment = take([w.slug, `phuong-${w.slug}`, `${w.slug}-${d.slug}`]);
     }
   }
-  for (const d of ordered) {
+  for (const d of segmentOrder) {
     for (const w of d.oldWards) {
       w.urlSegment = take([w.slug, `${w.slug}-cu`, `${w.slug}-${d.slug}-cu`]);
     }

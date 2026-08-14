@@ -50,6 +50,67 @@ export const HANOI_DISTRICTS: readonly DistrictDef[] = [
   { name: 'Thị xã Sơn Tây', shortName: 'Sơn Tây' },
 ];
 
+/**
+ * Phân nhóm menu ngang do khách gửi ngày 2026-08-14 (câu B1).
+ *
+ * Đối chiếu với `HANOI_DISTRICTS`: 30/30 khớp tuyệt đối, không trùng, không thừa —
+ * `extract-locations-xlsx.ts` kiểm lại điều này mỗi lần chạy và dừng nếu lệch, để
+ * khi khách sửa danh sách mà quên một quận thì phát hiện ngay chứ không âm thầm bỏ sót.
+ *
+ * Thứ tự trong mảng cũng là thứ tự hiển thị trong mỗi nhóm.
+ */
+export const HANOI_DISTRICT_GROUPS: readonly { label: string; shortNames: readonly string[] }[] = [
+  {
+    label: 'Trung tâm',
+    shortNames: [
+      'Cầu Giấy', 'Nam Từ Liêm', 'Hà Đông', 'Thanh Xuân', 'Hoàng Mai',
+      'Tây Hồ', 'Đống Đa', 'Hai Bà Trưng', 'Ba Đình', 'Hoàn Kiếm',
+    ],
+  },
+  {
+    label: 'Cận trung tâm',
+    shortNames: [
+      'Long Biên', 'Bắc Từ Liêm', 'Gia Lâm', 'Đông Anh', 'Hoài Đức',
+      'Thanh Trì', 'Đan Phượng', 'Mê Linh', 'Thanh Oai', 'Thường Tín',
+    ],
+  },
+  {
+    label: 'Ngoại thành',
+    shortNames: [
+      'Sóc Sơn', 'Thạch Thất', 'Quốc Oai', 'Chương Mỹ', 'Sơn Tây',
+      'Phúc Thọ', 'Ba Vì', 'Phú Xuyên', 'Ứng Hòa', 'Mỹ Đức',
+    ],
+  },
+];
+
+/** `shortName` -> {nhãn nhóm, thứ tự nhóm, thứ tự trong nhóm}. */
+export function buildDistrictGroupIndex(): Map<
+  string,
+  { group: string; groupOrder: number; orderInGroup: number }
+> {
+  const index = new Map<string, { group: string; groupOrder: number; orderInGroup: number }>();
+  HANOI_DISTRICT_GROUPS.forEach((g, groupOrder) => {
+    g.shortNames.forEach((shortName, orderInGroup) => {
+      if (index.has(shortName)) {
+        throw new Error(`Quận "${shortName}" bị xếp vào hai nhóm.`);
+      }
+      index.set(shortName, { group: g.label, groupOrder, orderInGroup });
+    });
+  });
+
+  const known = new Set(HANOI_DISTRICTS.map((d) => d.shortName));
+  const unknown = [...index.keys()].filter((n) => !known.has(n));
+  const ungrouped = [...known].filter((n) => !index.has(n));
+  if (unknown.length || ungrouped.length) {
+    throw new Error(
+      'Phân nhóm quận/huyện không khớp bảng chuẩn.' +
+        (unknown.length ? ` Không có trong bảng: ${unknown.join(', ')}.` : '') +
+        (ungrouped.length ? ` Chưa được xếp nhóm: ${ungrouped.join(', ')}.` : ''),
+    );
+  }
+  return index;
+}
+
 // Dùng chung với đường tạo khu vực trong trang admin, để URL của khu vực nhập từ file
 // và khu vực admin tạo tay sinh ra theo cùng một quy tắc.
 export { stripUnitPrefix, UNIT_PREFIXES } from '../location/location-utils';

@@ -98,6 +98,13 @@ model User {
 
 model Property {
   id              String    @id @default(uuid())
+
+  /// Mã ngắn dùng trong URL: `/tin/{slug}-{shortCode}`, thay cho UUID 36 ký tự.
+  /// Sinh từ sequence `property_short_code_seq` (base36) nên duy nhất tuyệt đối và
+  /// chỉ 5 ký tự. `id` KHÔNG đổi — URL cũ dạng `--{uuid}` vẫn 301 về đây.
+  /// Nullable ở tầng schema để migration thêm cột chạy được trên bảng đang có dữ liệu;
+  /// mọi bản ghi đều đã được backfill và đường tạo tin luôn gán giá trị.
+  shortCode       String?   @unique
   title           String
   description     String
   transactionType String // BAN, CHO_THUE, CAN_MUA
@@ -317,6 +324,13 @@ model Location {
 
   sortOrder Int @default(0)
 
+  /// Nhãn nhóm điều hướng của cấp quận/huyện, ví dụ "Trung tâm" / "Cận trung tâm" /
+  /// "Ngoại thành" cho Hà Nội. NULL = tỉnh này không phân nhóm (Nghệ An) và menu giữ
+  /// dạng phẳng. Lưu nhãn thay vì enum để tỉnh khác dùng cách chia của riêng họ mà
+  /// không phải migrate schema.
+  group      String?
+  groupOrder Int     @default(0)
+
   /// Số thứ tự toàn cục trong file nguồn, để import lại idempotent khi khách gửi
   /// bản dữ liệu sửa.
   externalRef String?
@@ -339,6 +353,7 @@ model Location {
   @@index([type, name])
   @@index([parentId])
   @@index([path])
+  @@index([group, groupOrder, sortOrder])
   @@index([type, isActive])
   @@index([type, isFeatured])
   @@index([parentId, type, sortOrder])
