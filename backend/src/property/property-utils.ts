@@ -101,15 +101,6 @@ const PROPERTY_TYPE_LABELS: Record<string, string[]> = {
   BDS_KHAC: ['BDS_KHAC', 'Bất động sản khác', 'Khác'],
 };
 
-const LOCATION_SLUGS: Record<string, string> = {
-  'thanh-vinh': 'Phường Thành Vinh',
-  'truong-vinh': 'Phường Trường Vinh',
-  'vinh-loc': 'Phường Vinh Lộc',
-  'vinh-phu': 'Phường Vinh Phú',
-  'vinh-hung': 'Phường Vinh Hưng',
-  'cua-lo': 'Phường Cửa Lò',
-};
-
 export type NormalizedFilters = {
   q?: string;
   transactionType?: string;
@@ -437,8 +428,11 @@ export function normalizeSearchFilters(query: Record<string, any>): NormalizedFi
     tier: query.tier === 'VIP' || query.tier === 'UP' ? query.tier : undefined,
   };
 
+  // Trước đây có bảng LOCATION_SLUGS hard-code 6 phường của TP Vinh để đổi slug thành
+  // tên phường. Với dữ liệu đa tỉnh thì bảng đó vô nghĩa; slug -> khu vực giờ tra qua
+  // /locations/resolve. Giá trị không nhận diện được rơi về tìm kiếm toàn văn (dòng ~525).
   if (query.location) {
-    filters.location = LOCATION_SLUGS[String(query.location)] || String(query.location);
+    filters.location = String(query.location);
   }
   if (filters.location && !filters.ward && filters.location.startsWith('Phường')) {
     filters.ward = filters.location;

@@ -6,6 +6,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   providers: [LocationService],
-  controllers: [LocationController]
+  controllers: [LocationController],
+  // AdminModule cần để xoá cache trong tiến trình sau khi sửa khu vực.
+  exports: [LocationService],
 })
 export class LocationModule {}

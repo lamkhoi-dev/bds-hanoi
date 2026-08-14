@@ -170,6 +170,10 @@ model Property {
   // Timestamps
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  // updatedAt là @updatedAt nên MỌI thao tác ghi đều đẩy nó — kể cả cron gia hạn VIP.
+  // contentUpdatedAt chỉ được set khi nội dung/trạng thái hiển thị thực sự đổi, và là
+  // nguồn <lastmod> của sitemap. Google yêu cầu lastmod phản ánh thay đổi nội dung thật.
+  contentUpdatedAt DateTime?
   publishedAt   DateTime?
   tierExpiresAt DateTime? // When VIP/UP expires
   frozenTierMs          Float? // Amount of ms frozen when property is PENDING
@@ -193,6 +197,7 @@ model Property {
   @@index([price])
   @@index([area])
   @@index([publishedAt])
+  @@index([contentUpdatedAt])
   @@index([ward, district, city])
   @@index([status, propertyType, publishedAt])
   @@index([status, locationId, publishedAt])
@@ -274,12 +279,51 @@ model PaymentWebhookLog {
   @@index([transactionId])
 }
 
+enum LocationType {
+  CITY
+  DISTRICT
+  WARD
+  OLD_WARD
+}
+
 model Location {
-  id           String  @id @default(uuid())
-  name         String
-  type         String // "CITY", "DISTRICT", "WARD"
-  parentId     String?
-  slug         String? @unique
+  id String @id @default(uuid())
+
+  /// Tên nguyên văn từ nguồn: "Phường Hoàn Kiếm", "Xã An Khánh", "Ba Vì".
+  /// Nguồn không nhất quán tiền tố (79/126 phường xã mới không có tiền tố) nên
+  /// không được tự chế thêm "Phường"/"Xã".
+  name String
+
+  /// Tên đã bỏ tiền tố đơn vị: "Hoàn Kiếm", "An Khánh". Slug sinh từ đây.
+  shortName String
+
+  type     LocationType
+  parentId String?
+
+  /// Slug trong phạm vi cha. KHÔNG unique toàn cục: dữ liệu Hà Nội có 125 nhóm tên
+  /// trùng nhau, chạm 275/736 bản ghi. Khoá đúng là (parentId, type, slug) —
+  /// bỏ `type` ra thì vẫn còn 76 xung đột WARD↔OLD_WARD cùng tên trong cùng quận.
+  slug String
+
+  /// Đoạn URL duy nhất toàn cục, phục vụ URL phẳng /ban/dat-nen/{urlSegment}.
+  urlSegment String @unique
+
+  /// Đường dẫn vật hoá "ha-noi/cau-giay/yen-hoa". Trả lời "URL lồng này có tồn tại
+  /// không" bằng một lần tra index, và dựng breadcrumb không cần truy vấn đệ quy.
+  /// urlSegment phục vụ URL phẳng, path phục vụ URL lồng — importer sinh cả hai nên
+  /// khi khách chốt dạng URL thì chỉ đổi routing, không phải migrate lại.
+  path  String
+  depth Int    @default(0)
+
+  sortOrder Int @default(0)
+
+  /// Số thứ tự toàn cục trong file nguồn, để import lại idempotent khi khách gửi
+  /// bản dữ liệu sửa.
+  externalRef String?
+
+  /// Dữ liệu ngoài tỉnh đang phục vụ bị tắt bằng cờ này thay vì xoá cứng — mọi FK
+  /// đều onDelete: SetNull nên xoá là mất luôn liên kết của tin đăng.
+  isActive     Boolean @default(true)
   isFeatured   Boolean @default(false)
   isSeoEnabled Boolean @default(false)
 
@@ -291,10 +335,13 @@ model Location {
   wardProperties     Property[]    @relation("PropertyWard")
   requirements       Requirement[]
 
+  @@unique([parentId, type, slug])
   @@index([type, name])
   @@index([parentId])
-  @@index([slug, type, parentId])
+  @@index([path])
+  @@index([type, isActive])
   @@index([type, isFeatured])
+  @@index([parentId, type, sortOrder])
 }
 
 model Category {
@@ -579,6 +626,8 @@ model News {
   content   String   @db.Text
   thumbnail String?
   slug      String   @unique
+  // Slug cũ sau khi đổi tiêu đề, giữ lại để 301 URL đã được Google index.
+  previousSlugs String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -1,0 +1,80 @@
+{
+  "note": "Các mục KHÔNG import được, cần khách làm rõ.",
+  "items": [
+    {
+      "kind": "FEATURED_AMBIGUOUS",
+      "sheet": "Phường xã cũ hot",
+      "value": "Vạn Phúc",
+      "candidates": [
+        {
+          "district": "Hà Đông",
+          "shortName": "Vạn Phúc"
+        },
+        {
+          "district": "Thanh Trì",
+          "shortName": "Vạn Phúc"
+        },
+        {
+          "district": "Phúc Thọ",
+          "shortName": "Vân Phúc"
+        }
+      ]
+    },
+    {
+      "kind": "FEATURED_AMBIGUOUS",
+      "sheet": "Phường xã cũ hot",
+      "value": "Minh Khai",
+      "candidates": [
+        {
+          "district": "Hai Bà Trưng",
+          "shortName": "Minh Khai"
+        },
+        {
+          "district": "Bắc Từ Liêm",
+          "shortName": "Minh Khai"
+        },
+        {
+          "district": "Hoài Đức",
+          "shortName": "Minh Khai"
+        }
+      ]
+    },
+    {
+      "kind": "HOT_AREA_BLOCKED",
+      "note": "Sheet \"khu vực hot\" chủ yếu là tên dự án/khu đô thị (Vinhomes Smart City, Royal City, Ecopark...), không phải đơn vị hành chính và không có cột quận/huyện cha nên không dựng được breadcrumb. Chưa import — chờ khách trả lời câu A4 (nó là \"Dự án\" hay thực thể riêng?).",
+      "values": [
+        "An Hưng",
+        "Linh Đàm",
+        "Văn Phú",
+        "Vinhomes Smart City",
+        "Vinhomes Ocean Park",
+        "Vinhomes Riverside",
+        "Ciputra",
+        "Splendora",
+        "Ecopark",
+        "Royal City",
+        "Times City",
+        "Goldmark City",
+        "Mỹ Đình Pearl",
+        "The Manor",
+        "Keangnam",
+        "Mandarin Garden",
+        "Park Hill",
+        "Mỹ Đình 1",
+        "Mỹ Đình 2",
+        "Hồ Tây",
+        "Ngoại Giao Đoàn",
+        "Láng Hạ",
+        "Trung Kính",
+        "Phương Liệt",
+        "Gamuda Gardens",
+        "Thanh Hà",
+        "Nam An Khánh",
+        "Bắc An Khánh",
+        "The Matrix One",
+        "Imperia Sky Garden",
+        "Sunshine City"
+      ]
+    }
+  ]
+}

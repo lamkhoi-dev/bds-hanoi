@@ -2,6 +2,7 @@ import { Controller, Get, Put, Post, Patch, Delete, Param, Body, UseGuards, Requ
 import type { Response } from 'express';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateLocationDto, UpdateLocationDto } from '../location/dto/location.dto';
 
 type PropertyStatus = string;
 
@@ -272,14 +273,14 @@ export class AdminController {
 
   @UseGuards(JwtAuthGuard)
   @Post('locations')
-  async createLocation(@Request() req, @Body() data: { name: string, slug: string, type: string, parentId?: string, isFeatured?: boolean, isSeoEnabled?: boolean }) {
+  async createLocation(@Request() req, @Body() data: CreateLocationDto) {
     this.checkAdmin(req);
     return this.adminService.createLocation(data);
   }
 
   @UseGuards(JwtAuthGuard)
   @Put('locations/:id')
-  async updateLocation(@Request() req, @Param('id') id: string, @Body() data: { name?: string, slug?: string, type?: string, parentId?: string, isFeatured?: boolean, isSeoEnabled?: boolean }) {
+  async updateLocation(@Request() req, @Param('id') id: string, @Body() data: UpdateLocationDto) {
     this.checkAdmin(req);
     return this.adminService.updateLocation(id, data);
   }

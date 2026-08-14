@@ -4,6 +4,10 @@ import { SearchService } from '../search/search.service';
 import { NotificationService } from '../notification/notification.service';
 import { CryptoService } from '../shared/crypto.service';
 import { AdminActionLogService } from './admin-action-log.service';
+import { locationSlug, stripUnitPrefix } from '../location/location-utils';
+import { LocationService } from '../location/location.service';
+import { SeoService } from '../seo/seo.service';
+import { LocationType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 type PropertyStatus = string;
@@ -15,7 +19,9 @@ export class AdminService {
     private searchService: SearchService,
     private notificationService: NotificationService,
     private cryptoService: CryptoService,
-    private adminActionLogService: AdminActionLogService
+    private adminActionLogService: AdminActionLogService,
+    private locationService: LocationService,
+    private seoService: SeoService
   ) {}
 
   private csvCell(value: any) {
@@ -912,8 +918,11 @@ export class AdminService {
 
     const updatedProperty = await this.prisma.property.update({
       where: { id },
-      data: updateData,
+      // Duyệt/ẩn/gỡ tin là thay đổi trạng thái hiển thị -> cập nhật mốc cho sitemap.
+      data: { ...updateData, contentUpdatedAt: new Date() },
     });
+    // Tin vừa đổi trạng thái hiển thị -> sitemap phải phản ánh ngay, không đợi hết TTL.
+    await this.seoService.invalidate();
 
     await this.prisma.auditLog.create({
       data: {
@@ -978,8 +987,9 @@ export class AdminService {
     
     const updated = await this.prisma.property.update({
       where: { id },
-      data: { status: 'REJECTED' }
+      data: { status: 'REJECTED', contentUpdatedAt: new Date() }
     });
+    await this.seoService.invalidate();
     await this.searchService.deleteDocument(id).catch(() => null);
 
     await this.prisma.auditLog.create({
@@ -1300,18 +1310,105 @@ export class AdminService {
 
   // Location CRUD
   async getLocations() {
-    return this.prisma.location.findMany();
+    return this.prisma.location.findMany({
+      orderBy: [{ depth: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
+    });
   }
 
-  async createLocation(data: { name: string, slug: string, type: string, parentId?: string, isFeatured?: boolean, isSeoEnabled?: boolean }) {
-    return this.prisma.location.create({ data });
+  /**
+   * Sinh các trường dẫn xuất (shortName / slug / urlSegment / path / depth) từ tên và
+   * cấp cha. Admin chỉ nhập tên, loại và cha — phần còn lại phải theo đúng quy tắc mà
+   * importer dùng, nếu không URL của khu vực tạo tay sẽ lệch với khu vực nhập từ file.
+   */
+  private async buildLocationFields(input: {
+    name: string;
+    parentId?: string | null;
+    excludeId?: string;
+  }) {
+    const shortName = stripUnitPrefix(input.name);
+    const slug = locationSlug(input.name);
+    if (!slug) throw new BadRequestException('Tên khu vực không hợp lệ');
+
+    const parent = input.parentId
+      ? await this.prisma.location.findUnique({ where: { id: input.parentId } })
+      : null;
+    if (input.parentId && !parent) throw new NotFoundException('Không tìm thấy khu vực cha');
+
+    // urlSegment phải duy nhất TOÀN CỤC (nó là một đoạn URL), nên thêm hậu tố khi trùng.
+    const candidates = [slug, parent ? `${slug}-${parent.slug}` : ''].filter(Boolean);
+    let urlSegment = '';
+    for (const candidate of candidates) {
+      const taken = await this.prisma.location.findUnique({ where: { urlSegment: candidate } });
+      if (!taken || taken.id === input.excludeId) {
+        urlSegment = candidate;
+        break;
+      }
+    }
+    if (!urlSegment) urlSegment = `${slug}-${Math.random().toString(36).slice(2, 8)}`;
+
+    return {
+      shortName,
+      slug,
+      urlSegment,
+      path: parent ? `${parent.path}/${urlSegment}` : urlSegment,
+      depth: parent ? parent.depth + 1 : 0,
+    };
   }
 
-  async updateLocation(id: string, data: { name?: string, slug?: string, type?: string, parentId?: string, isFeatured?: boolean, isSeoEnabled?: boolean }) {
-    return this.prisma.location.update({ where: { id }, data });
+  async createLocation(data: {
+    name: string;
+    type: LocationType;
+    parentId?: string;
+    isFeatured?: boolean;
+    isSeoEnabled?: boolean;
+  }) {
+    const derived = await this.buildLocationFields({ name: data.name, parentId: data.parentId });
+    return this.prisma.location.create({
+      data: {
+        name: data.name.trim(),
+        type: data.type,
+        parentId: data.parentId ?? null,
+        isFeatured: data.isFeatured ?? false,
+        isSeoEnabled: data.isSeoEnabled ?? false,
+        ...derived,
+      },
+    });
+  }
+
+  async updateLocation(
+    id: string,
+    data: {
+      name?: string;
+      type?: LocationType;
+      parentId?: string;
+      isFeatured?: boolean;
+      isSeoEnabled?: boolean;
+      isActive?: boolean;
+    },
+  ) {
+    const current = await this.prisma.location.findUnique({ where: { id } });
+    if (!current) throw new NotFoundException('Không tìm thấy khu vực');
+
+    const patch: any = {
+      ...(data.type !== undefined ? { type: data.type } : {}),
+      ...(data.isFeatured !== undefined ? { isFeatured: data.isFeatured } : {}),
+      ...(data.isSeoEnabled !== undefined ? { isSeoEnabled: data.isSeoEnabled } : {}),
+      ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
+    };
+
+    // Đổi tên hoặc đổi cha thì phải sinh lại slug/urlSegment/path.
+    if (data.name !== undefined || data.parentId !== undefined) {
+      const name = data.name ?? current.name;
+      const parentId = data.parentId !== undefined ? data.parentId : current.parentId;
+      Object.assign(patch, { name: name.trim(), parentId }, await this.buildLocationFields({ name, parentId, excludeId: id }));
+    }
+
+    return this.prisma.location.update({ where: { id }, data: patch });
   }
 
   async deleteLocation(id: string) {
-    return this.prisma.location.delete({ where: { id } });
+    // Xoá cứng sẽ null hoá Property.wardId/districtId/locationId (mọi FK là SetNull).
+    // Tắt là đủ để khu vực biến mất khỏi bộ lọc, sitemap và trang danh mục.
+    return this.prisma.location.update({ where: { id }, data: { isActive: false } });
   }
 }

@@ -1,0 +1,296 @@
+{
+  "wards": [
+    {
+      "district": "Hà Đông",
+      "shortName": "Hà Đông",
+      "label": "Hà Đông"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "Dương Nội",
+      "label": "Dương Nội"
+    },
+    {
+      "district": "Nam Từ Liêm",
+      "shortName": "Tây Mỗ",
+      "label": "Tây Mỗ"
+    },
+    {
+      "district": "Nam Từ Liêm",
+      "shortName": "Đại Mỗ",
+      "label": "Đại Mỗ"
+    },
+    {
+      "district": "Cầu Giấy",
+      "shortName": "Cầu Giấy",
+      "label": "Cầu Giấy"
+    },
+    {
+      "district": "Cầu Giấy",
+      "shortName": "Yên Hòa",
+      "label": "Yên Hòa"
+    },
+    {
+      "district": "Cầu Giấy",
+      "shortName": "Nghĩa Đô",
+      "label": "Nghĩa Đô"
+    },
+    {
+      "district": "Thanh Xuân",
+      "shortName": "Thanh Xuân",
+      "label": "Thanh Xuân"
+    },
+    {
+      "district": "Long Biên",
+      "shortName": "Long Biên",
+      "label": "Long Biên"
+    },
+    {
+      "district": "Long Biên",
+      "shortName": "Việt Hưng",
+      "label": "Việt Hưng"
+    },
+    {
+      "district": "Long Biên",
+      "shortName": "Bồ Đề",
+      "label": "Bồ Đề"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Hoàng Mai",
+      "label": "Hoàng Mai"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Yên Sở",
+      "label": "Yên Sở"
+    },
+    {
+      "district": "Bắc Từ Liêm",
+      "shortName": "Xuân Đỉnh",
+      "label": "Xuân Đỉnh"
+    },
+    {
+      "district": "Bắc Từ Liêm",
+      "shortName": "Phú Diễn",
+      "label": "Phú Diễn"
+    },
+    {
+      "district": "Hoài Đức",
+      "shortName": "An Khánh",
+      "label": "An Khánh"
+    },
+    {
+      "district": "Gia Lâm",
+      "shortName": "Gia Lâm",
+      "label": "Gia Lâm"
+    },
+    {
+      "district": "Gia Lâm",
+      "shortName": "Bát Tràng",
+      "label": "Bát Tràng"
+    },
+    {
+      "district": "Đông Anh",
+      "shortName": "Đông Anh",
+      "label": "Đông Anh"
+    },
+    {
+      "district": "Đông Anh",
+      "shortName": "Vĩnh Thanh",
+      "label": "Vĩnh Thanh"
+    },
+    {
+      "district": "Thanh Trì",
+      "shortName": "Đại Thanh",
+      "label": "Đại Thanh"
+    },
+    {
+      "district": "Thanh Trì",
+      "shortName": "Ngọc Hồi",
+      "label": "Ngọc Hồi"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "Kiến Hưng",
+      "label": "Kiến Hưng"
+    },
+    {
+      "district": "Nam Từ Liêm",
+      "shortName": "Xuân Phương",
+      "label": "Xuân Phương"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Định Công",
+      "label": "Định Công"
+    },
+    {
+      "district": "Thanh Xuân",
+      "shortName": "Khương Đình",
+      "label": "Khương Đình"
+    },
+    {
+      "district": "Tây Hồ",
+      "shortName": "Tây Hồ",
+      "label": "Tây Hồ"
+    },
+    {
+      "district": "Tây Hồ",
+      "shortName": "Phú Thượng",
+      "label": "Phú Thượng"
+    }
+  ],
+  "oldWards": [
+    {
+      "district": "Hà Đông",
+      "shortName": "Mộ Lao",
+      "label": "Mộ Lao"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "Văn Quán",
+      "label": "Văn Quán"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "La Khê",
+      "label": "La Khê"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "Phú Lương",
+      "label": "Phú Lương"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "Yên Nghĩa",
+      "label": "Yên Nghĩa"
+    },
+    {
+      "district": "Nam Từ Liêm",
+      "shortName": "Mễ Trì",
+      "label": "Mễ Trì"
+    },
+    {
+      "district": "Nam Từ Liêm",
+      "shortName": "Trung Văn",
+      "label": "Trung Văn"
+    },
+    {
+      "district": "Bắc Từ Liêm",
+      "shortName": "Cổ Nhuế 1",
+      "label": "Cổ Nhuế 1"
+    },
+    {
+      "district": "Bắc Từ Liêm",
+      "shortName": "Cổ Nhuế 2",
+      "label": "Cổ Nhuế 2"
+    },
+    {
+      "district": "Bắc Từ Liêm",
+      "shortName": "Đông Ngạc",
+      "label": "Đông Ngạc"
+    },
+    {
+      "district": "Bắc Từ Liêm",
+      "shortName": "Tây Tựu",
+      "label": "Tây Tựu"
+    },
+    {
+      "district": "Cầu Giấy",
+      "shortName": "Dịch Vọng",
+      "label": "Dịch Vọng"
+    },
+    {
+      "district": "Cầu Giấy",
+      "shortName": "Mai Dịch",
+      "label": "Mai Dịch"
+    },
+    {
+      "district": "Long Biên",
+      "shortName": "Ngọc Thụy",
+      "label": "Ngọc Thụy"
+    },
+    {
+      "district": "Long Biên",
+      "shortName": "Thạch Bàn",
+      "label": "Thạch Bàn"
+    },
+    {
+      "district": "Long Biên",
+      "shortName": "Sài Đồng",
+      "label": "Sài Đồng"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Hoàng Liệt",
+      "label": "Hoàng Liệt"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Đại Kim",
+      "label": "Đại Kim"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Vĩnh Hưng",
+      "label": "Vĩnh Hưng"
+    },
+    {
+      "district": "Thanh Xuân",
+      "shortName": "Nhân Chính",
+      "label": "Nhân Chính"
+    },
+    {
+      "district": "Thanh Xuân",
+      "shortName": "Thanh Xuân Trung",
+      "label": "Thanh Xuân Trung"
+    },
+    {
+      "district": "Thanh Xuân",
+      "shortName": "Thanh Xuân Bắc",
+      "label": "Thanh Xuân Bắc"
+    },
+    {
+      "district": "Tây Hồ",
+      "shortName": "Xuân La",
+      "label": "Xuân La"
+    },
+    {
+      "district": "Tây Hồ",
+      "shortName": "Quảng An",
+      "label": "Quảng An"
+    },
+    {
+      "district": "Tây Hồ",
+      "shortName": "Nhật Tân",
+      "label": "Nhật Tân"
+    },
+    {
+      "district": "Gia Lâm",
+      "shortName": "Đặng Xá",
+      "label": "Đặng Xá"
+    },
+    {
+      "district": "Gia Lâm",
+      "shortName": "Dương Xá",
+      "label": "Dương Xá"
+    },
+    {
+      "district": "Đông Anh",
+      "shortName": "Vĩnh Ngọc",
+      "label": "Vĩnh Ngọc"
+    },
+    {
+      "district": "Đông Anh",
+      "shortName": "Hải Bối",
+      "label": "Hải Bối"
+    },
+    {
+      "district": "Đông Anh",
+      "shortName": "Kim Nỗ",
+      "label": "Kim Nỗ"
+    }
+  ]
+}

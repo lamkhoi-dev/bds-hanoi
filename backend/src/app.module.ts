@@ -24,6 +24,7 @@ import { redisStore } from 'cache-manager-redis-yet';
 import { BackupModule } from './backup/backup.module';
 import { NewsModule } from './news/news.module';
 import { OnlineModule } from './online/online.module';
+import { SeoModule } from './seo/seo.module';
 
 const redisEnabled = process.env.REDIS_ENABLED === 'true';
 
@@ -87,6 +88,7 @@ async function createCacheOptions() {
     BackupModule,
     NewsModule,
     OnlineModule,
+    SeoModule,
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: createCacheOptions,
