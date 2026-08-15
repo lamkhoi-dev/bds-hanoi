@@ -3,7 +3,7 @@ import { siteConfig } from '@/lib/site-config';
 import { Home as HomeIcon, Users, Building2, Star, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import SidebarFilter from '@/components/SidebarFilter';
+import HomeFilterButton from '@/components/HomeFilterButton';
 import PropertyCard from '@/components/PropertyCard';
 import PropertyBlock from '@/components/PropertyBlock';
 import PropertyTabs from '@/components/PropertyTabs';
@@ -117,8 +117,12 @@ export default async function Home() {
 
       {/* ===== SEARCH SECTION ===== */}
       <section className="relative z-10 px-4 -mt-8 md:-mt-8 mb-8">
-        <div className="container mx-auto max-w-4xl relative">
+        <div className="container mx-auto max-w-4xl relative flex flex-col gap-3">
           <SearchForm />
+          {/* Bộ lọc ngay dưới ô tìm kiếm, mở ra dạng popup nổi. */}
+          <React.Suspense fallback={null}>
+            <HomeFilterButton />
+          </React.Suspense>
         </div>
       </section>
 
@@ -202,11 +206,11 @@ export default async function Home() {
           )}
         </div>
 
-        {/* Right Sidebar (Filter, Stats & Banner) */}
+        {/* Right Sidebar (Stats & Banner) */}
         <aside className="w-full lg:w-[320px] flex-shrink-0 mb-8 lg:mb-0">
-          <React.Suspense fallback={<div className="h-40 bg-gray-100 animate-pulse rounded-2xl"></div>}>
-            <SidebarFilter />
-          </React.Suspense>
+          {/* Bộ lọc đã được KÉO LÊN đầu trang, ngay dưới ô tìm kiếm, dạng popup nổi —
+              để trang chủ và trang chuyên mục dùng chung một cách lọc như khách yêu cầu.
+              Trước đây nó nằm tận cuối trang trong cột bên phải. */}
           
           {/* Stats Box (Moved from top) */}
           <div className="mt-6 bg-white rounded-2xl shadow-card p-5 border border-borderLight/50">

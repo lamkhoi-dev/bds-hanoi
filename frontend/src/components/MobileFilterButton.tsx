@@ -39,7 +39,7 @@ export default function MobileFilterButton() {
           <div className="relative bg-white w-full rounded-t-2xl shadow-2xl h-[85vh] flex flex-col animate-in slide-in-from-bottom-full duration-200">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-              <h2 className="text-lg font-bold">Bộ lọc tìm kiếm</h2>
+              <h2 className="text-lg font-bold">Bộ lọc</h2>
               <button 
                 onClick={() => setIsFilterOpen(false)}
                 className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-full transition-colors"
