@@ -53,7 +53,10 @@ function getListingCopy(route: ListingRoute, dict: LocationDictionary) {
 
   const place = locationName ?? provinceName;
   const h1Text = `${titleCore} ${place}`;
-  const title = `${h1Text} | ${siteConfig.name}`;
+  // KHÔNG nối tên site ở đây: `layout.tsx` đã đặt template `%s | {tên site}` nên nối
+  // thêm sẽ ra "Bán đất nền Nghệ An | Nhà Đất Xứ Nghệ | Nhà Đất Xứ Nghệ" trên MỌI
+  // trang danh mục — đúng lỗi lặp thương hiệu ở mục II.3 của khách.
+  const title = h1Text;
 
   // Chỉ thêm tên tỉnh khi khu vực chưa tự chứa nó, tránh "Cầu Giấy, Hà Nội, Hà Nội".
   const descPlace = place.toLowerCase().includes(provinceName.toLowerCase())
