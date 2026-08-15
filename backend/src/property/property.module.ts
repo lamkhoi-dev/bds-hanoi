@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { PropertyReviewService } from './property-review.service';
+import { SeoModule } from '../seo/seo.module';
 import { PropertyService } from './property.service';
 import { PropertyInteractionService } from './property-interaction.service';
 import { PropertyController } from './property.controller';
@@ -26,6 +28,7 @@ const propertyUpQueueFallback = {
     SearchModule,
     NotificationModule,
     UserModule,
+    SeoModule,
     CacheModule.register(),
     ...(redisEnabled
       ? [
@@ -39,6 +42,7 @@ const propertyUpQueueFallback = {
   providers: [
     PropertyService,
     PropertyInteractionService,
+    PropertyReviewService,
     AdminActionLogService,
     ...(redisEnabled ? [PropertyProcessor] : [propertyUpQueueFallback]),
   ],

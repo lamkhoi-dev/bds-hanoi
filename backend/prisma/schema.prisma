@@ -16,6 +16,10 @@ enum Role {
 enum PropertyStatus {
   DRAFT
   PENDING
+
+  /// Admin đã sửa và trả về cho người đăng kiểm tra lại. Người đăng xem phần admin
+  /// sửa gì rồi bấm gửi lại, tin quay về PENDING để admin duyệt lần cuối.
+  AWAITING_AUTHOR
   APPROVED
   REJECTED
   HIDDEN

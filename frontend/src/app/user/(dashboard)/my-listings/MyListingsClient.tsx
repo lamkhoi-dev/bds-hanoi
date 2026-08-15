@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import EditHistoryModal from '@/components/EditHistoryModal';
 import { listingDetailPath } from '@/lib/seo/canonical';
 import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
@@ -13,6 +14,7 @@ import { Crown, ArrowUpCircle, EyeOff, CheckCircle, Trash2, Edit, MapPin } from 
 import { toMediaUrl } from '@/lib/media';
 
 export default function MyListingsClient() {
+  const [viewingHistory, setViewingHistory] = useState<any>(null);
   const [properties, setProperties] = useState<any[]>([]);
   const [drafts, setDrafts] = useState<any[]>([]);
   const router = useRouter();
@@ -160,7 +162,18 @@ export default function MyListingsClient() {
     </div>
   );
 
+  const handleResubmit = async (id: string) => {
+    try {
+      await api.post(`/properties/${id}/resubmit`);
+      toast.success('Đã gửi duyệt lại. Tin quay về trạng thái chờ duyệt.');
+      fetchData();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Không gửi được, vui lòng thử lại');
+    }
+  };
+
   return (
+    <>
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -241,12 +254,14 @@ export default function MyListingsClient() {
                       <div className="shrink-0">
                         <span className={`px-3 py-1.5 text-xs font-bold rounded-xl whitespace-nowrap border ${
                           property.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          property.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                          property.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          property.status === 'AWAITING_AUTHOR' ? 'bg-orange-50 text-orange-700 border-orange-200' : 
                           property.status === 'HIDDEN' ? 'bg-gray-50 text-gray-700 border-gray-200' :
                           'bg-red-50 text-red-700 border-red-200'
                         }`}>
                           {property.status === 'APPROVED' ? 'Đã duyệt' :
-                           property.status === 'PENDING' ? 'Chờ duyệt' : 
+                           property.status === 'PENDING' ? 'Chờ duyệt' :
+                           property.status === 'AWAITING_AUTHOR' ? 'Cần bạn kiểm tra lại' : 
                            property.status === 'HIDDEN' ? 'Đang ẩn' :
                            property.status === 'SOLD' ? 'Đã bán' :
                            property.status === 'REJECTED' ? 'Từ chối' : property.status}
@@ -304,6 +319,24 @@ export default function MyListingsClient() {
                         </button>
                       )}
                       
+                      {/* Quy trình duyệt 2 chiều: admin đã sửa và trả về, người đăng
+                          xem lịch sử sửa rồi gửi duyệt lại. */}
+                      {property.status === 'AWAITING_AUTHOR' && (
+                        <>
+                          <button
+                            onClick={() => setViewingHistory(property)}
+                            className="flex items-center justify-center gap-2 text-sm font-bold bg-white text-gray-600 px-4 py-2.5 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                          >
+                            Xem admin đã sửa gì
+                          </button>
+                          <button
+                            onClick={() => handleResubmit(property.id)}
+                            className="flex-1 md:flex-none flex items-center justify-center gap-2 text-sm font-bold bg-amber-500 text-white px-4 py-2.5 rounded-xl hover:bg-amber-600 transition-colors"
+                          >
+                            Gửi duyệt lại
+                          </button>
+                        </>
+                      )}
                       {activeTab === 'draft' && (
                         <Link href={`/post?editId=${property.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 text-sm font-bold bg-primary/10 text-primary px-4 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-colors border border-primary/20 hover:border-transparent">
                           <Edit size={16} /> Sửa
@@ -384,5 +417,14 @@ export default function MyListingsClient() {
         </div>
       )}
     </div>
+
+    {viewingHistory && (
+      <EditHistoryModal
+        propertyId={viewingHistory.id}
+        title={viewingHistory.title}
+        onClose={() => setViewingHistory(null)}
+      />
+    )}
+    </>
   );
 }

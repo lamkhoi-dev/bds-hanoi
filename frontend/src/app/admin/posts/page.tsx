@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
+import ReviewModal from '@/components/admin/ReviewModal';
 import { listingDetailPath } from '@/lib/seo/canonical';
 import { PROPERTY_TYPES, propertyTypeByEnum } from '@/lib/seo/taxonomy';
-import { CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, Filter } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, Filter, PenLine} from 'lucide-react';
 import Link from 'next/link';
 import { generateSlug } from '@/lib/utils';
 import api from '@/lib/axios';
@@ -12,6 +13,7 @@ import { toast } from 'react-hot-toast';
 import { confirmAction } from '@/lib/toast-helpers';
 
 export default function AdminPosts() {
+  const [reviewing, setReviewing] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -76,6 +78,7 @@ export default function AdminPosts() {
     }
   };
   return (
+    <>
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-extrabold text-gray-900">Quản lý Bài đăng</h1>
@@ -175,13 +178,23 @@ export default function AdminPosts() {
                     </Link>
                     {post.status === 'PENDING' && (
                       <>
-                        <button onClick={() => handleUpdateStatus(post.id, 'APPROVED')} className="inline-flex p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Duyệt bài">
+                        <button onClick={() => handleUpdateStatus(post.id, 'APPROVED')} className="inline-flex p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Duyệt đăng">
                           <CheckCircle size={18} />
+                        </button>
+                        {/* Lựa chọn thứ ba khách yêu cầu: sửa rồi TRẢ VỀ cho người đăng
+                            kiểm tra lại, thay vì từ chối thẳng vì một lỗi nhỏ. */}
+                        <button onClick={() => setReviewing(post)} className="inline-flex p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Sửa & trả về người đăng">
+                          <PenLine size={18} />
                         </button>
                         <button onClick={() => handleUpdateStatus(post.id, 'REJECTED')} className="inline-flex p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Từ chối">
                           <AlertTriangle size={18} />
                         </button>
                       </>
+                    )}
+                    {post.status === 'AWAITING_AUTHOR' && (
+                      <span className="inline-flex px-2 py-1 text-xs rounded bg-amber-50 text-amber-700 font-semibold" title="Đang chờ người đăng kiểm tra lại">
+                        Chờ người đăng
+                      </span>
                     )}
                     {post.status === 'APPROVED' && (
                       <button onClick={() => handleUpdateStatus(post.id, 'HIDDEN')} className="inline-flex p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="Ẩn bài">
@@ -209,5 +222,14 @@ export default function AdminPosts() {
         </div>
       </div>
     </div>
+
+    {reviewing && (
+      <ReviewModal
+        post={reviewing}
+        onClose={() => setReviewing(null)}
+        onDone={() => { setReviewing(null); fetchPosts(); }}
+      />
+    )}
+    </>
   );
 }

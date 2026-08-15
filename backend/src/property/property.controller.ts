@@ -1,4 +1,5 @@
-import { Controller, Post, Put, Delete, Body, Get, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException, Injectable, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Put, Delete, Body, Get, Param, Query, UseGuards, Request, UseInterceptors, UploadedFile, BadRequestException, Injectable, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { PropertyReviewService } from './property-review.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { PropertyService } from './property.service';
@@ -27,7 +28,8 @@ export class PropertyController {
     private readonly searchService: SearchService,
     private readonly prisma: PrismaService,
     private readonly viewedPropertyService: ViewedPropertyService,
-    private readonly uploadService: UploadService
+    private readonly uploadService: UploadService,
+    private readonly propertyReviewService: PropertyReviewService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -334,5 +336,51 @@ export class PropertyController {
   @Post(':id/restore')
   async restore(@Request() req, @Param('id') id: string) {
     return this.propertyService.restore(req.user.id, id);
+  }
+
+  // ===== Quy trình duyệt tin 2 chiều (PHẦN I) =====
+
+  /**
+   * Admin kiểm duyệt: sửa (tuỳ chọn) rồi DUYỆT LUÔN hoặc TRẢ VỀ cho người đăng.
+   * `changes` rỗng = duyệt luôn không sửa gì.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/review')
+  async review(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() body: { changes?: Record<string, any>; returnToAuthor?: boolean; note?: string },
+  ) {
+    // Dự án kiểm quyền thủ công trong controller (không có RolesGuard) — giữ đúng
+    // cách đang dùng ở AdminController thay vì thêm cơ chế thứ hai.
+    if (!['ADMIN', 'MOD'].includes(req.user?.role)) {
+      throw new ForbiddenException('Chỉ quản trị viên mới được kiểm duyệt tin');
+    }
+    return this.propertyReviewService.review(
+      req.user.id,
+      id,
+      body?.changes ?? {},
+      Boolean(body?.returnToAuthor),
+      body?.note,
+    );
+  }
+
+  /** Người đăng xem xong phần admin sửa và gửi duyệt lại -> quay về chờ duyệt. */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/resubmit')
+  async resubmit(@Request() req, @Param('id') id: string) {
+    return this.propertyReviewService.resubmit(req.user.id, id);
+  }
+
+  /** Lịch sử chỉnh sửa của tin. Chủ tin hoặc admin xem được. */
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/history')
+  async history(@Request() req, @Param('id') id: string) {
+    const property = await this.propertyService.findOne(id);
+    const isAdmin = req.user?.role === 'ADMIN' || req.user?.role === 'MOD';
+    if (!isAdmin && property.userId !== req.user?.id) {
+      throw new NotFoundException('Không tìm thấy bất động sản');
+    }
+    return this.propertyReviewService.history(id);
   }
 }
