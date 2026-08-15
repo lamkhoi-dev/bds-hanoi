@@ -33,7 +33,7 @@ export default function PropertyBlock({
       </div>
       
       {displayItems.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
           {displayItems.map((item, idx) => (
             <div key={item.id} className={`h-full ${idx > 4 ? 'hidden lg:block' : (idx > 3 ? 'hidden md:block' : '')}`}>
               <PropertyCard item={item} />
