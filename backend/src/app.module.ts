@@ -23,6 +23,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { BackupModule } from './backup/backup.module';
 import { NewsModule } from './news/news.module';
+import { ProjectModule } from './project/project.module';
 import { OnlineModule } from './online/online.module';
 import { SeoModule } from './seo/seo.module';
 
@@ -87,6 +88,7 @@ async function createCacheOptions() {
     RequirementModule,
     BackupModule,
     NewsModule,
+    ProjectModule,
     OnlineModule,
     SeoModule,
     CacheModule.registerAsync({

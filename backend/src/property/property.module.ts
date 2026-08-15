@@ -46,6 +46,8 @@ const propertyUpQueueFallback = {
     AdminActionLogService,
     ...(redisEnabled ? [PropertyProcessor] : [propertyUpQueueFallback]),
   ],
+  // ProjectModule dùng để liệt kê tin đăng trong một dự án qua searchDatabase().
+  exports: [PropertyService],
 })
 export class PropertyModule {}
 

@@ -12,10 +12,13 @@ import { ChevronRight } from 'lucide-react';
 const navItems = [
   { label: 'Trang chủ', href: '/' },
   { label: `BĐS ${siteConfig.province.name}`, href: listingPath({ locationSlug: siteConfig.province.slug }) },
-  ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN']).map((t) => ({
+  ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU']).map((t) => ({
     label: t.label,
     href: listingPath({ propertyTypeSlug: t.slug }),
   })),
+  // Không còn là link category theo taxonomy nữa — /du-an giờ là trang danh mục Dự án
+  // (thực thể riêng, xem model Project). URL không đổi nên không ảnh hưởng SEO đã index.
+  { label: 'Dự án', href: '/du-an' },
   { label: 'Cho thuê', href: listingPath({ transaction: 'cho-thue' }) },
   { label: 'Tin tức', href: '/news' },
 ];

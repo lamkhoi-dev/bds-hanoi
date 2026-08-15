@@ -23,11 +23,14 @@ const SITE_HOSTNAME = (() => {
   }
 })();
 
+// KHÔNG có "du-an" — /du-an giờ là trang danh mục Dự án (model Project, thực thể
+// riêng), không còn là danh mục lọc propertyType=DU_AN nữa. Ở chế độ enforce, vòng lặp
+// bên dưới 301 mọi slug trong danh sách này về `/ban/{slug}`; còn "du-an" trong đó sẽ
+// đè lên đúng URL của trang Dự án mới, xoá sổ nó ngay khi bật enforce.
 const PROPERTY_TYPE_SLUGS = [
   "dat-nen",
   "nha-rieng",
   "chung-cu",
-  "du-an",
   "mat-bang-kho-xuong",
   "biet-thu",
   "bds-khac",

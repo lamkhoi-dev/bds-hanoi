@@ -116,6 +116,13 @@ model Property {
   categoryId      String?
   category        Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  /// Dự án chứa tin này, nếu người đăng chọn từ danh sách dự án có sẵn thay vì tự nhập
+  /// địa điểm. 4 trường địa điểm bên dưới được BACKEND copy từ Project lúc tạo tin (xem
+  /// property.service.ts), không suy qua join lúc đọc — nên xoá liên kết dự án
+  /// (SetNull) không làm mất địa điểm của tin đã đăng.
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   // Location
   city     String?
   district String?
@@ -290,6 +297,55 @@ model PaymentWebhookLog {
   @@index([transactionId])
 }
 
+enum ProjectStatus {
+  VISIBLE
+  HIDDEN
+}
+
+/// Dự án bất động sản (PHẦN I, mục 8–23) — một thực thể admin tạo (tên, ảnh đại diện,
+/// địa điểm, mô tả) gom nhiều tin đăng lại. KHÁC với `propertyType = 'DU_AN'` (một giá
+/// trị lọc có sẵn từ trước trên từng tin, không đổi) — một tin có thể vừa mang
+/// `propertyType = 'DU_AN'` vừa thuộc (hoặc không thuộc) một Project cụ thể.
+model Project {
+  id String @id @default(uuid())
+
+  /// URL: `/du-an/{slug}-{shortCode}`. Sinh kiểu retry giống
+  /// `generateUniquePropertyCode` — số dự án rất ít nên không cần sequence riêng.
+  shortCode String @unique
+
+  name String
+  /// Sinh một lần lúc tạo, giữ nguyên khi đổi tên — URL không đổi theo tên, giống cách
+  /// `Property.slug` xử lý đổi tiêu đề.
+  slug String
+
+  thumbnail   String?
+  description String  @db.Text
+
+  status ProjectStatus @default(VISIBLE)
+
+  // Y hệt shape địa điểm của Property, để copy thẳng sang property khi tạo tin.
+  city             String?
+  district         String?
+  ward             String?
+  oldWard          String?
+  provinceId       String?
+  province         Location? @relation("ProjectProvince", fields: [provinceId], references: [id], onDelete: SetNull)
+  districtId       String?
+  districtLocation Location? @relation("ProjectDistrict", fields: [districtId], references: [id], onDelete: SetNull)
+  wardId           String?
+  wardLocation     Location? @relation("ProjectWard", fields: [wardId], references: [id], onDelete: SetNull)
+
+  properties Property[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  /// Mốc cho sitemap. KHÔNG dùng `updatedAt` — nó bump theo mọi thay đổi kể cả không
+  /// ảnh hưởng nội dung hiển thị, đúng lỗi `lastmod` đã sửa cho Property.
+  contentUpdatedAt DateTime?
+
+  @@index([status])
+}
+
 enum LocationType {
   CITY
   DISTRICT
@@ -352,6 +408,9 @@ model Location {
   districtProperties Property[]    @relation("PropertyDistrict")
   wardProperties     Property[]    @relation("PropertyWard")
   requirements       Requirement[]
+  provinceProjects   Project[]     @relation("ProjectProvince")
+  districtProjects   Project[]     @relation("ProjectDistrict")
+  wardProjects       Project[]     @relation("ProjectWard")
 
   @@unique([parentId, type, slug])
   @@index([type, name])

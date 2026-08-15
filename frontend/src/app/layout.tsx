@@ -258,10 +258,14 @@ export default async function RootLayout({
                     // Đường dẫn dựng qua listingPath để đổi dạng URL chỉ cần đổi một cờ,
                     // và link nội bộ không bao giờ trỏ vào một 301.
                     { label: 'Trang chủ', href: '/' },
-                    ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN']).map((t) => ({
+                    ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU']).map((t) => ({
                       label: t.label,
                       href: listingPath({ propertyTypeSlug: t.slug }),
                     })),
+                    // Không còn là link category theo taxonomy nữa — /du-an giờ là
+                    // trang danh mục Dự án (thực thể riêng, xem model Project). URL
+                    // không đổi nên không ảnh hưởng gì tới SEO đã index.
+                    { label: 'Dự án', href: '/du-an' },
                     // 3 mục cũ (/nghe-an, /ha-tinh, /thanh-pho-vinh) là link chết trên
                     // site Hà Nội. Gom về một mục theo tỉnh đang cấu hình; P7 sẽ thay
                     // bằng 3 menu xổ Trung tâm / Cận trung tâm / Ngoại thành khi khách

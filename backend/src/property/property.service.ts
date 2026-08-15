@@ -20,6 +20,7 @@ import {
   transactionTypeVariants,
   slugify,
   applyRangeKeys,
+  applyProjectLocation,
   type NormalizedFilters,
 } from './property-utils';
 import { listingPath, PROPERTY_TYPE_LABEL, PROPERTY_TYPE_SLUG } from '../seo/seo-urls';
@@ -215,7 +216,7 @@ export class PropertyService {
     if (property.userId !== userId) throw new ForbiddenException('Không có quyền sửa bản nháp này');
     if (property.status !== 'DRAFT') throw new BadRequestException('Chỉ có thể cập nhật bản nháp');
 
-    const normalizedData = normalizePropertyPayload(data);
+    const normalizedData = await applyProjectLocation(this.prisma, normalizePropertyPayload(data));
     
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {
       throw new BadRequestException('Không thể cập nhật tin thành CẦN MUA hoặc CẦN THUÊ.');
@@ -258,7 +259,7 @@ export class PropertyService {
       throw new ForbiddenException('Vui lòng xác thực email trước khi tạo nháp.');
     }
 
-    const normalizedData = normalizePropertyPayload(data);
+    const normalizedData = await applyProjectLocation(this.prisma, normalizePropertyPayload(data));
     this.validatePropertyPayload(normalizedData, true);
 
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {
@@ -345,7 +346,7 @@ export class PropertyService {
       throw new ForbiddenException('Vui lòng xác thực email trước khi đăng tin.');
     }
 
-    const normalizedData = normalizePropertyPayload(data);
+    const normalizedData = await applyProjectLocation(this.prisma, normalizePropertyPayload(data));
     this.validatePropertyPayload(normalizedData);
 
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {
@@ -1052,7 +1053,7 @@ export class PropertyService {
     if (!property) throw new NotFoundException('Không tìm thấy bất động sản');
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (property.userId !== userId && user?.role !== 'ADMIN') throw new ForbiddenException('Không có quyền sửa bài này');
-    const normalizedData = normalizePropertyPayload(data);
+    const normalizedData = await applyProjectLocation(this.prisma, normalizePropertyPayload(data));
     this.validatePropertyPayload(normalizedData, true);
 
     if (normalizedData.transactionType === 'CAN_MUA' || normalizedData.transactionType === 'CAN_THUE') {

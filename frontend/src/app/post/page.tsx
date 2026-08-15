@@ -11,6 +11,7 @@ const MapPin = dynamic(() => import('@/components/MapPin'), { ssr: false, loadin
 import toast from 'react-hot-toast';
 import { PRICE_RANGES_SELL, PRICE_RANGES_RENT, AREA_RANGES, getPriceLabel, getAreaLabel } from '@/constants/ranges';
 import { siteConfig } from '@/lib/site-config';
+import LocationPicker, { resolveLocationIds } from '@/components/LocationPicker';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -23,6 +24,7 @@ const INITIAL_FORM_DATA = {
   district: '',
   ward: '',
   oldWard: '',
+  projectId: '',
   areaRangeKey: '',
   area: '' as number | string,
   priceRangeKey: '',
@@ -53,6 +55,7 @@ function PostPropertyContent() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -68,8 +71,27 @@ function PostPropertyContent() {
     api.get('/locations').then(res => {
       setLocations(res.data);
     }).catch(console.error);
+    api.get('/projects').then(res => {
+      setProjects(res.data || []);
+    }).catch(console.error);
   }, [user, isAuthLoading, router]);
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+
+  const handleProjectChange = (projectId: string) => {
+    const project = projects.find((p: any) => p.id === projectId);
+    setFormData(prev => ({
+      ...prev,
+      projectId,
+      // Chọn dự án -> khoá 4 field địa điểm bằng đúng địa điểm của dự án. Bỏ chọn thì
+      // giữ nguyên giá trị đang có (giờ có thể sửa tay lại), không xoá về rỗng.
+      ...(project ? {
+        city: project.city || prev.city,
+        district: project.district || '',
+        ward: project.ward || '',
+        oldWard: project.oldWard || '',
+      } : {}),
+    }));
+  };
 
   const searchType = searchParams.get('type');
   const searchTitle = searchParams.get('title');
@@ -151,6 +173,7 @@ function PostPropertyContent() {
             // Map all basic string/numeric fields explicitly
             if (prop.transactionType) nextState.transactionType = prop.transactionType;
             if (prop.propertyType) nextState.propertyType = prop.propertyType;
+            if (prop.projectId) nextState.projectId = prop.projectId;
             if (prop.title !== undefined && prop.title !== null) nextState.title = prop.title;
             
             const desc = prop.description || prop.content;
@@ -221,27 +244,8 @@ function PostPropertyContent() {
     }
   }, [searchEditId, searchType, searchTitle]);
 
-  const formatLocationName = (name: string) => {
-    if (!name) return '';
-    // Format "Phường ABC - XYZ cũ" to "Phường ABC (XYZ cũ)" if needed
-    if (name.includes('cũ') && name.includes('-')) {
-      return name.replace(/\s*-\s*(.*cũ.*)/i, ' ($1)');
-    }
-    return name;
-  };
-
   const isRequirement = formData.transactionType === 'CAN_MUA' || formData.transactionType === 'CAN_THUE';
   const labelText = isRequirement ? 'Gửi nhu cầu mua hoặc thuê Bất động sản' : 'Đăng tin công khai';
-
-  // Site phục vụ một tỉnh: không còn nhánh riêng cho tỉnh thứ hai.
-  const activeLocations = locations;
-  const selectedDistrictObj = activeLocations.find(d => d.name === formData.district);
-  const currentWards = selectedDistrictObj ? selectedDistrictObj.children.filter((c: any) => c.type === 'WARD') : [];
-  const oldWards = selectedDistrictObj ? selectedDistrictObj.children.filter((c: any) => c.type === 'OLD_WARD') : [];
-
-  const handleCityChange = (city: string) => {
-    setFormData(prev => ({...prev, city, district: '', ward: '', oldWard: ''}));
-  };
 
   useEffect(() => {
     const fetchCoordinates = async () => {
@@ -316,10 +320,8 @@ function PostPropertyContent() {
   };
 
   const getSanitizedPayload = () => {
-    const provinceId = selectedDistrictObj?.parentId || null;
-    const districtId = selectedDistrictObj?.id || null;
-    const wardId = currentWards.find((w: any) => w.name === formData.ward)?.id || null;
-    
+    const { provinceId, districtId, wardId } = resolveLocationIds(locations, formData);
+
     const sanitizedData = { ...formData } as any;
     const numericFields = ['bedrooms', 'bathrooms', 'floors', 'frontage', 'roadWidth', 'price', 'area'];
     numericFields.forEach(field => {
@@ -560,9 +562,12 @@ function PostPropertyContent() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-textMain">Loại BĐS <span className="text-danger">*</span></label>
-                <select 
+                <select
                   value={formData.propertyType}
-                  onChange={(e) => setFormData(prev => ({...prev, propertyType: e.target.value}))}
+                  onChange={(e) => {
+                    const newType = e.target.value;
+                    setFormData(prev => ({...prev, propertyType: newType, projectId: newType === 'DU_AN' ? prev.projectId : ''}));
+                  }}
                   className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
                 >
                   {/* Danh sách này thiếu hẳn BIET_THU dù backend nhận, và nhãn
@@ -584,59 +589,34 @@ function PostPropertyContent() {
               </div>
               Vị trí & Diện tích
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-textMain">Tỉnh / Thành phố</label>
-                <select 
-                  value={formData.city}
-                  onChange={(e) => handleCityChange(e.target.value)}
+            {formData.propertyType === 'DU_AN' && (
+              <div className="mb-5">
+                <label className="block text-sm font-medium mb-2 text-textMain">Thuộc dự án (tuỳ chọn)</label>
+                <select
+                  value={formData.projectId}
+                  onChange={(e) => handleProjectChange(e.target.value)}
                   className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
                 >
-                  <option className="font-sans" value={PROVINCE_NAME}>{PROVINCE_NAME}</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-textMain">Khu vực <span className="text-danger">*</span></label>
-                <select 
-                  value={formData.district} 
-                  onChange={(e) => setFormData(prev => ({...prev, district: e.target.value, ward: '', oldWard: ''}))}
-                  className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
-                >
-                  <option className="font-sans" value="">Chọn Khu vực</option>
-                  {activeLocations.map((d: any) => (
-                    <option className="font-sans" key={d.id} value={d.name}>{formatLocationName(d.name)}</option>
+                  <option className="font-sans" value="">Không thuộc dự án nào — tự nhập địa điểm</option>
+                  {projects.map((p: any) => (
+                    <option className="font-sans" key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
+                {formData.projectId && (
+                  <p className="text-xs text-textSecondary mt-2">Địa điểm bên dưới được khoá theo dự án đã chọn.</p>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-textMain">Phường/Xã mới {!isRequirement && <span className="text-danger">*</span>}</label>
-                <select 
-                    value={formData.ward} 
-                    onChange={(e) => setFormData(prev => ({...prev, ward: e.target.value}))}
-                    className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm mb-3"
-                    disabled={!formData.district}
-                  >
-                    <option className="font-sans" value="">Chọn Phường/Xã mới</option>
-                    {currentWards.map((w: any) => (
-                      <option className="font-sans" key={w.id} value={w.name}>{formatLocationName(w.name)}</option>
-                  ))}
-                </select>
-                <label className="block text-sm font-medium mb-2 text-textMain">Phường/Xã cũ (tuỳ chọn)</label>
-                <select 
-                    value={formData.oldWard} 
-                    onChange={(e) => setFormData(prev => ({...prev, oldWard: e.target.value}))}
-                    className="font-sans w-full border border-borderLight rounded-xl p-3.5 outline-none input-glow bg-white cursor-pointer text-sm"
-                    disabled={!formData.district}
-                  >
-                    <option className="font-sans" value="">Chọn Phường/Xã cũ (nếu có)</option>
-                    {oldWards.length > 0 && oldWards.map((w: any) => (
-                      <option className="font-sans" key={w.id} value={w.name}>{formatLocationName(w.name)}</option>
-                    ))}
-                  <option className="font-sans" value="Khác">Khác</option>
-                </select>
-              </div>
+            )}
+            <div className="mb-5">
+              <LocationPicker
+                locations={locations}
+                value={{ city: formData.city, district: formData.district, ward: formData.ward, oldWard: formData.oldWard }}
+                onChange={(loc) => setFormData(prev => ({ ...prev, ...loc }))}
+                requireWard={!isRequirement}
+                disabled={Boolean(formData.projectId)}
+              />
             </div>
-            
+
             {/* Map Pin */}
             {!isRequirement && (
             <div className="mt-5 mb-5 bg-gray-50/50 p-4 rounded-xl border border-borderLight">

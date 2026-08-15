@@ -125,6 +125,8 @@ export type NormalizedFilters = {
   districtId?: string;
   wardId?: string;
   tier?: string;
+  /** Lọc tin thuộc một dự án cụ thể — dùng cho trang /du-an/{slug}-{shortCode}. */
+  projectId?: string;
 };
 
 export function stripAccents(value: string) {
@@ -260,6 +262,7 @@ export function normalizePropertyPayload(data: Record<string, any>): Record<stri
     'transactionType',
     'propertyType',
     'categoryId',
+    'projectId',
     'city',
     'district',
     'ward',
@@ -343,6 +346,47 @@ export function normalizePropertyPayload(data: Record<string, any>): Record<stri
     normalized['images'] = normalized['images'].filter((image: unknown) => typeof image === 'string' && image.trim());
   }
   return normalized;
+}
+
+/**
+ * Khi tin chọn một dự án có sẵn (mục 9, PHẦN I), 7 trường địa điểm phải lấy từ CHÍNH dự
+ * án chứ không nhận từ client — 4 field địa điểm trên form đã bị khoá (disabled) phía
+ * frontend, nên nếu tin vẫn ghi đè bằng payload client gửi thì một request giả mạo có
+ * thể gắn tin vào dự án A nhưng địa điểm lại là B.
+ *
+ * Tách khỏi PropertyService (thay vì để private method) để unit test được độc lập —
+ * PropertyService có 7 dependency (queue, cache, search, notification...) không đáng
+ * phải mock chỉ để kiểm tra logic copy địa điểm này.
+ */
+export async function applyProjectLocation(
+  prisma: { project: { findUnique: (args: { where: { id: string } }) => Promise<any> } },
+  data: Record<string, any>,
+): Promise<Record<string, any>> {
+  if (!data.projectId) {
+    // Client gửi projectId rỗng ('') nghĩa là "gỡ khỏi dự án" (VD: đổi loại BĐS khỏi
+    // DU_AN lúc sửa tin) -- phải ghi NULL tường minh, không được để nguyên chuỗi rỗng
+    // lọt xuống Prisma vì cột có FK tới Project.id, '' không khớp NULL cũng không khớp
+    // dự án nào nên sẽ vỡ ràng buộc khoá ngoại.
+    if ('projectId' in data) return { ...data, projectId: null };
+    return data;
+  }
+
+  const project = await prisma.project.findUnique({ where: { id: data.projectId } });
+  if (!project || project.status !== 'VISIBLE') {
+    const { projectId, ...rest } = data;
+    return rest;
+  }
+  return {
+    ...data,
+    projectId: project.id,
+    city: project.city,
+    district: project.district,
+    ward: project.ward,
+    oldWard: project.oldWard,
+    provinceId: project.provinceId,
+    districtId: project.districtId,
+    wardId: project.wardId,
+  };
 }
 
 function toNumber(value: any) {
@@ -517,6 +561,7 @@ export function buildPrismaWhere(filters: NormalizedFilters): PropertyWhereInput
   if (filters.provinceId) and.push({ provinceId: filters.provinceId } as any);
   if (filters.districtId) and.push({ districtId: filters.districtId } as any);
   if (filters.wardId) and.push({ wardId: filters.wardId } as any);
+  if (filters.projectId) and.push({ projectId: filters.projectId } as any);
   
   const hasPriceFilter = filters.minPrice !== undefined || filters.maxPrice !== undefined || filters.priceRangeKey;
   if (hasPriceFilter) {

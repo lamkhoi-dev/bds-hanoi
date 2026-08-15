@@ -53,7 +53,7 @@ export class SeoService {
   /** Gọi khi tin được tạo/duyệt/ẩn/xoá để sitemap phản ánh trong lần refresh kế tiếp. */
   async invalidate(): Promise<void> {
     await Promise.all(
-      ['seo:landing', 'seo:listings', 'seo:news', 'seo:index'].map((key) =>
+      ['seo:landing', 'seo:listings', 'seo:news', 'seo:projects', 'seo:index'].map((key) =>
         this.cache.del(key).catch(() => undefined),
       ),
     );
@@ -204,6 +204,41 @@ export class SeoService {
     });
   }
 
+  /**
+   * URL trang Dự án — chỉ dự án VISIBLE và có ít nhất 1 tin đang hiển thị công khai.
+   *
+   * "Có nội dung" dùng đúng PUBLIC_STATUSES (APPROVED + SOLD) — cùng định nghĩa với
+   * `total` mà trang `/du-an/{slug}` đọc để quyết định noindex, để quyết định index ở
+   * trang và quyết định có mặt trong sitemap không bao giờ lệch nhau (rule 9 chung của
+   * mọi trang danh mục rỗng, xem indexability.ts phía frontend).
+   */
+  async getProjectUrls(): Promise<SitemapUrl[]> {
+    return this.cached('seo:projects', async () => {
+      const [projects, counts] = await Promise.all([
+        this.prisma.project.findMany({
+          where: { status: 'VISIBLE' },
+          select: { id: true, slug: true, shortCode: true, contentUpdatedAt: true, updatedAt: true, createdAt: true },
+        }),
+        this.prisma.property.groupBy({
+          by: ['projectId'],
+          where: { projectId: { not: null }, status: { in: [...PUBLIC_STATUSES] }, deletedAt: null },
+          _count: { id: true },
+        }),
+      ]);
+
+      const countByProject = new Map(counts.map((c) => [c.projectId as string, c._count.id]));
+
+      return projects
+        .filter((p) => (countByProject.get(p.id) ?? 0) > 0)
+        .map((p) => ({
+          loc: this.abs(`/du-an/${p.slug}-${p.shortCode}`),
+          lastmod: p.contentUpdatedAt ?? p.updatedAt ?? p.createdAt,
+          changefreq: 'weekly',
+          priority: 0.6,
+        }));
+    });
+  }
+
   getStaticUrls(): SitemapUrl[] {
     const support = [
       'pricing',
@@ -222,6 +257,7 @@ export class SeoService {
       { loc: this.abs(listingPath({})), changefreq: 'always', priority: 0.9 },
       { loc: this.abs(listingPath({ transaction: 'cho-thue' })), changefreq: 'daily', priority: 0.8 },
       { loc: this.abs('/news'), changefreq: 'daily', priority: 0.6 },
+      { loc: this.abs('/du-an'), changefreq: 'daily', priority: 0.6 },
       { loc: this.abs('/khu-vuc'), changefreq: 'weekly', priority: 0.5 },
       ...support.map((s) => ({
         loc: this.abs(`/support/${s}`),
@@ -239,10 +275,11 @@ export class SeoService {
   }
 
   async renderIndex(): Promise<string> {
-    const [landing, listings, news] = await Promise.all([
+    const [landing, listings, news, projects] = await Promise.all([
       this.getLandingUrls(),
       this.getListingUrls(),
       this.getNewsUrls(),
+      this.getProjectUrls(),
     ]);
 
     const entries: { loc: string; lastmod?: Date | string | null }[] = [
@@ -255,6 +292,7 @@ export class SeoService {
       entries.push({ loc: this.abs(`/sitemaps/listings-${i}.xml`) }),
     );
     if (news.length > 0) entries.push({ loc: this.abs('/sitemaps/news.xml') });
+    if (projects.length > 0) entries.push({ loc: this.abs('/sitemaps/projects.xml') });
 
     return renderSitemapIndex(entries);
   }
@@ -275,6 +313,10 @@ export class SeoService {
     return renderUrlSet(await this.getNewsUrls());
   }
 
+  async renderProjects(): Promise<string> {
+    return renderUrlSet(await this.getProjectUrls());
+  }
+
   /** Số tin theo từng tổ hợp — để đối chiếu trước/sau khi đổi sitemap. */
   async getFacetSummary() {
     const landing = await this.getLandingUrls();
@@ -282,6 +324,7 @@ export class SeoService {
       landingUrls: landing.length,
       listingUrls: (await this.getListingUrls()).length,
       newsUrls: (await this.getNewsUrls()).length,
+      projectUrls: (await this.getProjectUrls()).length,
       staticUrls: this.getStaticUrls().length,
       mode: process.env.SEO_MODE || 'report',
     };

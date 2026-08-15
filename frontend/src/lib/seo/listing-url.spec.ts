@@ -37,6 +37,17 @@ describe('parseListingRef — nhận cả hai dạng URL', () => {
   it('không có dấu nối thì lấy nguyên chuỗi', () => {
     expect(parseListingRef('19xk3').ref).toBe('19xk3');
   });
+
+  // `/du-an/{slug}-{shortCode}` dùng lại đúng hàm này (Project không có parser riêng).
+  // shortCode của Project sinh bằng thuật toán KHÁC Property (retry-loop 5 ký tự
+  // base36 ngẫu nhiên thay vì sequence Postgres), nên cần một ca riêng xác nhận dạng
+  // đó vẫn tách đúng, không phải chỉ suy diễn từ format của Property.
+  it('dạng dự án /du-an/{slug}-{shortCode}: shortCode 5 ký tự cũng tách đúng', () => {
+    expect(parseListingRef('vinhomes-riverside-a1b2c')).toEqual({
+      ref: 'a1b2c',
+      isLegacy: false,
+    });
+  });
 });
 
 describe('listingDetailPath', () => {

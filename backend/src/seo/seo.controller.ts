@@ -47,6 +47,12 @@ export class SeoController {
     return this.seoService.renderNews();
   }
 
+  @Get('sitemaps/projects.xml')
+  @Header('Content-Type', 'application/xml; charset=utf-8')
+  async projects() {
+    return this.seoService.renderProjects();
+  }
+
   /**
    * Số liệu tóm tắt để đối chiếu TRƯỚC/SAU khi đổi sitemap — đây là căn cứ go/no-go
    * mà plan yêu cầu chạy trên production trước khi merge.

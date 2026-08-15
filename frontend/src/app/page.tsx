@@ -16,6 +16,7 @@ import GoogleAdPlaceholder from '@/components/GoogleAdPlaceholder';
 import OnlineStatsGridItem from '@/components/OnlineStatsGridItem';
 import { serverApiUrl } from '@/lib/server-api';
 import ExploreMoreBehavioral from '@/components/ExploreMoreBehavioral';
+import { toMediaUrl } from '@/lib/media';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -65,16 +66,27 @@ async function getLocations() {
   }
 }
 
+async function getLatestProjects() {
+  try {
+    const res = await fetch(serverApiUrl('/projects/homepage?limit=4'), { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 // getVinhProperties() đã bị xoá: nó gọi 6 lượt fetch SSR cho 6 phường của TP Vinh
 // viết cứng, kèm slug tự chế. Khối "BĐS theo khu vực" giờ lấy từ Location.isFeatured
 // do importer đặt theo sheet "hot" của khách.
 
 export default async function Home() {
-  const [homepageData, hotLocations, locations, settings] = await Promise.all([
+  const [homepageData, hotLocations, locations, settings, latestProjects] = await Promise.all([
     getHomepageData(),
     getHotLocations(),
     getLocations(),
-    getPublicSettings()
+    getPublicSettings(),
+    getLatestProjects(),
   ]);
 
   const stats = homepageData?.stats || { properties: 100, users: 50, projects: 10, satisfaction: 99 };
@@ -179,6 +191,47 @@ export default async function Home() {
               moreLink={block.href}
             />
           ))}
+
+          {/* Khối Dự án (mục 11 PHẦN I) — 4 dự án có tin đăng mới nhất. */}
+          {latestProjects.length > 0 && (
+            <section className="mb-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-800">Dự án nổi bật</h2>
+                <Link href="/du-an" className="text-sm font-semibold text-primary hover:underline whitespace-nowrap">
+                  Xem toàn bộ
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {latestProjects.map((project: any) => (
+                  <Link
+                    key={project.id}
+                    href={`/du-an/${project.slug}-${project.shortCode}`}
+                    className="group bg-white rounded-2xl overflow-hidden border border-borderLight shadow-sm card-lift"
+                  >
+                    <div className="relative aspect-[4/3] bg-gray-100">
+                      {project.thumbnail ? (
+                        <Image
+                          src={toMediaUrl(project.thumbnail)}
+                          alt={project.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full text-gray-300">
+                          <Building2 className="w-10 h-10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-sm font-bold text-textMain group-hover:text-primary transition-colors line-clamp-2">
+                        {project.name}
+                      </h3>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Khách yêu cầu Cho thuê thành tab ngang thay vì một khối gộp. */}
           {homepageData?.rentTabs && homepageData.rentTabs.length > 0 && (

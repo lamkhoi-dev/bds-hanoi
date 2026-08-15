@@ -5,7 +5,7 @@ import { siteConfig } from '@/lib/site-config';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, Users, CreditCard, Settings, LogOut, ClipboardList, Database, Shield, Menu, X, Home, User } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, CreditCard, Settings, LogOut, ClipboardList, Database, Shield, Menu, X, Home, User, Building2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: 'Dashboard', icon: <LayoutDashboard size={20} />, href: '/admin', roles: ['ADMIN', 'SUPER_ADMIN', 'MOD'] },
     { label: 'Quản lý Tin đăng', icon: <FileText size={20} />, href: '/admin/posts', roles: ['ADMIN', 'SUPER_ADMIN', 'MOD'] },
     { label: 'Quản lý Tin tức', icon: <FileText size={20} />, href: '/admin/news', roles: ['ADMIN', 'SUPER_ADMIN', 'MOD'] },
+    { label: 'Quản lý Dự án', icon: <Building2 size={20} />, href: '/admin/projects', roles: ['ADMIN', 'SUPER_ADMIN', 'MOD'] },
     { label: 'Quản lý Nhu cầu', icon: <ClipboardList size={20} />, href: '/admin/requirements', roles: ['ADMIN', 'SUPER_ADMIN', 'MOD'] },
     { label: 'Quản lý User', icon: <Users size={20} />, href: '/admin/users', roles: ['ADMIN', 'SUPER_ADMIN'] },
     { label: 'Giao dịch & Nạp tiền', icon: <CreditCard size={20} />, href: '/admin/transactions', roles: ['ADMIN', 'SUPER_ADMIN'] },
