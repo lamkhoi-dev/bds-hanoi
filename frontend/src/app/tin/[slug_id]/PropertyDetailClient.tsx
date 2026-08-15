@@ -306,42 +306,17 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
     finalArea = exactArea;
   }
 
-  // Calculate Price per m2
-  let pricePerM2 = null;
-  if (property.price && property.area && property.price > 0) {
-    pricePerM2 = property.price / property.area;
-  } else {
-    const priceRanges = property.transactionType === 'CHO_THUE' ? PRICE_RANGES_RENT : PRICE_RANGES_SELL;
-    const pMatch = priceRanges.find(r => r.key === property.priceRangeKey);
-    const aMatch = AREA_RANGES.find(r => r.key === property.areaRangeKey);
-    
-    let avgPrice = (property.price && property.price > 0) ? property.price : null;
-    if (!avgPrice && pMatch && pMatch.canCalculate && pMatch.min && pMatch.max) {
-      avgPrice = (pMatch.min + pMatch.max) / 2;
-    }
-    
-    let avgArea = (property.area && property.area > 0) ? property.area : null;
-    if (!avgArea && aMatch && aMatch.canCalculate && aMatch.min && aMatch.max) {
-      avgArea = (aMatch.min + aMatch.max) / 2;
-    }
+  // Giá/m² LẤY TỪ BACKEND, không tự tính lại.
+  //
+  // Trước đây chỗ này có công thức riêng, lệch với công thức backend dùng cho card ở
+  // trang chủ/chuyên mục: cùng một tin 2,95 tỷ/100m² hiện "29,5 triệu/m²" ở đây nhưng
+  // "30 triệu/m²" trên card. Đó đúng là mục "chưa thống nhất giá/m2" khách báo.
+  // Nay chỉ có MỘT nguồn: calculatePricePerM2 + formatPricePerM2 ở backend.
+  const formattedPricePerM2 =
+    typeof property.pricePerM2Display === 'string' && property.pricePerM2Display.trim()
+      ? property.pricePerM2Display
+      : 'Đang cập nhật';
 
-    if (avgPrice && avgArea) {
-      pricePerM2 = avgPrice / avgArea;
-    }
-  }
-
-  let formattedPricePerM2 = 'Đang cập nhật';
-  if (pricePerM2) {
-    if (pricePerM2 < 500000 || pricePerM2 > 9999000000) {
-      formattedPricePerM2 = '-';
-    } else if (pricePerM2 < 1000000) {
-      formattedPricePerM2 = `≈ ${formatNumberString(Math.round(pricePerM2 / 1000))} nghìn/m²`;
-    } else {
-      formattedPricePerM2 = `≈ ${(pricePerM2 / 1000000).toFixed(1).replace(/\.0$/, '').replace('.', ',')} triệu/m²`;
-    }
-  } else if (property.isNegotiable || property.priceRangeKey === 'THOA_THUAN') {
-    formattedPricePerM2 = 'Giá thương lượng';
-  }
 
   // Bảng alias phường cứng cho một phường ở Vinh đã bỏ — dữ liệu Hà Nội có cột
   // oldWard thật cho mọi tin.

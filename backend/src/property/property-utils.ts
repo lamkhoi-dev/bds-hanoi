@@ -143,35 +143,66 @@ export function slugify(value?: string | null) {
     .replace(/^-+|-+$/g, '');
 }
 
+/**
+ * Giá trên mỗi m². ĐÂY LÀ NƠI DUY NHẤT tính đại lượng này.
+ *
+ * Khách báo "chưa thống nhất giá/m2": card ở trang chủ/chuyên mục lấy giá trị backend
+ * tính, còn trang chi tiết TỰ TÍNH LẠI bằng một công thức khác. Hai bên lệch nhau ở
+ * ba điểm: backend luôn lấy trung bình khoảng còn trang chi tiết ưu tiên giá/diện tích
+ * chính xác; backend làm tròn về số nguyên còn trang chi tiết giữ một chữ số thập phân
+ * (2,95 tỷ/100m² ra "30 triệu/m²" ở card nhưng "29,5 triệu/m²" ở trang chi tiết); và
+ * backend trả "-" cho mọi mức dưới 1 triệu/m².
+ *
+ * Quy tắc chốt: ƯU TIÊN giá và diện tích CHÍNH XÁC. Chỉ khi thiếu mới lùi về trung
+ * điểm khoảng — con số chính xác luôn đáng tin hơn trung bình của một khoảng.
+ */
 export function calculatePricePerM2(
   priceMin?: number | null,
   priceMax?: number | null,
   areaMin?: number | null,
-  areaMax?: number | null
+  areaMax?: number | null,
+  exactPrice?: number | null,
+  exactArea?: number | null,
 ): number | null {
-  // Chỉ tính khi có đủ min/max hợp lệ (có thể min = max). Không tính cho các trường hợp chỉ có 1 đầu.
-  if (
-    priceMin !== undefined && priceMin !== null &&
-    priceMax !== undefined && priceMax !== null &&
-    areaMin !== undefined && areaMin !== null &&
-    areaMax !== undefined && areaMax !== null
-  ) {
-    const avgPrice = (priceMin + priceMax) / 2;
-    const avgArea = (areaMin + areaMax) / 2;
-    if (avgArea > 0) {
-      return avgPrice / avgArea;
-    }
-  }
-  return null;
+  const price =
+    exactPrice !== undefined && exactPrice !== null && exactPrice > 0
+      ? exactPrice
+      : priceMin !== undefined && priceMin !== null && priceMax !== undefined && priceMax !== null
+        ? (priceMin + priceMax) / 2
+        : null;
+
+  const area =
+    exactArea !== undefined && exactArea !== null && exactArea > 0
+      ? exactArea
+      : areaMin !== undefined && areaMin !== null && areaMax !== undefined && areaMax !== null
+        ? (areaMin + areaMax) / 2
+        : null;
+
+  if (price === null || area === null || area <= 0 || price <= 0) return null;
+  return price / area;
 }
 
+/**
+ * Định dạng giá/m². Đi kèm `calculatePricePerM2` — mọi nơi hiển thị đều phải qua đây.
+ *
+ * Giữ MỘT chữ số thập phân ở đơn vị triệu: làm tròn về số nguyên khiến 29,5 thành 30,
+ * lệch 1,7% và lệch hẳn với con số trang chi tiết đang hiện.
+ * Dưới 1 triệu/m² đổi sang "nghìn/m²" thay vì trả "-": đất nông thôn 800 nghìn/m² là
+ * mức có thật, trả "-" là giấu mất thông tin đúng.
+ */
 export function formatPricePerM2(pricePerM2?: number | null): string {
-  if (!pricePerM2) return '-';
-  const millionPerM2 = pricePerM2 / 1000000;
-  const rounded = Math.round(millionPerM2);
-  if (rounded === 0 || rounded > 9999) return '-';
-  return `≈ ${rounded} triệu/m²`;
+  if (!pricePerM2 || pricePerM2 <= 0) return '-';
+  // Ngoài dải này gần như chắc chắn do nhập sai đơn vị -> không hiển thị con số sai.
+  if (pricePerM2 < 500_000 || pricePerM2 > 9_999_000_000) return '-';
+  if (pricePerM2 < 1_000_000) {
+    return `≈ ${Math.round(pricePerM2 / 1000)} nghìn/m²`;
+  }
+  const trieu = (pricePerM2 / 1_000_000).toFixed(1).replace(/\.0$/, '').replace('.', ',');
+  return `≈ ${trieu} triệu/m²`;
 }
+
+/** Chuỗi hiển thị khi tin để giá thoả thuận. Dùng chung để hai nơi không viết khác nhau. */
+export const PRICE_NEGOTIABLE_LABEL = 'Giá thỏa thuận';
 
 function normalizeKey(value?: string | null) {
   if (!value) return undefined;
@@ -375,9 +406,11 @@ export function applyRangeKeys(data: Record<string, any>) {
     data.priceMin = null;
     data.priceMax = null;
     data.pricePerM2 = null;
-    data.pricePerM2Display = 'Giá thỏa thuận';
+    data.pricePerM2Display = PRICE_NEGOTIABLE_LABEL;
   } else {
-    const pricePerM2 = calculatePricePerM2(data.priceMin, data.priceMax, data.areaMin, data.areaMax);
+    const pricePerM2 = calculatePricePerM2(
+      data.priceMin, data.priceMax, data.areaMin, data.areaMax, data.price, data.area,
+    );
     if (pricePerM2) {
       data.pricePerM2 = pricePerM2;
       data.pricePerM2Display = formatPricePerM2(pricePerM2);
