@@ -167,7 +167,7 @@ export default function PropertyCard({ item }: { item: any }) {
     <>
     <Link
       href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)}
-      className="flex flex-col card-lift group bg-white rounded-2xl overflow-hidden border border-borderLight shadow-sm animate-fade-in"
+      className="flex flex-col h-full card-lift group bg-white rounded-2xl overflow-hidden border border-borderLight shadow-sm animate-fade-in"
     >
       {/* ẢNH — chiếm toàn bộ chiều ngang card */}
       <div
@@ -248,16 +248,19 @@ export default function PropertyCard({ item }: { item: any }) {
               </>
             )}
           </div>
-          {placeLine && (
-            <div className="text-[11px] sm:text-xs text-amber-200 font-medium leading-tight mt-0.5 line-clamp-1 drop-shadow">
-              {placeLine}
-            </div>
-          )}
+          {/* Bản cũ có chữ dự phòng "Chưa cập nhật" khi tin thiếu cả xã lẫn huyện —
+              giữ lại, không để trống dòng khi thiếu dữ liệu. */}
+          <div className="text-[11px] sm:text-xs text-amber-200 font-medium leading-tight mt-0.5 line-clamp-1 drop-shadow">
+            {placeLine || 'Chưa cập nhật'}
+          </div>
         </div>
       </div>
 
-      {/* DƯỚI ẢNH — 3 hàng, chạy suốt chiều ngang */}
-      <div className="px-3 sm:px-4 py-3">
+      {/* DƯỚI ẢNH — 3 hàng, chạy suốt chiều ngang.
+          flex-1 + mt-auto ở dòng cuối: card ngắn tiêu đề (1 dòng) và card dài tiêu đề
+          (2 dòng) trong CÙNG một hàng lưới vẫn cao bằng nhau, dòng ngày đăng luôn nằm
+          sát đáy card thay vì lệch cao thấp theo độ dài tiêu đề. */}
+      <div className="px-3 sm:px-4 py-3 flex-1 flex flex-col">
         {/* 2 hàng tiêu đề, chữ đậm, quá thì cắt bằng dấu ba chấm */}
         <h3
           className="font-bold text-sm sm:text-base text-textMain group-hover:text-primary line-clamp-2 leading-snug"
@@ -267,7 +270,7 @@ export default function PropertyCard({ item }: { item: any }) {
         </h3>
 
         {/* Hàng thứ 3: chữ không đậm, nhỏ hơn một chút */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-textSecondary">
+        <div className="mt-auto pt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-textSecondary">
           {metaParts.map((part, i) => (
             <span key={i} className="flex items-center gap-2">
               {i > 0 && <span className="text-gray-300">·</span>}
