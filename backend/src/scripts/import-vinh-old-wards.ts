@@ -9,8 +9,8 @@
  * Đoạn URL được chọn lúc chạy, đối chiếu với các segment ĐANG CÓ trong CSDL, theo đúng
  * thứ tự ưu tiên của importer Hà Nội: {slug} -> {slug}-cu -> {slug}-vinh-cu -> -N.
  *
- * Chạy thử (không ghi):  node dist/scripts/import-vinh-old-wards.js
- * Chạy thật:             node dist/scripts/import-vinh-old-wards.js --apply
+ * Chạy thử (không ghi):  node dist/src/scripts/import-vinh-old-wards.js
+ * Chạy thật:             node dist/src/scripts/import-vinh-old-wards.js --apply
  */
 import * as fs from 'fs';
 import * as path from 'path';

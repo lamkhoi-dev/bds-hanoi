@@ -139,7 +139,7 @@ Rủi ro chính: `backend/scripts/seed_nghe_an.js` dùng `findUnique` trên `slu
 
 ### Importer — 2 tầng
 - **`backend/src/scripts/extract-locations-xlsx.ts`** (chạy ở máy dev, nhận đường dẫn file) → sinh `backend/prisma/data/hanoi/locations.hanoi.json`, `featured.hanoi.json`, `conflicts.hanoi.json` **commit vào git**. Khi khách gửi dữ liệu sửa, diff PR cho thấy đúng phường nào đổi trước khi động vào production.
-- **`backend/src/scripts/import-locations.ts`** đọc JSON và upsert. **Đặt trong `src/scripts/`** vì `backend/Dockerfile` chỉ copy `dist`, `node_modules`, `package*.json`, `prisma` — script trong `backend/scripts/` sẽ không bao giờ vào image, và `ts-node` đã bị prune. Chạy: `docker compose exec backend node dist/scripts/import-locations.js`.
+- **`backend/src/scripts/import-locations.ts`** đọc JSON và upsert. **Đặt trong `src/scripts/`** vì `backend/Dockerfile` chỉ copy `dist`, `node_modules`, `package*.json`, `prisma` — script trong `backend/scripts/` sẽ không bao giờ vào image, và `ts-node` đã bị prune. Chạy: `docker compose exec backend node dist/src/scripts/import-locations.js`.
 
 **Luật parse** (đã kiểm chứng trên XML thật): tra sheet theo tên đã chuẩn hoá dấu (tên tab lệch dấu: `phường xa mới hot`) · forward-fill cột quận (ô merge) · **loại dòng nào cột số thứ tự không phải số** — cách này bỏ được cả 2 dòng header mà không hard-code số dòng · khoá join quận = bỏ tiền tố + bỏ dấu → 30↔30 khớp tuyệt đối · **tên quận hiển thị lấy từ bảng 30 dòng khai trong script**, không lấy từ sheet (tránh `Tây hồ` thắng `Tây Hồ`) · lấy danh sách quận từ 2 sheet "All…", **không** từ sheet `quận huyện` (sheet này chỉ có 27, thiếu Phúc Thọ/Thạch Thất/Sơn Tây) — sheet đó chỉ dùng để gán `sortOrder`.
 

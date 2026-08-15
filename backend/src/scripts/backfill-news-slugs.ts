@@ -8,8 +8,8 @@
  * Google index vẫn 301 sang URL mới thay vì 404.
  *
  * Chạy:
- *   node dist/scripts/backfill-news-slugs.js            # xem trước, không ghi
- *   node dist/scripts/backfill-news-slugs.js --apply    # ghi thật
+ *   node dist/src/scripts/backfill-news-slugs.js            # xem trước, không ghi
+ *   node dist/src/scripts/backfill-news-slugs.js --apply    # ghi thật
  */
 import { PrismaClient } from '@prisma/client';
 import { slugify } from '../property/property-utils';

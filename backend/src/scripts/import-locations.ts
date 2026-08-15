@@ -2,8 +2,8 @@
  * Nhập cây hành chính từ JSON đã commit vào database.
  *
  * Chạy trong container (script được `nest build` biên dịch vào dist/):
- *   docker compose -f docker-compose.vps.yml exec backend node dist/scripts/import-locations.js
- *   docker compose -f docker-compose.vps.yml exec backend node dist/scripts/import-locations.js --apply
+ *   docker compose -f docker-compose.vps.yml exec backend node dist/src/scripts/import-locations.js
+ *   docker compose -f docker-compose.vps.yml exec backend node dist/src/scripts/import-locations.js --apply
  *
  * Nguyên tắc:
  *   - KHÔNG BAO GIỜ deleteMany. Bản ghi biến mất khỏi file nguồn chỉ bị tắt

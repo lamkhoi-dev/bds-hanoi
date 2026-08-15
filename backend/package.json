@@ -16,6 +16,7 @@
     "db:generate": "prisma generate",
     "locations:extract": "ts-node src/scripts/extract-locations-xlsx.ts",
     "locations:import": "ts-node src/scripts/import-locations.ts",
+    "locations:backfill": "ts-node src/scripts/backfill-locations.ts",
     "preflight": "ts-node src/scripts/preflight-check.ts",
     "vinh:extract": "ts-node src/scripts/extract-vinh-old-wards.ts",
     "vinh:import": "ts-node src/scripts/import-vinh-old-wards.ts",
