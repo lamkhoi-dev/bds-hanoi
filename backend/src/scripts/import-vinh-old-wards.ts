@@ -54,14 +54,34 @@ async function main() {
         `Script này chỉ chạy trên CSDL Nghệ An, không phải Hà Nội.`,
     );
   }
-  if (matches.length > 1) {
-    // Không đoán: hai đơn vị cùng tên thì phải người quyết định.
+  // CSDL nhadatxunghe.vn có HAI cây khu vực trùng nhau: cây gốc ('nghe-an/…', là cây
+  // mọi tin đăng thật đang tham chiếu) và cây từ lần đồng bộ toàn quốc
+  // ('tinh-nghe-an/…', không tin nào dùng). Nên chỉ nhận quận nằm trong tỉnh mà site
+  // ĐANG PHỤC VỤ; ngoài phạm vi đó thì vẫn không đoán.
+  const activeSlugs = (process.env.ACTIVE_PROVINCE_SLUG || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const inActive = matches.filter((m) =>
+    activeSlugs.some((slug) => m.path === slug || m.path.startsWith(`${slug}/`)),
+  );
+  const candidates = inActive.length > 0 ? inActive : matches;
+
+  if (candidates.length > 1) {
+    // Không đoán: còn nhiều hơn một thì phải người quyết định.
     throw new Error(
-      `Có ${matches.length} quận/huyện khớp "${payload.parentDistrict.displayName}": ` +
-        matches.map((m) => `${m.name} (path=${m.path})`).join(' | '),
+      `Có ${candidates.length} quận/huyện khớp "${payload.parentDistrict.displayName}" ` +
+        `trong phạm vi đang phục vụ (${activeSlugs.join(', ') || 'chưa đặt'}): ` +
+        candidates.map((m) => `${m.name} (path=${m.path})`).join(' | '),
     );
   }
-  const parent = matches[0];
+  const parent = candidates[0];
+  if (matches.length > candidates.length) {
+    console.log(
+      `Bỏ qua ${matches.length - candidates.length} bản ghi cùng tên nằm ngoài tỉnh đang phục vụ: ` +
+        matches.filter((m) => m.id !== parent.id).map((m) => m.path).join(', '),
+    );
+  }
   console.log(`Quận cha: ${parent.name} (path=${parent.path})`);
 
   // ---------- Tập segment đang dùng ----------
