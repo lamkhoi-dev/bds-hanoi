@@ -1,0 +1,19 @@
+[
+  { "name": "Phường Lê Mao", "districtName": "Thành phố Vinh" },
+  { "name": "Phường Đội Cung", "districtName": "Thành phố Vinh" },
+  { "name": "Phường Hồng Sơn", "districtName": "Thành phố Vinh" },
+  { "name": "Phường Quang Trung", "districtName": "Thành phố Vinh" },
+  { "name": "Xã Nghi Xuân", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Phúc Thọ", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Nghi Thái", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Nghi Phong", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Nghi Hoa", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Nghi Diên", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Nghi Thịnh", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Nghi Trường", "districtName": "Huyện Nghi Lộc" },
+  { "name": "Xã Ngọc Sơn", "districtName": "Huyện Đô Lương" },
+  { "name": "Xã Lam Sơn", "districtName": "Huyện Đô Lương" },
+  { "name": "Xã Nghĩa Hợp", "districtName": "Huyện Tân Kỳ" },
+  { "name": "Xã Nghĩa Bình", "districtName": "Huyện Tân Kỳ" },
+  { "name": "Thị xã Cửa Lò", "districtName": "Thành phố Vinh" }
+]

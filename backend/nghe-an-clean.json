@@ -1,0 +1,232 @@
+[
+  {
+    "name": "Huyện Anh Sơn",
+    "wards": [
+      "Xã Anh Sơn",
+      "Xã Yên Xuân",
+      "Xã Nhân Hoà",
+      "Xã Anh Sơn Đông",
+      "Xã Vĩnh Tường",
+      "Xã Thành Bình Thọ"
+    ]
+  },
+  {
+    "name": "Huyện Con Cuông",
+    "wards": [
+      "Xã Con Cuông",
+      "Xã Môn Sơn",
+      "Xã Mậu Thạch",
+      "Xã Cam Phục",
+      "Xã Châu Khê",
+      "Xã Bình Chuẩn"
+    ]
+  },
+  {
+    "name": "Huyện Diễn Châu",
+    "wards": [
+      "Xã Diễn Châu",
+      "Xã Đức Châu",
+      "Xã Quảng Châu",
+      "Xã Hải Châu",
+      "Xã Tân Châu",
+      "Xã An Châu",
+      "Xã Minh Châu",
+      "Xã Hùng Châu"
+    ]
+  },
+  {
+    "name": "Huyện Đô Lương",
+    "wards": [
+      "Xã Đô Lương",
+      "Xã Bạch Ngọc",
+      "Xã Văn Hiến",
+      "Xã Bạch Hà",
+      "Xã Thuần Trung",
+      "Xã Lương Sơn"
+    ]
+  },
+  {
+    "name": "Thị xã Hoàng Mai",
+    "wards": [
+      "Phường Hoàng Mai",
+      "Phường Tân Mai",
+      "Phường Quỳnh Mai"
+    ]
+  },
+  {
+    "name": "Huyện Hưng Nguyên",
+    "wards": [
+      "Xã Hưng Nguyên",
+      "Xã Yên Trung",
+      "Xã Hưng Nguyên Nam",
+      "Xã Lam Thành"
+    ]
+  },
+  {
+    "name": "Huyện Kỳ Sơn",
+    "wards": [
+      "Xã Mường Xén",
+      "Xã Hữu Kiệm",
+      "Xã Nậm Cắn",
+      "Xã Chiêu Lưu",
+      "Xã Na Loi",
+      "Xã Mường Típ",
+      "Xã Na Ngoi",
+      "Xã Mỹ Lý",
+      "Xã Bắc Lý",
+      "Xã Keng Đu",
+      "Xã Huồi Tụ",
+      "Xã Mường Lống"
+    ]
+  },
+  {
+    "name": "Huyện Nam Đàn",
+    "wards": [
+      "Xã Vạn An",
+      "Xã Nam Đàn",
+      "Xã Đại Huệ",
+      "Xã Thiên Nhẫn",
+      "Xã Kim Liên"
+    ]
+  },
+  {
+    "name": "Huyện Nghĩa Đàn",
+    "wards": [
+      "Xã Nghĩa Đàn",
+      "Xã Nghĩa Thọ",
+      "Xã Nghĩa Lâm",
+      "Xã Nghĩa Mai",
+      "Xã Nghĩa Hưng",
+      "Xã Nghĩa Khánh",
+      "Xã Nghĩa Lộc"
+    ]
+  },
+  {
+    "name": "Huyện Nghi Lộc",
+    "wards": [
+      "Xã Nghi Lộc",
+      "Xã Phúc Lộc",
+      "Xã Đông Lộc",
+      "Xã Trung Lộc",
+      "Xã Thần Lĩnh",
+      "Xã Hải Lộc",
+      "Xã Văn Kiều"
+    ]
+  },
+  {
+    "name": "Huyện Quế Phong",
+    "wards": [
+      "Xã Quế Phong",
+      "Xã Tiền Phong",
+      "Xã Tri Lễ",
+      "Xã Mường Quàng",
+      "Xã Thông Thụ"
+    ]
+  },
+  {
+    "name": "Huyện Quỳ Châu",
+    "wards": [
+      "Xã Quỳ Châu",
+      "Xã Châu Tiến",
+      "Xã Hùng Chân",
+      "Xã Châu Bình"
+    ]
+  },
+  {
+    "name": "Huyện Quỳ Hợp",
+    "wards": [
+      "Xã Quỳ Hợp",
+      "Xã Tam Hợp",
+      "Xã Châu Lộc",
+      "Xã Châu Hồng",
+      "Xã Mường Ham",
+      "Xã Mường Chọng",
+      "Xã Minh Hợp"
+    ]
+  },
+  {
+    "name": "Huyện Quỳnh Lưu",
+    "wards": [
+      "Xã Quỳnh Lưu",
+      "Xã Quỳnh Văn",
+      "Xã Quỳnh Anh",
+      "Xã Quỳnh Tam",
+      "Xã Quỳnh Phú",
+      "Xã Quỳnh Sơn",
+      "Xã Quỳnh Thắng"
+    ]
+  },
+  {
+    "name": "Huyện Tân Kỳ",
+    "wards": [
+      "Xã Tân Kỳ",
+      "Xã Tân Phú",
+      "Xã Tân An",
+      "Xã Nghĩa Đồng",
+      "Xã Giai Xuân",
+      "Xã Nghĩa Hành",
+      "Xã Tiên Đồng"
+    ]
+  },
+  {
+    "name": "Thị xã Thái Hoà",
+    "wards": [
+      "Phường Thái Hoà",
+      "Phường Tây Hiếu",
+      "Xã Đông Hiếu"
+    ]
+  },
+  {
+    "name": "Huyện Thanh Chương",
+    "wards": [
+      "Xã Cát Ngạn",
+      "Xã Tam Đồng",
+      "Xã Hạnh Lâm",
+      "Xã Sơn Lâm",
+      "Xã Hoa Quân",
+      "Xã Kim Bảng",
+      "Xã Bích Hào",
+      "Xã Đại Đồng",
+      "Xã Xuân Lâm"
+    ]
+  },
+  {
+    "name": "Huyện Tương Dương",
+    "wards": [
+      "Xã Tam Quang",
+      "Xã Tam Thái",
+      "Xã Tương Dương",
+      "Xã Lượng Minh",
+      "Xã Yên Na",
+      "Xã Yên Hoà",
+      "Xã Nga My",
+      "Xã Hữu Khuông",
+      "Xã Nhôn Mai"
+    ]
+  },
+  {
+    "name": "Thành phố Vinh",
+    "wards": [
+      "Phường Trường Vinh",
+      "Phường Thành Vinh",
+      "Phường Vinh Hưng",
+      "Phường Vinh Phú",
+      "Phường Vinh Lộc",
+      "Phường Cửa Lò"
+    ]
+  },
+  {
+    "name": "Huyện Yên Thành",
+    "wards": [
+      "Xã Yên Thành",
+      "Xã Quan Thành",
+      "Xã Hợp Minh",
+      "Xã Vân Tụ",
+      "Xã Vân Du",
+      "Xã Quang Đồng",
+      "Xã Giai Lạc",
+      "Xã Bình Minh",
+      "Xã Đông Thành"
+    ]
+  }
+]

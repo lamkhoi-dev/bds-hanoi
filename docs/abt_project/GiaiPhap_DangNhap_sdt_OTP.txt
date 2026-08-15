@@ -1,0 +1,65 @@
+BẢNG PHÂN TÍCH CÁC GIẢI PHÁP ĐĂNG NHẬP BẰNG SỐ ĐIỆN THOẠI (GỬI MÃ OTP)
+
+Kính gửi Quý Khách hàng,
+
+Để thực hiện tính năng "Đăng nhập bằng số điện thoại" trên website, hệ thống bắt buộc phải sử dụng một dịch vụ của bên thứ 3 (nhà mạng viễn thông hoặc dịch vụ trung gian) để gửi tin nhắn chứa mã số xác thực (Mã OTP) về số điện thoại của người dùng.
+
+Dưới đây là 3 phương án công nghệ phổ biến nhất hiện nay, kèm theo ưu nhược điểm và yêu cầu chuẩn bị để anh/chị cân nhắc lựa chọn:
+
+--------------------------------------------------
+PHƯƠNG ÁN 1: SỬ DỤNG FIREBASE (Dịch vụ của GOOGLE)
+(Đề xuất cho giai đoạn đầu của dự án)
+--------------------------------------------------
+- Ưu điểm:
+  + Không yêu cầu thủ tục hành chính, giấy phép kinh doanh.
+  + Tích hợp nhanh chóng, không tốn thời gian chờ duyệt.
+  + Chi phí cực rẻ (hoặc miễn phí) trong giai đoạn đầu. Cụ thể Google miễn phí 10.000 tin nhắn xác thực đầu tiên mỗi tháng.
+
+- Nhược điểm:
+  + Tên người gửi tin nhắn (Sender ID) hiển thị trên điện thoại người dùng thường là một dãy số ngẫu nhiên hoặc chữ "Verify", chứ không mang tên thương hiệu của anh/chị.
+  + Đôi khi nhà mạng Việt Nam chặn tin nhắn từ đầu số quốc tế, dẫn đến việc nhận mã OTP bị chậm từ 1-2 phút ở một số thuê bao.
+
+- Khách hàng cần chuẩn bị: 
+  + Không cần chuẩn bị giấy tờ gì. Chỉ cần cấp quyền truy cập Gmail cho đội ngũ kỹ thuật thao tác là xong.
+
+
+--------------------------------------------------
+PHƯƠNG ÁN 2: THUÊ TỔNG ĐÀI SMS TRONG NƯỚC (Ví dụ: eSMS, SpeedSMS)
+(Đề xuất khi website đã phát triển mạnh và cần xây dựng thương hiệu)
+--------------------------------------------------
+- Ưu điểm:
+  + Tốc độ nhận tin nhắn cực kỳ nhanh và ổn định (chỉ 1-3 giây).
+  + Tin nhắn gửi đến sẽ hiển thị Tên thương hiệu của anh/chị (Ví dụ: "NhaDatXN"), trông rất uy tín và chuyên nghiệp.
+
+- Nhược điểm:
+  + Mất phí cho mỗi tin nhắn gửi đi (dao động từ 500đ - 800đ / 1 tin nhắn OTP).
+  + Thủ tục đăng ký phức tạp và mất thời gian (khoảng 3 - 7 ngày làm việc).
+
+- Khách hàng cần chuẩn bị:
+  + Bắt buộc phải có Giấy phép Đăng ký kinh doanh hợp lệ.
+  + Ký hợp đồng trực tiếp với bên cung cấp dịch vụ SMS.
+  + Nạp tiền sẵn vào tài khoản để duy trì việc gửi tin.
+
+
+--------------------------------------------------
+PHƯƠNG ÁN 3: GỬI OTP QUA ZALO (Zalo ZNS)
+(Đang rất thịnh hành hiện nay)
+--------------------------------------------------
+- Ưu điểm:
+  + Chi phí rẻ hơn SMS truyền thống (chỉ khoảng 200đ - 300đ / 1 tin nhắn).
+  + Tin nhắn hiển thị đẹp, rõ ràng, có kèm logo thương hiệu ngay trong ứng dụng Zalo. Khả năng tương tác cao.
+
+- Nhược điểm:
+  + Chỉ những người dùng có cài đặt và sử dụng ứng dụng Zalo mới nhận được tin nhắn. (Tuy nhiên ở VN tỷ lệ dùng Zalo rất cao).
+
+- Khách hàng cần chuẩn bị:
+  + Bắt buộc phải có Giấy phép Đăng ký kinh doanh.
+  + Phải khởi tạo tài khoản Zalo OA (Official Account) cho doanh nghiệp và đăng ký xác thực Tick vàng với Zalo.
+
+
+--------------------------------------------------
+LỜI KHUYÊN TỪ ĐỘI NGŨ KỸ THUẬT:
+Trong giai đoạn đầu khi website mới ra mắt và chưa có lượng người dùng quá lớn, anh/chị nên chọn PHƯƠNG ÁN 1 (Google Firebase). Đây là giải pháp tiết kiệm chi phí, không rườm rà giấy tờ và giúp đẩy nhanh tiến độ dự án. 
+Sau khi website đã đi vào hoạt động ổn định và anh/chị có đầy đủ pháp nhân/giấy phép kinh doanh, chúng ta có thể dễ dàng nâng cấp lên PHƯƠNG ÁN 2 hoặc PHƯƠNG ÁN 3 để tăng tính chuyên nghiệp cho thương hiệu.
+
+Anh/chị vui lòng xem xét và phản hồi lại phương án anh/chị chọn để đội ngũ kỹ thuật tiến hành triển khai nhé!

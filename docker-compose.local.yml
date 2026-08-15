@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: bds-postgres-local
+    environment:
+      POSTGRES_USER: bds_user
+      POSTGRES_PASSWORD: bds_password
+      POSTGRES_DB: bds_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: bds-redis-local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_local:/data
+    restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.7
+    container_name: bds-meilisearch-local
+    environment:
+      - MEILI_MASTER_KEY=bds_master_key_123
+      - MEILI_NO_ANALYTICS=true
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data_local:/meili_data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+    container_name: bds-backend-local
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: "postgresql://bds_user:bds_password@postgres:5432/bds_db?schema=public"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: local-secret-key-for-jwt-12345
+      ENCRYPTION_KEY: local-secret-key-for-encryption-12345
+      MEILISEARCH_HOST: http://meilisearch:7700
+      MEILISEARCH_KEY: bds_master_key_123
+      FRONTEND_URL: http://localhost:3000
+      PUBLIC_API_URL: http://localhost:4000
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USER: nguyenduy20062025@gmail.com
+      SMTP_PASS: bzmfwiqsqircyxgy
+      SMTP_FROM: "Nhà Đất Xứ Nghệ <nguyenduy20062025@gmail.com>"
+    depends_on:
+      - postgres
+      - redis
+      - meilisearch
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: /api
+        INTERNAL_API_URL: http://backend:4000
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    container_name: bds-frontend-local
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: /api
+      INTERNAL_API_URL: http://backend:4000
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data_local:
+  redis_data_local:
+  meilisearch_data_local:

@@ -1,0 +1,691 @@
+--- C:\Users\Nguye\OneDrive\Desktop\Website-BDS\docs\hiệu chỉnh link seo.docx ---
+PHẦN 1. URL SEO / LANDING PAGE / SITEMAP
+Triển khai SEO cho loại giao dịch Bán. 
+Đối với giao dịch cho thuê thì link như vậy là ok (chỉ có điều form lọc khi vào cho thuê sẽ được chọn sẵn là cho thuê – cái này là yêu cầu chung cho toàn bộ form lọc khi vào danh mục)
+1. Mục tiêu
+Hiện tại một số link vẫn đang dùng dạng search/filter: /search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+Link này có thể đúng về chức năng lọc dữ liệu, nhưng chưa đúng định hướng URL SEO.
+Các link dùng cho menu, sitemap, link liên quan trong bài viết, block xem thêm, footer SEO và liên kết nội bộ nên trỏ về landing page cố định.
+Ví dụ:
+Không nên dùng: /search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+Nên dùng: /dat-nen/phuong-truong-vinh
+2. Phân biệt search/filter và URL SEO
+2.1. /search?... dùng cho lọc động
+Dùng khi người dùng tự nhập từ khóa hoặc tự chọn bộ lọc:
+/search?q=dat-gan-dai-hoc-vinh
+/search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+/search?priceMin=1000000000&priceMax=2000000000
+Các link này phục vụ chức năng tìm kiếm/lọc nội bộ.
+2.2. URL SEO cố định dùng cho landing page
+Dùng cho menu, sitemap, link liên quan, block xem thêm, footer SEO và liên kết nội bộ.
+Công thức URL SEO chính:
+/{loai-bds}
+/{khu-vuc}
+/{loai-bds}/{khu-vuc}
+Ví dụ: /dat-nen                  /phuong-truong-vinh                      /dat-nen/phuong-truong-vinh         /nha-rieng/h-nghi-loc
+Các URL này cần là route thật, truy cập trực tiếp được, lọc đúng dữ liệu, có H1/title/meta/canonical riêng.
+3. Định hướng cấu trúc URL
+Website sẽ dùng 2 lớp chính để tạo URL SEO giai đoạn này:
+Loại BĐS → Khu vực
+Trong đó:
+Loại BĐS: - Đất nền - Nhà riêng / nhà mặt phố - Chung cư - Dự án- Mặt bằng / kho xưởng - BĐS khác (có 6 loại)
+Khu vực:
+- Các phường/khu vực ưu tiên SEO
+- Các huyện/thị/thành cũ ưu tiên SEO
+- Nghệ An, Hà Tĩnh 
+Công thức triển khai:
+/{loai-bds}                    /{khu-vuc}                                    /{loai-bds}/{khu-vuc}
+Ví dụ: /dat-nen                /phuong-truong-vinh         /dat-nen/phuong-truong-vinh           /nha-rieng/h-nghi-loc
+Các trang này mặc định lấy tin bán theo đúng loại BĐS và/hoặc khu vực tương ứng.
+Đối với URL có một phần slug thuộc danh mục SEO đã chốt, phần đó cần được map và lọc theo dữ liệu cấu trúc đúng quy định. Nếu phần còn lại không thuộc danh mục loại BĐS/khu vực SEO đã chốt, thì phần đó chỉ được xử lý như điều kiện tìm kiếm phụ hoặc bộ lọc động; không xem URL đó là landing page SEO chính, không đưa vào sitemap và không dùng thay cho URL SEO cố định.
+Ví dụ: Khi người dùng search, gần đại học vinh thì tạo link /dat-nen/gan-dai-hoc-vinh, phần /dat-nen/ là cố định theo cấu trúc, còn  /gan-dai-hoc-vinh là tùy chọn (theo bên bạn đặt có liên quan đến gan-dai-hoc-vinh)
+4. Các nhóm URL cần hỗ trợ
+Nhóm 1: URL loại BĐS
+Công thức: /{loai-bds}
+Ví dụ: /dat-nen                          /nha-rieng
+Yêu cầu: /dat-nen                  H1: Bán đất nền Nghệ An
+/nha-rieng             H1: Bán nhà riêng, nhà mặt phố Nghệ An
+Nhóm 2: URL khu vực
+Công thức:    /{khu-vuc}
+Ví dụ:   /phuong-truong-vinh      /h-nghi-loc
+Yêu cầu:   /phuong-truong-vinh       H1: Nhà đất bán phường Trường Vinh
+/h-nghi-loc                             H1: Nhà đất bán Nghi Lộc, Nghệ An
+Nhóm 3: URL loại BĐS + khu vực
+Công thức: /{loai-bds}/{khu-vuc}
+Ví dụ:   /dat-nen/phuong-truong-vinh                     /nha-rieng/h-nghi-loc
+Đây là nhóm URL SEO chính nên ưu tiên.
+Ví dụ yêu cầu với một URL cụ thể:
+URL:  /dat-nen/phuong-truong-vinh
+H1: Bán đất nền phường Trường Vinh
+Title:    Bán đất nền phường Trường Vinh | Nhà Đất Xứ Nghệ
+Meta description:     Cập nhật tin bán đất nền phường Trường Vinh, Nghệ An. Xem giá, diện tích, vị trí, pháp lý và thông tin liên hệ người đăng tin.
+Dữ liệu hiển thị: Lọc các tin có: - Loại giao dịch: Bán - Loại BĐS: Đất nền - Khu vực: Phường Trường Vinh
+Canonical:  https://nhadatxunghe.com/dat-nen/phuong-truong-vinh
+5. Menu không cần chứa toàn bộ URL 2 tầng
+Menu chính có thể giữ gọn, chỉ cần link 1 tầng.
+Không yêu cầu đưa toàn bộ các URL 2 tầng lên menu.
+Tuy nhiên, hệ thống vẫn phải hỗ trợ các URL 2 tầng để phục vụ SEO, sitemap và internal link.
+Đối với các Menu có sẵn trên trang phải lấy đúng link tương ứng
+6. Vị trí đặt các URL 2 tầng
+Các URL 2 tầng nên xuất hiện ở các vị trí sau:
+6.1. Sitemap
+Các URL landing SEO quan trọng cần được đưa vào sitemap.
+Ví dụ:   /dat-nen       /nha-rieng         /phuong-truong-vinh      /h-nghi-loc
+/dat-nen/phuong-truong-vinh    /nha-rieng/phuong-truong-vinh    /dat-nen/h-nghi-loc
+6.2. Trong trang loại BĐS
+Ví dụ tại trang:
+/dat-nen nên có block “Đất nền theo khu vực”:
+Đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh
+Đất nền Nghi Lộc -> /dat-nen/h-nghi-loc
+6.3. Trong trang khu vực
+Ví dụ tại trang: 
+/phuong-truong-vinh    nên có block “Bất động sản phường Trường Vinh theo loại”:
+Đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh
+Nhà riêng phường Trường Vinh -> /nha-rieng/phuong-truong-vinh
+Chung cư phường Trường Vinh -> /chung-cu/phuong-truong-vinh
+(trong trang khu vực nên có đủ 6 loại BĐS)
+6.4. Trong trang chi tiết bài đăng
+Trong bài đăng, phần “Tin liên quan”, “Xem thêm” hoặc “Bất động sản liên quan” không nên trỏ về /search?....
+Ví dụ bài đăng là “Bán đất nền phường Trường Vinh”, phần liên quan nên dùng:
+Bán đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh
+Bán đất nền Nghệ An -> /dat-nen
+Nhà đất bán phường Trường Vinh -> /phuong-truong-vinh
+Bán nhà riêng phường Trường Vinh -> /nha-rieng/phuong-truong-vinh
+Không dùng:
+/search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+cho link liên quan SEO.
+7. Về số lượng URL
+Công thức chính:
+6 loại BĐS × khoảng 30 khu vực = khoảng 180 URL 2 tầng, 36 link 1 tầng
+Tuy nhiên, không yêu cầu tạo tay từng trang.
+Yêu cầu là xây dựng route động/cơ chế động để hệ thống tự hiểu URL và lọc dữ liệu tương ứng.
+Ví dụ:
+/dat-nen/phuong-truong-vinh
+hệ thống hiểu là: Loại giao dịch: Bán   Loại BĐS: Đất nền Khu vực: Phường Trường Vinh
+8. Khu vực cần làm link/seo
+Giai đoạn đầu chưa yêu cầu bung toàn bộ xã/phường vào sitemap, chỉ làm khoảng 30 khu vực sau:
++ 6 phường Vinh/Cửa Lò mới
++ các huyện/thị/thành cũ của Nghệ An
++ Nghệ An, Hà Tĩnh 
+Nên có cơ chế bật/tắt SEO cho khu vực, ví dụ isSeoEnabled.
+Khu vực bật SEO:
+Có landing page
+Có trong sitemap
+Có index
+Có link nội bộ
+Khu vực chưa bật SEO:
+Vẫn dùng được trong form/bộ lọc
+Chưa đưa vào sitemap
+Có thể noindex nếu URL vẫn truy cập được
+DANH MỤC CẦN LÀM URL SEO
+Giai đoạn này chỉ triển khai URL SEO cho tin bán. Các URL SEO sẽ được sinh theo danh mục loại BĐS và khu vực dưới đây.
+1. Loại BĐS cần làm URL SEO
+Gồm 6 loại:
+Đất nền                 -> slug: dat-nen
+Nhà riêng / nhà mặt phố -> slug: nha-rieng
+Chung cư                -> slug: chung-cu
+Dự án                   -> slug: du-an
+Mặt bằng / kho xưởng    -> slug: mat-bang-kho-xuong
+BĐS khác                -> slug: bds-khac
+URL theo loại BĐS:
+/dat-nen
+/nha-rieng
+/chung-cu
+/du-an
+/mat-bang-kho-xuong
+/bds-khac
+2. Khu vực cần làm URL SEO
+Khu vực SEO giai đoạn này gồm 3 nhóm chính. Các khu vực này dùng để tạo URL dạng:
+/{khu-vuc}
+/{loai-bds}/{khu-vuc}
+2.1. Nhóm 6 phường Vinh/Cửa Lò mới
+Gồm: Phường Trường Vinh, Phường Thành Vinh, Phường Vinh Lộc, Phường Vinh Phú, Phường Vinh Hưng, Phường Cửa Lò.
+Slug theo quy tắc: viết thường, không dấu, nối bằng dấu gạch ngang, có tiền tố phuong-.
+Ví dụ: Phường Trường Vinh -> phuong-truong-vinh
+URL khu vực: /phuong-truong-vinh
+URL loại BĐS + khu vực: /dat-nen/phuong-truong-vinh
+2.2. Nhóm huyện/thành phố/thị xã cũ của Nghệ An
+Gồm: TP Vinh, Nghi Lộc, Diễn Châu, Yên Thành, Đô Lương, Nam Đàn, Hưng Nguyên, Quỳnh Lưu, Hoàng Mai, Thái Hòa, Nghĩa Đàn, Tân Kỳ, Anh Sơn, Thanh Chương, Con Cuông, Tương Dương, Kỳ Sơn, Quế Phong, Quỳ Châu, Quỳ Hợp.
+Slug theo quy tắc:
+TP Vinh: tp-vinh
+Huyện: dùng tiền tố h-, ví dụ h-nghi-loc
+Thị xã: dùng tiền tố tx-, ví dụ tx-hoang-mai
+Ví dụ:
+Nghi Lộc -> h-nghi-loc
+URL khu vực: /h-nghi-loc
+URL loại BĐS + khu vực: /dat-nen/h-nghi-loc
+2.3. Nhóm tỉnh: Gồm: Nghệ An, Hà Tĩnh.
+Slug theo quy tắc: viết thường, không dấu, nối bằng dấu gạch ngang.
+Ví dụ:
+Hà Tĩnh -> ha-tinh
+URL khu vực: /ha-tinh
+URL loại BĐS + khu vực: /dat-nen/ha-tinh
+Tất cả các landing page này mặc định lấy tin bán theo đúng loại BĐS và/hoặc khu vực tương ứng.
+PHẦN 2. DỮ LIỆU, FORM ĐĂNG TIN VÀ CÁCH LANDING PAGE LẤY TIN
+Phần này mình chỉ nêu yêu cầu đầu ra mong muốn. Cách thiết kế bảng dữ liệu, đặt tên field, mapping hoặc xử lý kỹ thuật cụ thể bên bạn có thể chủ động lựa chọn sao cho phù hợp với hệ thống hiện tại.
+1. Mục tiêu
+Các landing page SEO cần hiển thị đúng bài đăng theo URL.
+Ví dụ: /dat-nen/phuong-truong-vinh
+ thì trang này cần hiển thị đúng các tin: - Loại giao dịch: Bán - Loại BĐS: Đất nền - Khu vực: Phường Trường Vinh - Tin đang hiển thị/còn hiệu lực
+Không lấy tin cho thuê vào các landing page SEO giai đoạn này.
+Các trường như loại giao dịch, loại BĐS, khu vực nên được chọn từ danh mục chuẩn để hệ thống lọc chính xác. Dev có thể chọn cách lưu bằng ID, code, slug hoặc cách khác phù hợp, miễn là landing page truy xuất đúng dữ liệu.
+2. Landing page cần lấy tin theo dữ liệu có cấu trúc
+Các URL SEO không nên lấy tin bằng cách search từ khóa trong tiêu đề hoặc mô tả.
+Ví dụ không nên xử lý kiểu:
+/dat-nen/phuong-truong-vinh
+→ search từ khóa "đất nền phường trường vinh"
+Vì cách này dễ thiếu tin hoặc lấy nhầm tin nếu người đăng viết tiêu đề/mô tả khác nhau.
+Định hướng mong muốn là:
+URL slug → hiểu đúng loại BĐS/khu vực → lấy tin theo dữ liệu đã lưu trong hệ thống
+Ví dụ:
+/dat-nen cần lấy các tin: - Loại giao dịch: Bán - Loại BĐS: Đất nền
+Ví dụ: /phuong-truong-vinh
+cần lấy các tin: - Loại giao dịch: Bán - Khu vực: Phường Trường Vinh
+Ví dụ: /dat-nen/phuong-truong-vinh
+cần lấy các tin: - Loại giao dịch: Bán - Loại BĐS: Đất nền - Khu vực: Phường Trường Vinh
+4. Tin đăng cần tự xuất hiện ở các landing page phù hợp
+Ví dụ một tin có thông tin:
+Loại giao dịch: Bán Loại BĐS: Đất nền Tỉnh: Nghệ An Huyện cũ: TP Vinh Xã/phường mới: Phường Trường Vinh
+Trạng thái: Đang hiển thị
+Sau khi được duyệt/hiển thị, tin này cần tự xuất hiện ở các landing page phù hợp, ví dụ:
+/dat-nen
+/phuong-truong-vinh
+/tp-vinh
+/dat-nen/phuong-truong-vinh
+/dat-nen/tp-vinh
+4. Điều kiện chung khi lấy tin cho landing page
+Danh sách tin trên landing page chỉ nên lấy các tin đủ điều kiện hiển thị công khai:
+- Tin đã duyệt hoặc đang hiển thị
+- Không lấy tin nháp
+- Không lấy tin chờ duyệt nếu quy định chưa cho hiển thị
+- Không lấy tin bị ẩn/xóa
+- Không lấy tin hết hạn
+Thứ tự hiển thị tin theo quy định đã thống nhất của website, ví dụ:
+1. Tin VIP còn hiệu lực
+2. Tin UP còn hiệu lực
+3. Tin thường mới nhất
+6. Yêu cầu nghiệm thu phần dữ liệu/lấy tin
+Với mỗi landing page SEO, cần kiểm tra được các điểm sau:
+1. URL truy cập trực tiếp được.
+2. Trang hiển thị đúng loại tin bán theo URL.
+3. Không lấy lẫn tin cho thuê.
+4. Không lấy tin sai loại BĐS hoặc sai khu vực.
+5. Không lấy tin nháp, tin ẩn, tin xóa, tin hết hạn.
+6. Link SEO không bị xử lý như search từ khóa trong tiêu đề/mô tả.
+7. Khi có tin mới phù hợp được đăng và duyệt, tin tự xuất hiện ở landing page tương ứng.
+Tóm lại, mong muốn của mình là: form đăng tin và dữ liệu phía sau cần đủ chuẩn để các landing page SEO lấy đúng bài đăng theo loại BĐS và khu vực. Cách triển khai kỹ thuật cụ thể bên bạncó thể chủ động, miễn là đầu ra đạt đúng các tiêu chí trên.
+Cái nền dữ liệu là các form lọc bắt buộc nhập có danh sách sổ xuống để chọn, thì sẽ xây dựng các trang chuyên mục, link chuẩn seo, bộ lọc, tìm kiếm
+Do đó, mình muốn bên bạn xây dựng phần dữ liệu nền thật rõ ràng ngay từ đầu: các trường bắt buộc trong form, danh sách sổ xuống, bảng danh mục, bảng khu vực, ID, slug, quan hệ dữ liệu và cách map dữ liệu phải được thiết kế thống nhất trong database.
+Các dữ liệu này không chỉ dùng để đăng tin, mà còn là nền để làm SEO, quản lý dữ liệu, phân phối/hiển thị dữ liệu, tìm kiếm và lọc dữ liệu trên toàn website. 
+Từ đó mới xây dựng đồng bộ được các phần như: trang chuyên mục, URL SEO, sitemap tự động, title/meta SEO, bộ lọc tự chọn theo trang đang xem, tin liên quan, mục “Khám phá thêm bất động sản”, block trang chủ, so sánh tin, thống kê và quản trị nội dung.
+Đồng thời, việc chuẩn hóa dữ liệu cũng giúp hạn chế nhập tự do, tránh sai dữ liệu, sai bộ lọc, sai URL và khó mở rộng về sau.
+
+--- C:\Users\Nguye\OneDrive\Desktop\Website-BDS\docs\thống kê hiệu chỉnh 27-6.docx ---
+Khi bấm “So sánh ngay”, tự động đóng/ẩn bảng so sánh nhỏ đang nổi để không che nội dung trang so sánh.
+Mở lại tin nháp hoặc sửa tin bị reset lại các field, tiêu đề, mô tả.
+(mobile) Lỗi không hiển thị hết đặc điểm bđs, lỗi không hiển thị bản đồ, 
+(mobile, PC)  Lỗi màn chiều ngang màn hình lớn hơn màn hình điện thoại (vuốt ngang được, không xem hết màn hình -bị che 1 phần bên phải màn hình)
+(mobile)  bỏ menu cố đinh liên hệ, dưới bài đăng (đã có trong bài), chiếm nhiều diện tích, Cái nút đăng tin và nút bạn muốn mua BĐS gì có thể làm menu cố định như trên PC, có thể rút gọn tên là Đăng bán, Cần mua.
+Bỏ mục bạn muốn đăng tin ở đầu trang (chiếm nhiều diện tích), vẫn để cuối trang
+Form lọc: Khi vào 1 trang chuyên mục thì hệ thống mặc định đã chọn chuyên mục đó ở form lọc. Ví dụ: Vào /Phuong -truong-vinh, thì form lọc (hoặc lọc để tìm kiếm) chọn sẵn Phường trường Vinh
+Mục khám phá thêm bất động sản đang cố định link, chưa phải là thay đổi liên quan đến bài viết, chuyên mục, Hay theo hành vi người xem
+Thêm id vào link user để dễ quản lý, 
+nếu được thì link dạng /Nguyen-van-A-ID
+Chỗ lọc tìm kiếm trong chuyên mục bổ sung lọc khu vực
+Trên trang chủ, các chuyên mục chưa hiển thị bài đăng mới nhất mà là đang là bài đăng cũ hơn
+27/9: Lỗi đăng nhập bằng gg
+27/9: Mất chức năng bản đồ
+Form đăng tin: bổ sung phường xã cũ cho các huyện (tương tự cho phép ở form lọc)
+Thống kê: Bổ sung người đang online (admin có thể bật tắt chức năng này)
+Cái form cần mua/cần thuê: Lược bớt phần thông tin bài viết, chỉ để lại, Hướng nhà, nội thất, mặt tiền, đường trước đất, pháp lý, sửa ĐĂNG TIN NGAY thành GỬI YÊU CẦU
+Form cho thuê: Mức giá sửa đơn vị triệu thành triệu/tháng, thông tin bài viết lược bớt, chỉ để lại số phòng ngủ, số phòng vệ sinh, số tầng, nội thất, đường trước nhà
+Quảng cáo trong chuyên mục: Kéo xuống dưới phần tin UP, trên tin thường
+
+--- C:\Users\Nguye\OneDrive\Desktop\Website-BDS\docs\bổ sung thông tin edit.docx ---
+DANH SÁCH CẦN XIN KHÁCH / ĐỂ DEPLOY & NGHIỆM THU 
+1. THƯƠNG HIỆU / LOGO / GIAO DIỆN
+Logo chính thức: 
+Logo ngang dùng cho header: 
+Logo footer nếu khác
+Favicon : 
+App icon/PWA icon nếu có: 
+File ưu tiên: SVG hoặc PNG nền trong suốt: https://drive.google.com/drive/folders/1_2nT0Bxutm-W38jQaiR_v4xixP8bDORq?usp=sharing
+Nếu có bản sáng/tối thì gửi cả 2
+Tên thương hiệu chính thức: Nhà Đất Xứ Nghệ.
+Tên website hiển thị trên header/footer: Nhà đất xứ Nghệ
+Tên đầy đủ dùng trong SEO/meta title : Nhà đất xứ Nghệ
+Tên ngắn dùng cho app/PWA: Nhà đất XN.
+Màu thương hiệu nếu có:
+Màu chính
+Màu phụ
+Font nếu có guideline riêng
+Màu thương hiệu tạm chốt:
+- Màu chính: Xanh dương đậm
+  Mã màu: #1565C0
+- Màu phụ: Vàng cam
+  Mã màu: #F9A825
+- Màu nền phụ: Xám rất nhạt
+  Mã màu: #F5F7FA
+- Màu chữ chính: Xám đen
+  Mã màu: #111827
+- Màu chữ phụ: Xám trung tính
+  Mã màu: #6B7280
+Font:
+Hiện tại chưa có guideline font riêng.
+Đề xuất dùng font dễ đọc, hiện đại, hỗ trợ tiếng Việt tốt, ví dụ:
+- Inter
+- Be Vietnam Pro
+- Roboto
+Ưu tiên font hiển thị rõ trên mobile, dễ đọc với nội dung bất động sản, không dùng font quá trang trí.
+2. DOMAIN / DNS(Phần này bạn có thể nhờ bên mình tư vấn thêm)
+Domain chính muốn dùng:nhadatxunghe.vn
+Có dùng www không? Không
+https://nhadatxunghe.vn
+Nếu người dùng gõ www thì trỏ về link trên
+https://nhadatxunghe.cloud   (tên miền phụ nếu cần)
+Subdomain cần dùng:
+api.nhadatxunghe.vn cho backend
+admin.nhadatxunghe.vn nếu tách admin
+staging.nhadatxunghe.vn nếu cần staging
+meili.domain.vn nếu public Meilisearch qua reverse proxy, thường không nên public trực tiếp
+Về Meilisearch: không public trực tiếp ra ngoài. Nếu cần dùng nội bộ thì cấu hình private/internal hoặc qua reverse proxy có bảo mật, không để người ngoài truy cập trực tiếp.
+www:
+Sử dụng domain chính không có www.
+www.nhadatxunghe.com redirect 301 về nhadatxunghe.com.
+Ai quản lý DNS?
+Mình giữ tài khoản domain, còn dev chỉ hướng dẫn/cấu hình kỹ thuật. Dns mình mua bên pa vietnam.
+Tài khoản Cloudflare/nhà cung cấp domain
+Hoặc anh An/khách tự trỏ record
+“Tên miền nhadatxunghe.vn mình đã mua và quản lý tại PA Việt Nam. Mình giữ tài khoản PA Việt Nam. Khi cần trỏ DNS, bên bạn gửi mình các record cần cấu hình, mình sẽ tự trỏ hoặc phối hợp để trỏ. Nếu cần dùng Cloudflare thì bên bạn hướng dẫn mình tạo/cấu hình bằng tài khoản của mình.”
+Cloudflare tạm thời dùng gói free.
+Cần trỏ DNS:
+A record về IP VPS
+CNAME nếu dùng Vercel/Render/Railway
+Các record phụ nếu cần email
+3. VPS / SERVER / DEPLOY TARGET ( chưa cần sớm)
+Hiện tại mình chưa có thông tin IP VPS. Khi triển khai thực tế, bên bạn cung cấp các DNS Record cần thiết để mình cấu hình hoặc phối hợp cấu hình trên PA Việt Nam/Cloudflare.
+Về VPS / Server / Deploy:
+Hiện tại mình chưa có VPS.
+Đề xuất bên bạn tư vấn giúp phương án VPS phù hợp cho giai đoạn đầu. Mình ưu tiên phương án dễ quản lý, ổn định, có thể mở rộng sau.
+Cấu hình tối thiểu mong muốn:
+- 2 CPU
+- RAM từ 4GB trở lên
+- SSD từ 40GB trở lên
+- Hệ điều hành Ubuntu 22.04 hoặc 24.04
+- Có backup/snapshot nếu được
+Về triển khai:
+- Giai đoạn đầu cần có môi trường Production để chạy website chính thức.
+- Nếu có thể, nên có thêm Staging để mình test trước khi cập nhật lên bản chính thức.
+Về hạ tầng:
+- Frontend, Backend, PostgreSQL, Redis, Meilisearch có thể triển khai trên cùng VPS ở giai đoạn đầu nếu cấu hình đáp ứng.
+- Sau này nếu lượng truy cập tăng thì có thể tách riêng database/search/cache hoặc nâng cấp VPS.
+Khi cần triển khai thực tế, bên bạn gửi mình thông tin VPS cần mua hoặc mình sẽ phối hợp để tạo VPS/tài khoản theo hướng dẫn. Tài khoản VPS/domain/Cloudflare nên đứng tên mình để thuận tiện quản lý lâu dài.
+Khách đã có VPS chưa?Nếu có, cần:
+IP server
+SSH user
+SSH key hoặc password
+OS: Ubuntu/CentOS/Debian
+Quyền sudo có hay không
+Port SSH nếu không phải 22
+Nếu chưa có VPS:Chốt phương án:
+Mua VPS
+Dùng Vercel cho frontend
+Dùng Render/Railway/Fly.io cho backend
+Dùng server riêng cho PostgreSQL/Redis/Meilisearch
+Cấu hình tối thiểu đề xuất:
+2 CPU
+4GB RAM trở lên
+40GB SSD trở lên
+Ubuntu 22.04/24.04
+Có backup snapshot nếu được
+Môi trường cần deploy:
+Staging
+Production
+Hay chỉ production
+4. DATABASE / STORAGE / SEARCH( có thể nhờ bên mình tư vấn)
+Về Database / Storage / Search:
+Giai đoạn đầu nhờ bên bạn tư vấn phương án phù hợp, ưu tiên ổn định, dễ quản lý và tiết kiệm chi phí.
+Định hướng tạm thời:
+1. PostgreSQL:
+- Giai đoạn đầu có thể dùng PostgreSQL trên cùng VPS nếu cấu hình đáp ứng.
+- Chưa cần managed DB riêng nếu chi phí cao.
+- Khi lượng dữ liệu/truy cập tăng thì có thể tách DB riêng sau.
+2. Redis:
+- Có sử dụng Redis nếu hệ thống cần cho cache, queue, cooldown up tin/ghim tin, chống spam hoặc xử lý tác vụ nền.
+- Giai đoạn đầu có thể chạy Redis trên cùng VPS.
+3. Meilisearch:
+- Có dùng Meilisearch cho tìm kiếm/lọc nhanh.
+- Không public trực tiếp Meilisearch ra Internet.
+- Ưu tiên cấu hình nội bộ/internal hoặc reverse proxy có bảo mật.
+4. Upload ảnh:
+- Giai đoạn đầu có thể cân nhắc 2 phương án:
+  a. Lưu local trên VPS nếu lượng ảnh chưa nhiều, chi phí thấp.
+  b. Dùng Cloudflare R2/S3 nếu muốn ổn định hơn, dễ mở rộng và giảm tải cho VPS.
+Mình ưu tiên phương án bên bạn tư vấn phù hợp nhất với MVP, nhưng cần đảm bảo sau này có thể mở rộng/chuyển sang R2/S3 mà không ảnh hưởng dữ liệu và website.
+Giai đoạn đầu ưu tiên chạy PostgreSQL, Redis, Meilisearch trên cùng VPS để tiết kiệm chi phí. Ảnh có thể tư vấn thêm giữa local VPS và Cloudflare R2/S3; nếu chênh không nhiều thì ưu tiên R2/S3 để dễ mở rộng sau. Chưa dùng managed DB/Redis riêng ở MVP nếu chưa cần
+PostgreSQL production:
+Dùng DB trên VPS hay managed DB?
+DATABASE_URL
+DB name
+User/password
+Host/port
+Redis:
+REDIS_URL
+Dùng cho queue, cooldown, cache nếu hệ thống bật
+Meilisearch:
+MEILI_HOST
+MEILI_MASTER_KEY
+Có cần bảo vệ qua internal network/reverse proxy không
+Upload ảnh:
+Lưu local trên VPS hay dùng S3/R2/Cloudinary?Nếu dùng S3/R2 cần:
+Endpoint
+Access key
+Secret key
+Bucket
+Public URL/CDN
+5. GOOGLE LOGIN / GOOGLE OAUTH
+Để bật “Login/Signin with Google”, cần:
+Google OAuth Client ID
+Google OAuth Client Secret
+Authorized JavaScript origins:
+https://domain.vn
+https://www.domain.vn nếu dùng
+https://staging.domain.vn nếu có staging
+Authorized redirect URI:Tùy backend đang cấu hình callback, cần xác nhận route thật. Thường là:
+https://api.domain.vn/auth/google/callbackhoặc:
+https://domain.vn/api/auth/google/callback
+Nếu khách chưa tạo được, cần quyền vào Google Cloud Console để tạo.
+Về Google Login / Google OAuth:
+Giai đoạn đầu nếu chưa bắt buộc thì có thể để đăng nhập bằng số điện thoại/email trước. Tuy nhiên nếu bên bạn đã làm sẵn hoặc nên có để người dùng đăng nhập nhanh thì mình đồng ý bật Google Login.
+Tên miền chính thức:
+https://nhadatxunghe.vn
+Nếu cần cấu hình Google OAuth, nhờ bên bạn hướng dẫn mình tạo trên Google Cloud Console hoặc hỗ trợ tạo bằng tài khoản Google của mình.
+Thông tin cấu hình dự kiến:
+Authorized JavaScript origins:
+- https://nhadatxunghe.vn
+- https://www.nhadatxunghe.vn nếu có dùng/redirect
+https://staging.nhadatxunghe.vn nếu có staging
+Authorized redirect URI:
+https://api.nhadatxunghe.vn/auth/google/callback
+Trường hợp route callback thực tế khác, bên bạn xác nhận lại route chính xác theo backend để mình cấu hình đúng.
+Tài khoản Google Cloud/OAuth nên do mình sở hữu, bên dev hỗ trợ kỹ thuật cấu hình.
+6. SEPAY / THANH TOÁN / NẠP ĐIỂM
+Để test và nghiệm thu nạp tiền, VIP, UP, cần:
+Tài khoản Sepay:
+API key
+Webhook secret nếu có
+Merchant/account identifier nếu Sepay yêu cầu
+Tài khoản ngân hàng nhận tiền:
+Tên ngân hàng
+Số tài khoản
+Tên chủ tài khoản
+Nội dung chuyển khoản mẫu nếu có
+Webhook URL production:Ví dụ:
+https://api.domain.vn/payments/sepay/webhook
+Quy tắc nạp điểm:
+1 VNĐ = bao nhiêu điểm?
+Hay số dư ví tính trực tiếp theo VNĐ?
+Bảng giá thật:
+Giá VIP
+Thời hạn VIP
+Giá UP
+Thời hạn UP
+Miễn phí bao nhiêu lượt UP/ngày
+Giới hạn UP/ngày
+Cooldown giữa các lần UP
+Môi trường:
+Dùng Sepay test/sandbox hay prodVề Sepay / Thanh toán / Nạp điểm:
+Giai đoạn đầu mình muốn làm theo hướng đơn giản, dễ nghiệm thu trước.
+Tài khoản Sepay
+Hiện tại mình chưa có tài khoản Sepay/API key.
+Nhờ bên bạn tư vấn giúp:
+- Có cần tạo Sepay ngay ở giai đoạn này không?
+- Có thể làm trước luồng ví/nạp điểm/VIP/UP ở trạng thái test/manual không?
+- Khi cần tích hợp thật, mình sẽ tạo tài khoản Sepay bằng thông tin của mình và cung cấp API key/webhook theo hướng dẫn.
+2. Tài khoản ngân hàng nhận tiền
+Tài khoản ngân hàng nhận tiền phải là tài khoản chính chủ của mình/chủ website.
+Thông tin mình sẽ cung cấp sau, gồm: cập nhật sau
+- Tên ngân hàng: Vpbank 
+- Số tài khoản: 90718835
+- Tên chủ tài khoản: nguyen quang duy
+- Nội dung chuyển khoản mẫu napid (id là id của user).
+tạo mã QR theo từng Id user (nếu được)
+Có nut copy nội dung, số tk
+Có nút tôi đã thanh toán. User nhấn nút thì admin có thông báo.
+3. Webhook URL production
+Tên miền chính thức:
+https://nhadatxunghe.vn
+Webhook dự kiến:
+https://api.nhadatxunghe.vn/payments/sepay/webhook
+Nếu backend dùng route khác thì bên bạn xác nhận lại route thật để mình cấu hình.
+4. Quy tắc nạp tiền / nạp điểm
+Quy đổi 1.000 VNĐ = 1 điểm,
+5. Bảng giá tạm thời để test
+Giai đoạn test/nghiệm thu có thể dùng bảng giá tạm:
+- UP tin: 3.000đ/lượt (sau khi hết free)
+Đăng tin: 5.000 đ/bài (sau khi hết free)
+- Thời hạn hiệu lực UP: đưa tin lên nhóm tin mới/ưu tiên theo logic hệ thống
+- Cooldown giữa các lần UP cùng một tin: tối thiểu 10 phút
+- Giới hạn UP hoặc ghim/ngày: tối đa 10 lần/1 tài khoản
+- Tin VIP/Ghim tin: 10.000đ/ngày/Tin
+- Thời hạn VIP/Ghim: tính theo số ngày người dùng mua, không giới hạn
+- Tin VIP/Ghim hiển thị ở khu vực Tin nổi bật theo logic đã thống nhất
+Thời hạn up: 2 ngày
+(Hết thời hạn ghim/up trở về tin thường)
+6. Miễn phí
+Đăng bài : 2 bài/ngày, tối đa 60 bài
+Up tin: 1 lần/ngày, tối đa 60 lần
+Ghim tin: 0
+Quá free có thông báo, có gợi ý và link nộp tiền khi user sử dụng dịch vụ
+(Mấy thông số trên nếu đc thì để admin set tùy chọn)
+7. Môi trường thanh toán
+Giai đoạn phát triển/test:
+- Ưu tiên dùng môi trường test/sandbox nếu Sepay hỗ trợ.
+- Nếu chưa có sandbox thì cho phép admin cộng tiền thủ công vào ví để test luồng UP/VIP/Ghim trước.
+Khi nghiệm thu chính thức:
+- Chuyển sang production thật sau khi mình cung cấp tài khoản Sepay và tài khoản ngân hàng nhận tiền.uction thật?
+(Mình muốn chỗ này là vẫn cứ cài sandbox, sepay nhưng chưa bật, mà bật chế độ bán tự động: user nộp tiền, báo cho admin, admin công điểm, việc trừ điểm là tự động khi user mua dịch vụ. Khi web lớn bật chế độ tự động nộp tiền).
+7. EMAIL / OTP / THÔNG BÁO
+Nếu hệ thống có gửi OTP/quên mật khẩu/email xác nhận, cần:
+SMTP:
+SMTP host
+SMTP port
+SMTP user
+SMTP password
+From email
+From name
+Email support:
+Email hiển thị trên website
+Email nhận khiếu nại/liên hệ
+Nếu dùng dịch vụ khác:
+SendGrid/Mailgun/Amazon SES key
+Template nếu có
+Nếu có SMS OTP:
+Provider
+API key
+Brandname
+Giá cước/quy định gửi
+Về Email / OTP / Thông báo:
+Giai đoạn đầu ưu tiên dùng email, chưa cần SMS OTP
+1. Email hệ thống
+Website cần có email để:
+- Xác nhận tài khoản nếu có
+- Quên mật khẩu / đặt lại mật khẩu
+- Thông báo liên hệ từ khách hàng
+- Thông báo liên quan đến đăng tin nếu hệ thống có hỗ trợ
+Email hiển thị trên website dự kiến:
+support@nhadatxunghe.vn
+hoặc
+lienhe@nhadatxunghe.vn
+Tên hiển thị email:
+Nhà Đất Xứ Nghệ
+2. SMTP
+Hiện tại mình chưa có SMTP riêng.
+Nhờ bên bạn tư vấn phương án phù hợp:
+- Dùng email theo tên miền qua PA Việt Nam nếu có hỗ trợ.
+- Hoặc dùng Gmail/Google Workspace.
+- Hoặc dùng dịch vụ gửi email như SendGrid, Mailgun, Amazon SES nếu cần ổn định hơn.
+Khi chốt phương án, mình sẽ cung cấp:
+- SMTP host
+- SMTP port
+- SMTP user
+- SMTP password
+- From email
+- From name
+3. SMS OTP
+Giai đoạn đầu chưa cần SMS OTP 
+Có thể đăng nhập/đăng ký bằng:
+- Email + mật khẩu
+- Google Login nếu bật
+- Hoặc số điện thoại nhưng chưa cần OTP SMS thật
+Nếu sau này cần SMS OTP thì sẽ tích hợp sau với nhà cung cấp SMS/Brandname riêng.
+4. Template email
+Giai đoạn đầu có thể dùng template đơn giản theo thương hiệu:
+- From name: Nhà Đất Xứ Nghệ
+- Nội dung ngắn gọn, rõ ràng
+- Có logo nếu hệ thống hỗ trợ
+- Không dùng tên thương hiệu khác như Nhà Đất Việt Nam/BĐS Việt Nam
+8. THÔNG TIN PHÁP LÝ / FOOTER / CHÍNH SÁCH
+. Toàn bộ chưa chốt (tiếp tục cập nhật)
+Cần nội dung thật để thay placeholder:
+Tên đơn vị vận hành:
+Cá nhân/công ty/hộ kinh doanh
+Địa chỉ: Phường Trường Vinh, tỉnh Nghệ An
+Địa chỉ hiển thị footer: như trên
+Địa chỉ pháp lý nếu khác
+Hotline: 0812.598.698
+Số hotline chính
+Số Zalo chăm sóc khách hàng nếu có : như trên
+Email:
+Email hỗ trợ
+Email tiếp nhận khiếu nại
+Email pháp lý nếu có
+Mã số thuế nếu có
+Nội dung chính sách: 
+Điều khoản sử dụng
+Chính sách bảo mật
+Quy chế hoạt động
+Chính sách đăng tin
+Chính sách thanh toán
+Chính sách hoàn tiền
+Quy trình giải quyết khiếu nại
+Nếu chưa có nội dung pháp lý chi tiết, anh xác nhận cho em dùng bản mẫu tạm và ghi “Đang cập nhật” ở những mục chưa chốt.
+Mình làm tạm theo sườn này, nhưng cũng đc 70-80%, cái này mình sẽ update sau này, những cái này nó cũng hay thay đổi
+https://docs.google.com/document/d/1rNLxTMdIq5rWnVkHrnBdyAFr7QqsvCaIZtpVvM4PhXw/edit?usp=drivesdk
+11. SEO / ANALYTICS
+Google Analytics:
+GA4 Measurement ID
+Google Search Console:
+Ai quản lý
+Cần file verify hay DNS verify
+Meta SEO:
+Title mặc định
+Description mặc định
+Ảnh OG mặc định
+Sitemap domain:
+https://domain.vn/sitemap.xml
+Robots:
+Có chặn staging khỏi Google không?
+Production cho index chưa?
+Về SEO / Analytics:
+1. Google Analytics
+Cần tích hợp Google Analytics GA4 cho website.
+Hiện tại mình chưa có GA4 Measurement ID. Khi triển khai, nhờ bên bạn hướng dẫn mình tạo bằng tài khoản Google của mình, hoặc hỗ trợ tạo rồi mình cung cấp GA4 Measurement ID.
+2. Google Search Console
+Google Search Console do mình/khách quản lý bằng tài khoản Google của mình.
+Ưu tiên xác minh bằng DNS verify để ổn định lâu dài. Nếu cần file verify thì bên bạn hướng dẫn/cấu hình giúp.
+3. Meta SEO mặc định
+Title mặc định:
+Nhà Đất Xứ Nghệ - Mua bán, cho thuê bất động sản Nghệ An
+Description mặc định:
+Nhà Đất Xứ Nghệ là nền tảng đăng tin mua bán, cho thuê bất động sản tại Nghệ An. Hỗ trợ đăng tin miễn phí, tìm kiếm nhà đất, đất nền, chung cư, dự án và bất động sản cho thuê nhanh chóng, dễ dàng.
+Ảnh OG mặc định:
+Dùng ảnh/logo thương hiệu Nhà Đất Xứ Nghệ. Nếu chưa có ảnh OG riêng, tạm thời dùng logo chính thức hoặc banner thương hiệu kích thước chuẩn 1200x630px.
+4. Sitemap
+Sitemap chính:
+https://nhadatxunghe.vn/sitemap.xml
+Cần sitemap tự động cho:
+- Trang chủ
+- Danh mục bất động sản
+- Khu vực/phường/xã
+- Trang kết hợp loại BĐS + khu vực nếu có
+- Bài đăng công khai đang còn hiệu lực
+5. Robots
+Production:
+- Cho phép Google index sau khi website chính thức chạy ổn định.
+- Không index các trang admin, đăng nhập, tài khoản cá nhân, trang test, trang nội bộ.
+Staging:
+- Chặn Google index toàn bộ staging.
+- Nếu có staging.nhadatxunghe.vn thì cần noindex hoặc robots chặn để tránh Google lập chỉ mục bản test.
+6. Lưu ý thương hiệu
+Toàn bộ SEO title, description, OG image, schema, sitemap không dùng các tên như:
+- Nhà Đất Việt Nam
+- BĐS Việt Nam
+- Nền tảng BĐS toàn quốc
+Thống nhất dùng:
+- Nhà Đất Xứ Nghệ
+- nhadatxunghe.vn
+- Có thể dùng “Nhà Đất Nghệ An” ở phần mô tả nếu phù hợp SEO địa phương.
+12. LIÊN KẾT NGOÀI / SOCIAL / ZALO
+Facebook page URL: cập nhật 
+Zalo OA hoặc số Zalo CSKH  0812598698
+TikTok nếu có
+YouTube nếu có
+Messenger link nếu có
+Google Maps địa chỉ văn phòng nếu có
+13. XÁC NHẬN LUỒNG NGHIỆP VỤ CUỐI
+Người dùng miễn phí được đăng bao nhiêu tin/ngày?
+Tổng số tin tối đa/user là bao nhiêu?
+Một ngày được UP miễn phí bao nhiêu lần?
+Cooldown UP là bao lâu?
+Tin VIP hiển thị mấy ngày?
+Tin UP hiển thị mấy ngày?
+Bài đăng thường hết hạn sau bao lâu?
+Có bắt buộc admin duyệt trước khi hiển thị không?
+Cần mua/Cần thuê có cần admin duyệt không?
+Có cho user tự sửa/xóa/ẩn tin không?
+Có cho đánh dấu “Đã bán/Đã cho thuê” không?
+Về xác nhận luồng nghiệp vụ cuối:
+1. Người dùng miễn phí được đăng bao nhiêu tin/ngày?
+Giai đoạn đầu cho phép mỗi tài khoản đăng tối đa 2 tin/ngày.
+2. Tổng số tin tối đa/user là bao nhiêu?
+Mỗi tài khoản được có tối đa 20 tin
+3. Một ngày được UP miễn phí bao nhiêu lần?
+Giai đoạn đầu có thể cho 1 lượt UP miễn phí/ngày/tài khoản để khuyến khích người dùng mới.
+Ghim tin: không free
+4. Cooldown UP là bao lâu?
+Mỗi tin sau khi UP phải chờ tối thiểu 10 phút mới được UP tiếp.
+Có thể giới hạn thêm tối đa 5 lượt UP/tin/ngày để tránh spam.
+5. Tin VIP/Ghim hiển thị mấy ngày?
+Tin VIP/Ghim cho phép chọn số ngày khi mua, mặc định gói test là 2 ngày. 15 điểm  Hoặc số ngày tự chọn x 10 điểm/ngày
+Khi hết thời hạn VIP/Ghim, tin tự động trở về tin thường, không xóa bài.
+6. Tin UP hiển thị mấy ngày?
+Sau khi UP, tin được đẩy lên nhóm tin UP/ưu tiên theo logic hệ thống. Giai đoạn đầu có thể tính hiệu lực UP trong 24 giờ.
+Hết hiệu lực UP, tin trở về tin thường theo thời gian đăng/cập nhật.
+7. Bài đăng thường hết hạn sau bao lâu?
+Bài đăng thường hết hạn sau 365 ngày.
+Trước khi hết hạn có thể cho user gia hạn/đăng lại nếu cần. 
+8. Có bắt buộc admin duyệt trước khi hiển thị không? Có (bài đăng), không (uptin, ghim tin, xóa tin)
+Giai đoạn đầu nên có admin duyệt trước khi hiển thị công khai để kiểm soát spam, tin sai, tin rác.
+Luồng đề xuất:
+User đăng tin → trạng thái Chờ duyệt → Admin duyệt → Tin hiển thị công khai.
+9. Cần mua/Cần thuê có cần admin duyệt không?
+“Cần mua” không phải là loại tin đăng công khai.
+Phần “Bạn muốn tìm mua BĐS gì?” là form nhu cầu riêng, chỉ admin xem trong trang quản trị, không tạo bài đăng công khai, không tạo danh mục, URL, sitemap, SEO page hay kết quả tìm kiếm công khai.
+Giai đoạn đầu chưa cần “Cần thuê”.
+Dữ liệu form Cần mua nên lưu trạng thái để admin xử lý, ví dụ: Mới gửi / Đang xử lý / Đã xử lý / Bỏ qua.
+10. Có cho user tự sửa/xóa/ẩn tin không?
+Có.
+User được:
+- Sửa tin của mình.
+- Ẩn tin của mình.
+- Xóa tin của mình theo dạng xóa mềm.
+- Gửi lại để admin duyệt nếu nội dung sửa ảnh hưởng đến thông tin chính của bài.
+Nếu tin đã hiển thị mà user sửa các trường quan trọng như giá, diện tích, khu vực, loại BĐS, ảnh, tiêu đề, mô tả thì nên chuyển lại trạng thái chờ duyệt.
+11. Có cho đánh dấu “Đã bán/Đã cho thuê” không?
+Có.
+User được đánh dấu:
+- Đã bán đối với tin Bán.
+- Đã cho thuê đối với tin Cho thuê.
+Khi đã đánh dấu, tin không còn ưu tiên hiển thị như tin đang bán/đang cho thuê. Có thể ẩn khỏi danh sách chính hoặc hiển thị nhãn trạng thái tùy thiết kế.
+

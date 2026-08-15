@@ -1,0 +1,220 @@
+PHẦN 1. URL SEO / LANDING PAGE / SITEMAP
+Triển khai SEO cho loại giao dịch Bán. 
+Đối với giao dịch cho thuê thì link như vậy là ok (chỉ có điều form lọc khi vào cho thuê sẽ được chọn sẵn là cho thuê – cái này là yêu cầu chung cho toàn bộ form lọc khi vào danh mục)
+1. Mục tiêu
+Hiện tại một số link vẫn đang dùng dạng search/filter: /search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+Link này có thể đúng về chức năng lọc dữ liệu, nhưng chưa đúng định hướng URL SEO.
+Các link dùng cho menu, sitemap, link liên quan trong bài viết, block xem thêm, footer SEO và liên kết nội bộ nên trỏ về landing page cố định.
+Ví dụ:
+Không nên dùng: /search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+Nên dùng: /dat-nen/phuong-truong-vinh
+2. Phân biệt search/filter và URL SEO
+2.1. /search?... dùng cho lọc động
+Dùng khi người dùng tự nhập từ khóa hoặc tự chọn bộ lọc:
+/search?q=dat-gan-dai-hoc-vinh
+/search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+/search?priceMin=1000000000&priceMax=2000000000
+Các link này phục vụ chức năng tìm kiếm/lọc nội bộ.
+2.2. URL SEO cố định dùng cho landing page
+Dùng cho menu, sitemap, link liên quan, block xem thêm, footer SEO và liên kết nội bộ.
+Công thức URL SEO chính:
+/{loai-bds}
+/{khu-vuc}
+/{loai-bds}/{khu-vuc}
+Ví dụ: /dat-nen                  /phuong-truong-vinh                      /dat-nen/phuong-truong-vinh         /nha-rieng/h-nghi-loc
+Các URL này cần là route thật, truy cập trực tiếp được, lọc đúng dữ liệu, có H1/title/meta/canonical riêng.
+3. Định hướng cấu trúc URL
+Website sẽ dùng 2 lớp chính để tạo URL SEO giai đoạn này:
+Loại BĐS → Khu vực
+Trong đó:
+Loại BĐS: - Đất nền - Nhà riêng / nhà mặt phố - Chung cư - Dự án- Mặt bằng / kho xưởng - BĐS khác (có 6 loại)
+Khu vực:
+- Các phường/khu vực ưu tiên SEO
+- Các huyện/thị/thành cũ ưu tiên SEO
+- Nghệ An, Hà Tĩnh 
+Công thức triển khai:
+/{loai-bds}                    /{khu-vuc}                                    /{loai-bds}/{khu-vuc}
+Ví dụ: /dat-nen                /phuong-truong-vinh         /dat-nen/phuong-truong-vinh           /nha-rieng/h-nghi-loc
+Các trang này mặc định lấy tin bán theo đúng loại BĐS và/hoặc khu vực tương ứng.
+Đối với URL có một phần slug thuộc danh mục SEO đã chốt, phần đó cần được map và lọc theo dữ liệu cấu trúc đúng quy định. Nếu phần còn lại không thuộc danh mục loại BĐS/khu vực SEO đã chốt, thì phần đó chỉ được xử lý như điều kiện tìm kiếm phụ hoặc bộ lọc động; không xem URL đó là landing page SEO chính, không đưa vào sitemap và không dùng thay cho URL SEO cố định.
+Ví dụ: Khi người dùng search, gần đại học vinh thì tạo link /dat-nen/gan-dai-hoc-vinh, phần /dat-nen/ là cố định theo cấu trúc, còn  /gan-dai-hoc-vinh là tùy chọn (theo bên bạn đặt có liên quan đến gan-dai-hoc-vinh)
+4. Các nhóm URL cần hỗ trợ
+Nhóm 1: URL loại BĐS
+Công thức: /{loai-bds}
+Ví dụ: /dat-nen                          /nha-rieng
+Yêu cầu: /dat-nen                  H1: Bán đất nền Nghệ An
+/nha-rieng             H1: Bán nhà riêng, nhà mặt phố Nghệ An
+Nhóm 2: URL khu vực
+Công thức:    /{khu-vuc}
+Ví dụ:   /phuong-truong-vinh      /h-nghi-loc
+Yêu cầu:   /phuong-truong-vinh       H1: Nhà đất bán phường Trường Vinh
+/h-nghi-loc                             H1: Nhà đất bán Nghi Lộc, Nghệ An
+Nhóm 3: URL loại BĐS + khu vực
+Công thức: /{loai-bds}/{khu-vuc}
+Ví dụ:   /dat-nen/phuong-truong-vinh                     /nha-rieng/h-nghi-loc
+Đây là nhóm URL SEO chính nên ưu tiên.
+Ví dụ yêu cầu với một URL cụ thể:
+URL:  /dat-nen/phuong-truong-vinh
+H1: Bán đất nền phường Trường Vinh
+Title:    Bán đất nền phường Trường Vinh | Nhà Đất Xứ Nghệ
+Meta description:     Cập nhật tin bán đất nền phường Trường Vinh, Nghệ An. Xem giá, diện tích, vị trí, pháp lý và thông tin liên hệ người đăng tin.
+Dữ liệu hiển thị: Lọc các tin có: - Loại giao dịch: Bán - Loại BĐS: Đất nền - Khu vực: Phường Trường Vinh
+Canonical:  https://nhadatxunghe.com/dat-nen/phuong-truong-vinh
+5. Menu không cần chứa toàn bộ URL 2 tầng
+Menu chính có thể giữ gọn, chỉ cần link 1 tầng.
+Không yêu cầu đưa toàn bộ các URL 2 tầng lên menu.
+Tuy nhiên, hệ thống vẫn phải hỗ trợ các URL 2 tầng để phục vụ SEO, sitemap và internal link.
+Đối với các Menu có sẵn trên trang phải lấy đúng link tương ứng
+6. Vị trí đặt các URL 2 tầng
+Các URL 2 tầng nên xuất hiện ở các vị trí sau:
+6.1. Sitemap
+Các URL landing SEO quan trọng cần được đưa vào sitemap.
+Ví dụ:   /dat-nen       /nha-rieng         /phuong-truong-vinh      /h-nghi-loc
+/dat-nen/phuong-truong-vinh    /nha-rieng/phuong-truong-vinh    /dat-nen/h-nghi-loc
+6.2. Trong trang loại BĐS
+Ví dụ tại trang:
+/dat-nen nên có block “Đất nền theo khu vực”:
+Đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh
+Đất nền Nghi Lộc -> /dat-nen/h-nghi-loc
+6.3. Trong trang khu vực
+Ví dụ tại trang: 
+/phuong-truong-vinh    nên có block “Bất động sản phường Trường Vinh theo loại”:
+Đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh
+Nhà riêng phường Trường Vinh -> /nha-rieng/phuong-truong-vinh
+Chung cư phường Trường Vinh -> /chung-cu/phuong-truong-vinh
+(trong trang khu vực nên có đủ 6 loại BĐS)
+6.4. Trong trang chi tiết bài đăng
+Trong bài đăng, phần “Tin liên quan”, “Xem thêm” hoặc “Bất động sản liên quan” không nên trỏ về /search?....
+Ví dụ bài đăng là “Bán đất nền phường Trường Vinh”, phần liên quan nên dùng:
+Bán đất nền phường Trường Vinh -> /dat-nen/phuong-truong-vinh
+Bán đất nền Nghệ An -> /dat-nen
+Nhà đất bán phường Trường Vinh -> /phuong-truong-vinh
+Bán nhà riêng phường Trường Vinh -> /nha-rieng/phuong-truong-vinh
+Không dùng:
+/search?propertyType=DAT_NEN&ward=Phường Trường Vinh
+cho link liên quan SEO.
+7. Về số lượng URL
+Công thức chính:
+6 loại BĐS × khoảng 30 khu vực = khoảng 180 URL 2 tầng, 36 link 1 tầng
+Tuy nhiên, không yêu cầu tạo tay từng trang.
+Yêu cầu là xây dựng route động/cơ chế động để hệ thống tự hiểu URL và lọc dữ liệu tương ứng.
+Ví dụ:
+/dat-nen/phuong-truong-vinh
+hệ thống hiểu là: Loại giao dịch: Bán   Loại BĐS: Đất nền Khu vực: Phường Trường Vinh
+8. Khu vực cần làm link/seo
+Giai đoạn đầu chưa yêu cầu bung toàn bộ xã/phường vào sitemap, chỉ làm khoảng 30 khu vực sau:
++ 6 phường Vinh/Cửa Lò mới
++ các huyện/thị/thành cũ của Nghệ An
++ Nghệ An, Hà Tĩnh 
+Nên có cơ chế bật/tắt SEO cho khu vực, ví dụ isSeoEnabled.
+Khu vực bật SEO:
+Có landing page
+Có trong sitemap
+Có index
+Có link nội bộ
+Khu vực chưa bật SEO:
+Vẫn dùng được trong form/bộ lọc
+Chưa đưa vào sitemap
+Có thể noindex nếu URL vẫn truy cập được
+DANH MỤC CẦN LÀM URL SEO
+Giai đoạn này chỉ triển khai URL SEO cho tin bán. Các URL SEO sẽ được sinh theo danh mục loại BĐS và khu vực dưới đây.
+1. Loại BĐS cần làm URL SEO
+Gồm 6 loại:
+Đất nền                 -> slug: dat-nen
+Nhà riêng / nhà mặt phố -> slug: nha-rieng
+Chung cư                -> slug: chung-cu
+Dự án                   -> slug: du-an
+Mặt bằng / kho xưởng    -> slug: mat-bang-kho-xuong
+BĐS khác                -> slug: bds-khac
+URL theo loại BĐS:
+/dat-nen
+/nha-rieng
+/chung-cu
+/du-an
+/mat-bang-kho-xuong
+/bds-khac
+2. Khu vực cần làm URL SEO
+Khu vực SEO giai đoạn này gồm 3 nhóm chính. Các khu vực này dùng để tạo URL dạng:
+/{khu-vuc}
+/{loai-bds}/{khu-vuc}
+2.1. Nhóm 6 phường Vinh/Cửa Lò mới
+Gồm: Phường Trường Vinh, Phường Thành Vinh, Phường Vinh Lộc, Phường Vinh Phú, Phường Vinh Hưng, Phường Cửa Lò.
+Slug theo quy tắc: viết thường, không dấu, nối bằng dấu gạch ngang, có tiền tố phuong-.
+Ví dụ: Phường Trường Vinh -> phuong-truong-vinh
+URL khu vực: /phuong-truong-vinh
+URL loại BĐS + khu vực: /dat-nen/phuong-truong-vinh
+2.2. Nhóm huyện/thành phố/thị xã cũ của Nghệ An
+Gồm: TP Vinh, Nghi Lộc, Diễn Châu, Yên Thành, Đô Lương, Nam Đàn, Hưng Nguyên, Quỳnh Lưu, Hoàng Mai, Thái Hòa, Nghĩa Đàn, Tân Kỳ, Anh Sơn, Thanh Chương, Con Cuông, Tương Dương, Kỳ Sơn, Quế Phong, Quỳ Châu, Quỳ Hợp.
+Slug theo quy tắc:
+TP Vinh: tp-vinh
+Huyện: dùng tiền tố h-, ví dụ h-nghi-loc
+Thị xã: dùng tiền tố tx-, ví dụ tx-hoang-mai
+Ví dụ:
+Nghi Lộc -> h-nghi-loc
+URL khu vực: /h-nghi-loc
+URL loại BĐS + khu vực: /dat-nen/h-nghi-loc
+2.3. Nhóm tỉnh: Gồm: Nghệ An, Hà Tĩnh.
+Slug theo quy tắc: viết thường, không dấu, nối bằng dấu gạch ngang.
+Ví dụ:
+Hà Tĩnh -> ha-tinh
+URL khu vực: /ha-tinh
+URL loại BĐS + khu vực: /dat-nen/ha-tinh
+Tất cả các landing page này mặc định lấy tin bán theo đúng loại BĐS và/hoặc khu vực tương ứng.
+PHẦN 2. DỮ LIỆU, FORM ĐĂNG TIN VÀ CÁCH LANDING PAGE LẤY TIN
+Phần này mình chỉ nêu yêu cầu đầu ra mong muốn. Cách thiết kế bảng dữ liệu, đặt tên field, mapping hoặc xử lý kỹ thuật cụ thể bên bạn có thể chủ động lựa chọn sao cho phù hợp với hệ thống hiện tại.
+1. Mục tiêu
+Các landing page SEO cần hiển thị đúng bài đăng theo URL.
+Ví dụ: /dat-nen/phuong-truong-vinh
+ thì trang này cần hiển thị đúng các tin: - Loại giao dịch: Bán - Loại BĐS: Đất nền - Khu vực: Phường Trường Vinh - Tin đang hiển thị/còn hiệu lực
+Không lấy tin cho thuê vào các landing page SEO giai đoạn này.
+Các trường như loại giao dịch, loại BĐS, khu vực nên được chọn từ danh mục chuẩn để hệ thống lọc chính xác. Dev có thể chọn cách lưu bằng ID, code, slug hoặc cách khác phù hợp, miễn là landing page truy xuất đúng dữ liệu.
+2. Landing page cần lấy tin theo dữ liệu có cấu trúc
+Các URL SEO không nên lấy tin bằng cách search từ khóa trong tiêu đề hoặc mô tả.
+Ví dụ không nên xử lý kiểu:
+/dat-nen/phuong-truong-vinh
+→ search từ khóa "đất nền phường trường vinh"
+Vì cách này dễ thiếu tin hoặc lấy nhầm tin nếu người đăng viết tiêu đề/mô tả khác nhau.
+Định hướng mong muốn là:
+URL slug → hiểu đúng loại BĐS/khu vực → lấy tin theo dữ liệu đã lưu trong hệ thống
+Ví dụ:
+/dat-nen cần lấy các tin: - Loại giao dịch: Bán - Loại BĐS: Đất nền
+Ví dụ: /phuong-truong-vinh
+cần lấy các tin: - Loại giao dịch: Bán - Khu vực: Phường Trường Vinh
+Ví dụ: /dat-nen/phuong-truong-vinh
+cần lấy các tin: - Loại giao dịch: Bán - Loại BĐS: Đất nền - Khu vực: Phường Trường Vinh
+4. Tin đăng cần tự xuất hiện ở các landing page phù hợp
+Ví dụ một tin có thông tin:
+Loại giao dịch: Bán Loại BĐS: Đất nền Tỉnh: Nghệ An Huyện cũ: TP Vinh Xã/phường mới: Phường Trường Vinh
+Trạng thái: Đang hiển thị
+Sau khi được duyệt/hiển thị, tin này cần tự xuất hiện ở các landing page phù hợp, ví dụ:
+/dat-nen
+/phuong-truong-vinh
+/tp-vinh
+/dat-nen/phuong-truong-vinh
+/dat-nen/tp-vinh
+4. Điều kiện chung khi lấy tin cho landing page
+Danh sách tin trên landing page chỉ nên lấy các tin đủ điều kiện hiển thị công khai:
+- Tin đã duyệt hoặc đang hiển thị
+- Không lấy tin nháp
+- Không lấy tin chờ duyệt nếu quy định chưa cho hiển thị
+- Không lấy tin bị ẩn/xóa
+- Không lấy tin hết hạn
+Thứ tự hiển thị tin theo quy định đã thống nhất của website, ví dụ:
+1. Tin VIP còn hiệu lực
+2. Tin UP còn hiệu lực
+3. Tin thường mới nhất
+6. Yêu cầu nghiệm thu phần dữ liệu/lấy tin
+Với mỗi landing page SEO, cần kiểm tra được các điểm sau:
+1. URL truy cập trực tiếp được.
+2. Trang hiển thị đúng loại tin bán theo URL.
+3. Không lấy lẫn tin cho thuê.
+4. Không lấy tin sai loại BĐS hoặc sai khu vực.
+5. Không lấy tin nháp, tin ẩn, tin xóa, tin hết hạn.
+6. Link SEO không bị xử lý như search từ khóa trong tiêu đề/mô tả.
+7. Khi có tin mới phù hợp được đăng và duyệt, tin tự xuất hiện ở landing page tương ứng.
+Tóm lại, mong muốn của mình là: form đăng tin và dữ liệu phía sau cần đủ chuẩn để các landing page SEO lấy đúng bài đăng theo loại BĐS và khu vực. Cách triển khai kỹ thuật cụ thể bên bạncó thể chủ động, miễn là đầu ra đạt đúng các tiêu chí trên.
+Cái nền dữ liệu là các form lọc bắt buộc nhập có danh sách sổ xuống để chọn, thì sẽ xây dựng các trang chuyên mục, link chuẩn seo, bộ lọc, tìm kiếm
+Do đó, mình muốn bên bạn xây dựng phần dữ liệu nền thật rõ ràng ngay từ đầu: các trường bắt buộc trong form, danh sách sổ xuống, bảng danh mục, bảng khu vực, ID, slug, quan hệ dữ liệu và cách map dữ liệu phải được thiết kế thống nhất trong database.
+Các dữ liệu này không chỉ dùng để đăng tin, mà còn là nền để làm SEO, quản lý dữ liệu, phân phối/hiển thị dữ liệu, tìm kiếm và lọc dữ liệu trên toàn website. 
+Từ đó mới xây dựng đồng bộ được các phần như: trang chuyên mục, URL SEO, sitemap tự động, title/meta SEO, bộ lọc tự chọn theo trang đang xem, tin liên quan, mục “Khám phá thêm bất động sản”, block trang chủ, so sánh tin, thống kê và quản trị nội dung.
+Đồng thời, việc chuẩn hóa dữ liệu cũng giúp hạn chế nhập tự do, tránh sai dữ liệu, sai bộ lọc, sai URL và khó mở rộng về sau.

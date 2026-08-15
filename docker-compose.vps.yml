@@ -1,0 +1,159 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bds-postgres-prod
+    environment:
+      POSTGRES_USER: ${DB_USER:-bds_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:-bds_db}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+  
+  caddy:
+    image: caddy:2-alpine
+    container_name: bds-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data_prod:/data
+      - caddy_config_prod:/config
+    depends_on:
+      - backend
+      - minio
+      - frontend
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bds_user} -d ${DB_NAME:-bds_db}"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bds-redis-prod
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    volumes:
+      - redisdata_prod:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=${REDIS_PASSWORD} redis-cli ping | grep PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.7
+    container_name: bds-meilisearch-prod
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:?MEILISEARCH_MASTER_KEY is required}
+      MEILI_ENV: production
+    volumes:
+      - meilidata_prod:/meili_data
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_SITE_URL=https://nhadatxunghe.vn
+    container_name: bds-frontend-prod
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://nhadatxunghe.vn/api/v1
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+    container_name: bds-backend-prod
+    environment:
+      NODE_ENV: production
+      TZ: Asia/Ho_Chi_Minh
+      DATABASE_URL: postgresql://${DB_USER:-bds_user}:${DB_PASSWORD:?DB_PASSWORD is required}@postgres:5432/${DB_NAME:-bds_db}?schema=public
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      MEILISEARCH_HOST: http://meilisearch:7700
+      MEILISEARCH_KEY: ${MEILISEARCH_MASTER_KEY:?MEILISEARCH_MASTER_KEY is required}
+      FRONTEND_URL: https://nhadatxunghe.vn
+      PUBLIC_API_URL: https://nhadatxunghe.vn/api/v1
+      TRUST_PROXY: 'true'
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-false}
+      ENABLE_SCHEDULED_BACKUP: ${ENABLE_SCHEDULED_BACKUP:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_FROM: ${SMTP_FROM:-"Support <support@your-domain.com>"}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
+      FACEBOOK_CALLBACK_URL: ${FACEBOOK_CALLBACK_URL:-}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-admin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-admin123}
+      MINIO_BUCKET: bds-uploads
+      PUBLIC_UPLOAD_BASE_URL: https://nhadatxunghe.vn/bds-uploads
+    depends_on:
+      - postgres
+      - redis
+      - meilisearch
+      - minio
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads_prod:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z-cpuv1
+    container_name: bds-minio-prod
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123}
+    command: server /data --console-address ":9001"
+    volumes:
+      - miniodata_prod:/data
+    restart: always
+
+  minio-createbucket:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z-cpuv1
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123}
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      /usr/bin/mc mb myminio/bds-uploads || true;
+      /usr/bin/mc anonymous set download myminio/bds-uploads;
+      exit 0;
+      "
+
+volumes:
+  pgdata_prod:
+  redisdata_prod:
+  meilidata_prod:
+  uploads_prod:
+  miniodata_prod:
+  caddy_data_prod:
+  caddy_config_prod:

@@ -1,0 +1,586 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MOD
+  ADMIN
+}
+
+enum PropertyStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+  SOLD
+  RENTED
+  EXPIRED
+  DELETED
+}
+
+enum PropertyTier {
+  NORMAL
+  UP
+  VIP
+}
+
+enum TransactionType {
+  DEPOSIT
+  DEDUCT
+  REFUND
+  ADMIN_ADJUST
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String?   @unique
+  phone                 String?   @unique
+  username              String?   @unique
+  password              String?
+  name                  String?
+  slug                  String?   @unique
+  bio                   String?
+  provider              String    @default("LOCAL")
+  providerId            String?
+  avatar                String?
+  role                  Role      @default(USER)
+  balance               Decimal   @default(0)
+  status                String    @default("ACTIVE") // ACTIVE, BANNED
+  otp                   String?
+  otpExpiresAt          DateTime?
+  failedOtpAttempts     Int       @default(0)
+  pendingEmail          String?
+  emailVerified         Boolean   @default(false)
+  emailOtp              String?
+  emailOtpExpiresAt     DateTime?
+  isNotificationEnabled Boolean   @default(true)
+  isPhoneVisible        Boolean   @default(true)
+  purpose               String? // FIND_BDS, SELL_BDS, BOTH
+  loginAttempts         Int       @default(0)
+  lockedUntil           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  properties           Property[]
+  transactions         Transaction[]
+  savedPosts           SavedPost[]
+  reports              Report[]
+  comments             Comment[]
+  notifications        Notification[]
+  searchHistories      SearchHistory[]
+  paymentWebhookLogs   PaymentWebhookLog[]
+  complaints           Complaint[]
+  auditLogs            AuditLog[]
+  dataDeletionRequests DataDeletionRequest[]
+  requirements         Requirement[]
+  adminActionLogs      AdminActionLog[]
+  viewedProperties     ViewedProperty[]
+  propertyHistories    PropertyHistory[]
+
+  @@index([status, createdAt])
+  @@index([role, createdAt])
+  @@index([provider, providerId])
+}
+
+model Property {
+  id              String    @id @default(uuid())
+  title           String
+  description     String
+  transactionType String // BAN, CHO_THUE, CAN_MUA
+  propertyType    String // DAT_NEN, NHA_RIENG, CHUNG_CU, ...
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // Location
+  city     String?
+  district String?
+  ward     String?
+  oldWard  String?
+  street   String?
+
+  provinceId       String?
+  province         Location? @relation("PropertyProvince", fields: [provinceId], references: [id], onDelete: SetNull)
+  districtId       String?
+  districtLocation Location? @relation("PropertyDistrict", fields: [districtId], references: [id], onDelete: SetNull)
+  wardId           String?
+  wardLocation     Location? @relation("PropertyWard", fields: [wardId], references: [id], onDelete: SetNull)
+
+  price      Decimal?
+  area       Float?
+  pricePerM2 Float?
+
+  // Map Coordinates
+  priceRangeKey     String?
+  priceMin          Decimal?
+  priceMax          Decimal?
+  areaRangeKey      String?
+  areaMin           Float?
+  areaMax           Float?
+  pricePerM2Display String?
+
+  locationId String?
+  location   Location? @relation("PropertyLocation", fields: [locationId], references: [id], onDelete: SetNull)
+
+  lat Float?
+  lng Float?
+  isExactLocation Boolean @default(true)
+
+  // Property details
+  bedrooms     Int?
+  bathrooms    Int?
+  floors       Int?
+  frontage     Float?
+  roadWidth    Float?
+  legal        String?
+  furniture    String?
+  surroundings String?
+  source       String?
+
+  // Metadata
+  direction String?
+  amenities String?
+  thumbnail String?
+  images    String[]
+
+  status       PropertyStatus @default(PENDING)
+  tier         PropertyTier   @default(NORMAL)
+  slug         String?        @unique
+  propertyCode String?        @unique
+  isNegotiable Boolean        @default(false)
+
+  views      Int @default(0)
+  likes      Int @default(0)
+  callClicks Int @default(0)
+  zaloClicks Int @default(0)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  publishedAt   DateTime?
+  tierExpiresAt DateTime? // When VIP/UP expires
+  frozenTierMs          Float? // Amount of ms frozen when property is PENDING
+  deletedAt     DateTime?
+  pushedAt      DateTime?
+
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedBy      SavedPost[]
+  histories    PropertyHistory[]
+  reports      Report[]
+  comments     Comment[]
+  complaints   Complaint[]
+  imageObjects PropertyImage[]
+  transactions Transaction[]
+  viewedBy     ViewedProperty[]
+
+  @@index([status, tier])
+  @@index([transactionType])
+  @@index([propertyType])
+  @@index([price])
+  @@index([area])
+  @@index([publishedAt])
+  @@index([ward, district, city])
+  @@index([status, propertyType, publishedAt])
+  @@index([status, locationId, publishedAt])
+  @@index([status, priceMin, priceMax])
+  @@index([status, areaMin, areaMax])
+  @@index([status, pricePerM2])
+  @@index([transactionType, propertyType, locationId])
+  @@index([deletedAt])
+  @@index([userId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([tierExpiresAt])
+  @@index([provinceId])
+  @@index([districtId])
+  @@index([wardId])
+}
+
+model SavedPost {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([propertyId])
+  @@index([createdAt])
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  userId        String?
+  type          TransactionType
+  amount        Decimal
+  description   String?
+  propertyId    String?
+  balanceBefore Decimal?
+  balanceAfter  Decimal?
+  userNote      String?
+  adminNote     String?
+  status        TransactionStatus @default(PENDING)
+  referenceId   String?           @unique // Cho Idempotency
+  createdAt     DateTime          @default(now())
+
+  user               User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  property           Property?           @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  complaints         Complaint[]
+  paymentWebhookLogs PaymentWebhookLog[]
+
+  @@index([userId, createdAt])
+  @@index([type, status, createdAt])
+  @@index([propertyId])
+}
+
+model PaymentWebhookLog {
+  id             String    @id @default(uuid())
+  provider       String    @default("SEPAY")
+  referenceId    String?   @unique
+  transferAmount Decimal?
+  transferType   String?
+  content        String?
+  payload        String
+  status         String    @default("PENDING") // PENDING, SUCCESS, FAILED, DUPLICATE, IGNORED
+  reason         String?
+  retryCount     Int       @default(0)
+  nextRetryAt    DateTime?
+  userId         String?
+  transactionId  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([transactionId])
+}
+
+model Location {
+  id           String  @id @default(uuid())
+  name         String
+  type         String // "CITY", "DISTRICT", "WARD"
+  parentId     String?
+  slug         String? @unique
+  isFeatured   Boolean @default(false)
+  isSeoEnabled Boolean @default(false)
+
+  parent             Location?     @relation("LocationHierarchy", fields: [parentId], references: [id])
+  children           Location[]    @relation("LocationHierarchy")
+  properties         Property[]    @relation("PropertyLocation")
+  provinceProperties Property[]    @relation("PropertyProvince")
+  districtProperties Property[]    @relation("PropertyDistrict")
+  wardProperties     Property[]    @relation("PropertyWard")
+  requirements       Requirement[]
+
+  @@index([type, name])
+  @@index([parentId])
+  @@index([slug, type, parentId])
+  @@index([type, isFeatured])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  parentId  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  parent     Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryHierarchy")
+  properties Property[]
+
+  @@index([parentId])
+}
+
+model SystemSettings {
+  id                     String   @id @default("default_settings")
+  bankBin                String?
+  bankAccount            String?
+  accountName            String?
+  sepayWebhookToken      String?
+  googleSearchConsoleId  String?
+  googleMapsApiKey       String?
+  googleAdsenseClientId  String?
+  googleAdsenseSlotId    String?
+  googleAnalyticsId      String?
+  facebookPixelId        String?
+  vipPrice               Decimal  @default(10000)
+  upPrice                Decimal  @default(3000)
+  vipDurationDays        Int      @default(2)
+  upDurationDays         Int      @default(1)
+  freePostsPerUser       Int      @default(2)
+  hardPostsPerUserPerDay Int      @default(50)
+  freeUpsPerUserPerDay   Int      @default(1)
+  hardUpsPerUserPerDay   Int      @default(10)
+  freePostsPerDay        Int      @default(2)
+  maxTotalPostsPerUser   Int      @default(60)
+  maxPostsPerDay         Int      @default(50)
+  maxUpsPerDay           Int      @default(10)
+  maxUpPerPostPerDay     Int      @default(10)
+  upCooldownMinutes      Int      @default(10)
+  extraPostPrice         Decimal  @default(5000)
+  forbiddenWords         String?  @default("chửi bậy,nhạy cảm,spam,lừa đảo,phản động")
+  isPreModerationEnabled Boolean  @default(true)
+  isAutoApprove          Boolean  @default(false)
+  contactPhone           String?
+  contactEmail           String?
+  vipPackages            Json?    @default("[]")
+  homeBannerUrl          String?
+  homeBannerLink         String?
+  isHomeBannerActive     Boolean  @default(true)
+  propertyAdUrl          String?
+  propertyAdLink         String?
+  propertyAds            Json?    @default("[]")
+  isPropertyAdActive     Boolean  @default(true)
+  showOnlineUsers        Boolean  @default(true)
+  updatedAt              DateTime @updatedAt
+}
+
+model PropertyImage {
+  id          String   @id @default(uuid())
+  propertyId  String
+  url         String
+  alt         String?
+  sortOrder   Int      @default(0)
+  isThumbnail Boolean  @default(false)
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, sortOrder])
+}
+
+model PropertyHistory {
+  id            String   @id @default(uuid())
+  propertyId    String
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  changedById   String?
+  changedByUser User?    @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  changedBy     String?
+  changes       String // JSON string of changes
+  createdAt     DateTime @default(now())
+
+  @@index([propertyId])
+}
+
+model Requirement {
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone  String?
+  email  String?
+  name   String?
+
+  transactionType String? // CAN_MUA, CAN_THUE
+  propertyType    String? // "DAT_NEN", "NHA_PHO", "CAN_HO"...
+  locationId      String?
+  location        Location? @relation(fields: [locationId], references: [id])
+
+  priceMin Float?
+  priceMax Float?
+  areaMin  Float?
+  areaMax  Float?
+
+  content   String
+  adminNote String?
+  status    String  @default("PENDING") // PENDING, MATCHED, CLOSED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([locationId])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  reason     String
+  adminNote  String?
+  status     String   @default("PENDING") // PENDING, REVIEWED
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([propertyId])
+}
+
+model Complaint {
+  id            String   @id @default(uuid())
+  userId        String?
+  transactionId String?
+  propertyId    String?
+  type          String   @default("GENERAL") // GENERAL, PAYMENT, PROPERTY, USER_DATA
+  subject       String
+  content       String
+  status        String   @default("PENDING") // PENDING, PROCESSING, RESOLVED, REJECTED
+  resolution    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction Transaction? @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  property    Property?    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([userId])
+  @@index([transactionId])
+  @@index([propertyId])
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  userId     String
+  propertyId String
+  content    String
+  parentId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([propertyId, createdAt])
+  @@index([userId, createdAt])
+  @@index([parentId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   String?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt])
+  @@index([actorId])
+  @@index([entityType, entityId])
+}
+
+model DataDeletionRequest {
+  id          String    @id @default(uuid())
+  userId      String?
+  status      String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, REJECTED
+  reason      String?
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model BackupLog {
+  id        String   @id @default(uuid())
+  type      String // BACKUP, RESTORE
+  status    String // SUCCESS, FAILED
+  filePath  String?
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@index([type, status, createdAt])
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String?
+  query     String
+  filters   String? // JSON string
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+model AdminActionLog {
+  id          String   @id @default(uuid())
+  adminId     String?
+  admin       User?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  actionType  String
+  targetId    String?
+  targetType  String?
+  description String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([actionType, createdAt])
+  @@index([targetType, targetId])
+}
+
+model ViewedProperty {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  viewedAt   DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@index([userId, viewedAt])
+  @@index([propertyId, viewedAt])
+}
+
+model News {
+  id        String   @id @default(uuid())
+  title     String
+  content   String   @db.Text
+  thumbnail String?
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}

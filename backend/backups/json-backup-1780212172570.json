@@ -1,0 +1,85 @@
+{
+  "properties": [
+    {
+      "id": "04461b3b-d937-4696-9229-3064e249f2db",
+      "title": "Biệt thự siêu VIP E2E",
+      "description": "Nhà đẹp lung linh",
+      "transactionType": "BAN",
+      "propertyType": "NHA_RIENG",
+      "categoryId": null,
+      "city": "Hà Nội",
+      "district": "Cầu Giấy",
+      "ward": "Dịch Vọng",
+      "street": null,
+      "price": 5000000000,
+      "area": 250,
+      "pricePerM2": 20000000,
+      "lat": null,
+      "lng": null,
+      "direction": null,
+      "amenities": null,
+      "thumbnail": null,
+      "images": [
+        "/uploads/test.jpg"
+      ],
+      "status": "APPROVED",
+      "tier": "NORMAL",
+      "views": 0,
+      "likes": 0,
+      "createdAt": "2026-05-28T18:05:13.907Z",
+      "updatedAt": "2026-05-28T18:05:14.098Z",
+      "publishedAt": null,
+      "tierExpiresAt": null,
+      "userId": "791ce0fb-589a-4833-8151-8336eb5d24b9"
+    },
+    {
+      "id": "daf6487a-1bc8-42a6-a064-26410ba8d669",
+      "title": "Biệt thự siêu VIP E2E",
+      "description": "Nhà đẹp lung linh",
+      "transactionType": "BAN",
+      "propertyType": "NHA_RIENG",
+      "categoryId": null,
+      "city": "Hà Nội",
+      "district": "Cầu Giấy",
+      "ward": "Dịch Vọng",
+      "street": null,
+      "price": 5000000000,
+      "area": 250,
+      "pricePerM2": 20000000,
+      "lat": null,
+      "lng": null,
+      "direction": null,
+      "amenities": null,
+      "thumbnail": null,
+      "images": [
+        "/uploads/test.jpg"
+      ],
+      "status": "APPROVED",
+      "tier": "NORMAL",
+      "views": 0,
+      "likes": 0,
+      "createdAt": "2026-05-28T18:05:33.757Z",
+      "updatedAt": "2026-05-28T18:05:33.905Z",
+      "publishedAt": null,
+      "tierExpiresAt": null,
+      "userId": "3792c1e3-4bd2-447a-aa94-1f181f5a2228"
+    }
+  ],
+  "settings": [
+    {
+      "id": "default_settings",
+      "bankBin": "970422",
+      "bankAccount": "123456",
+      "accountName": "TEST",
+      "sepayWebhookToken": "c68a479433b7ca430b5ca83fa5c2fb88:f89eb5ea0b0e48297db9db60eceffb97",
+      "vipPrice": 20000,
+      "upPrice": 10000,
+      "vipDurationDays": 7,
+      "upDurationDays": 3,
+      "freePostsPerUser": 3,
+      "forbiddenWords": "chửi bậy,nhạy cảm,spam,lừa đảo,phản động",
+      "isPreModerationEnabled": true,
+      "updatedAt": "2026-05-28T18:04:49.143Z"
+    }
+  ]
+}

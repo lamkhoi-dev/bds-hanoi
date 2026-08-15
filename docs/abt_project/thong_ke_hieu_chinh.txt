@@ -1,0 +1,19 @@
+Khi bấm “So sánh ngay”, tự động đóng/ẩn bảng so sánh nhỏ đang nổi để không che nội dung trang so sánh.
+Mở lại tin nháp hoặc sửa tin bị reset lại các field, tiêu đề, mô tả.
+(mobile) Lỗi không hiển thị hết đặc điểm bđs, lỗi không hiển thị bản đồ, 
+(mobile, PC)  Lỗi màn chiều ngang màn hình lớn hơn màn hình điện thoại (vuốt ngang được, không xem hết màn hình -bị che 1 phần bên phải màn hình)
+(mobile)  bỏ menu cố đinh liên hệ, dưới bài đăng (đã có trong bài), chiếm nhiều diện tích, Cái nút đăng tin và nút bạn muốn mua BĐS gì có thể làm menu cố định như trên PC, có thể rút gọn tên là Đăng bán, Cần mua.
+Bỏ mục bạn muốn đăng tin ở đầu trang (chiếm nhiều diện tích), vẫn để cuối trang
+Form lọc: Khi vào 1 trang chuyên mục thì hệ thống mặc định đã chọn chuyên mục đó ở form lọc. Ví dụ: Vào /Phuong -truong-vinh, thì form lọc (hoặc lọc để tìm kiếm) chọn sẵn Phường trường Vinh
+Mục khám phá thêm bất động sản đang cố định link, chưa phải là thay đổi liên quan đến bài viết, chuyên mục, Hay theo hành vi người xem
+Thêm id vào link user để dễ quản lý, 
+nếu được thì link dạng /Nguyen-van-A-ID
+Chỗ lọc tìm kiếm trong chuyên mục bổ sung lọc khu vực
+Trên trang chủ, các chuyên mục chưa hiển thị bài đăng mới nhất mà là đang là bài đăng cũ hơn
+27/9: Lỗi đăng nhập bằng gg
+27/9: Mất chức năng bản đồ
+Form đăng tin: bổ sung phường xã cũ cho các huyện (tương tự cho phép ở form lọc)
+Thống kê: Bổ sung người đang online (admin có thể bật tắt chức năng này)
+Cái form cần mua/cần thuê: Lược bớt phần thông tin bài viết, chỉ để lại, Hướng nhà, nội thất, mặt tiền, đường trước đất, pháp lý, sửa ĐĂNG TIN NGAY thành GỬI YÊU CẦU
+Form cho thuê: Mức giá sửa đơn vị triệu thành triệu/tháng, thông tin bài viết lược bớt, chỉ để lại số phòng ngủ, số phòng vệ sinh, số tầng, nội thất, đường trước nhà
+Quảng cáo trong chuyên mục: Kéo xuống dưới phần tin UP, trên tin thường

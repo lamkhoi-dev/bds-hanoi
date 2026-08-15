@@ -1,0 +1,32 @@
+Chào bạn, để bộ phận kỹ thuật tích hợp xong tính năng Đăng nhập bằng SMS (OTP) qua Firebase một cách bảo mật nhất mà không cần phải cấp quyền vào Gmail của bạn, bạn vui lòng dành khoảng 3 phút thao tác theo các bước dưới đây và gửi lại cho mình 2 thông tin nhé:
+
+### PHẦN 1: Bật tính năng Đăng nhập bằng Số điện thoại (Phone Auth)
+1. Truy cập vào Firebase Console (https://console.firebase.google.com/) và chọn dự án bạn vừa tạo.
+2. Ở menu bên trái, tìm mục "Build" (hoặc Phát triển) -> Chọn "Authentication" (Xác thực).
+3. Bấm vào nút "Get Started" (Bắt đầu) nếu đây là lần đầu tiên bạn vào mục này.
+4. Chuyển sang tab "Sign-in method" (Phương thức đăng nhập).
+5. Bấm vào nút "Add new provider" (Thêm nhà cung cấp mới) -> Chọn "Phone" (Điện thoại).
+6. Bật công tắc "Enable" (Bật) lên và bấm "Save" (Lưu).
+7. (Quan trọng) Chuyển sang tab "Settings" (Cài đặt) ngay cạnh đó -> Chọn mục "Authorized domains" (Miền được ủy quyền) -> Bấm "Add domain" và nhập tên miền website của chúng ta vào (VD: nhadatxunghe.vn) -> Bấm Add.
+
+### PHẦN 2: Lấy mã firebaseConfig (Cho Giao diện Website)
+1. Nhìn lên góc trên cùng bên trái màn hình, bấm vào biểu tượng Bánh răng cưa cạnh chữ Project Overview -> Chọn "Project settings" (Cài đặt dự án).
+2. Cuộn màn hình xuống dưới cùng sẽ thấy phần "Your apps" (Ứng dụng của bạn).
+3. Bấm vào biểu tượng web có hình "</>".
+4. Đặt tên bất kỳ cho app (VD: Website NĐXN) và bấm "Register app" (Đăng ký ứng dụng).
+5. Firebase sẽ hiện ra một đoạn mã code. Bạn hãy tìm khối có chữ "const firebaseConfig = { ... };".
+👉 Yêu cầu 1: Bạn copy nguyên đoạn "{ ... }" đó gửi cho mình nhé.
+
+### PHẦN 3: Lấy File JSON (Cho Máy chủ Backend)
+1. Vẫn ở trong trang "Project settings" (Cài đặt dự án) lúc nãy, bạn nhìn lên thanh menu ngang và chọn tab "Service accounts" (Tài khoản dịch vụ).
+2. Chờ một chút để màn hình load xong, hãy đảm bảo rằng mục "Firebase Admin SDK" đang được chọn.
+3. Cuộn xuống một chút và bấm vào nút màu xanh "Generate new private key" (Tạo khóa riêng tư mới).
+4. Một bảng cảnh báo hiện ra, bạn tiếp tục bấm "Generate key". 
+5. Máy tính của bạn sẽ tự động tải về một file có đuôi ".json". 
+👉 Yêu cầu 2: Bạn gửi trực tiếp file ".json" đó cho mình nhé. File này dùng để mã hóa tính năng kiểm tra OTP cực kỳ bảo mật của máy chủ.
+
+Tóm lại, bạn gửi cho mình 2 thứ:
+1. Khối mã firebaseConfig.
+2. File .json vừa tải về.
+
+Cảm ơn bạn nhiều!
