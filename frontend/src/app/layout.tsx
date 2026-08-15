@@ -182,6 +182,19 @@ export default async function RootLayout({
             }}
           />
         )}
+        {/* Ảnh dự phòng cho trình duyệt tắt JavaScript — có trong đoạn mã Meta cấp
+            nhưng bản cũ bỏ sót, nên nhóm người dùng đó không được ghi nhận. */}
+        {(settings?.facebookPixelId || process.env.NEXT_PUBLIC_META_PIXEL_ID) && (
+          <noscript>
+            <img
+              height="1"
+              width="1"
+              style={{ display: 'none' }}
+              alt=""
+              src={`https://www.facebook.com/tr?id=${settings?.facebookPixelId || process.env.NEXT_PUBLIC_META_PIXEL_ID}&ev=PageView&noscript=1`}
+            />
+          </noscript>
+        )}
         <AuthProvider>
           <OnlineProvider>
         <div className="relative flex flex-col min-h-screen overflow-x-clip w-full">
