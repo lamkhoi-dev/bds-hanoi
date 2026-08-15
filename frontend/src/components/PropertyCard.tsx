@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { listingDetailPath } from '@/lib/seo/canonical';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -27,13 +28,18 @@ import { formatPrice, formatArea } from '@/lib/utils';
  * Điểm khách nêu đích danh: bản cũ hiện GIÁ và GIÁ/M² hai lần — một lần đè trên ảnh,
  * một lần nữa ngay dưới tiêu đề. Bố cục này bỏ hẳn phần lặp đó.
  *
- * Đã gỡ luôn khối popup xem trước khi rê chuột (dựng qua React portal, tự đảo ảnh mỗi
- * 1,5 giây): nó không có trong đặc tả, không dùng được trên điện thoại, và giữ 4 state
- * cùng 2 setInterval cho mỗi card trên trang.
+ * Popup xem trước khi rê chuột (chỉ PC — di động không có "hover") ĐÃ ĐƯỢC KHÔI PHỤC
+ * theo yêu cầu của khách sau khi redesign: một hộp nổi theo con trỏ chuột, tự đảo qua
+ * tối đa 5 ảnh mỗi 1,5 giây. Không lặp lại giá/diện tích/giá-m² trong popup này — vì
+ * đó là đúng phần đã hiện sẵn trên card khi không hover, giữ đúng yêu cầu "không lặp"
+ * ở phần thân card.
  */
 export default function PropertyCard({ item }: { item: any }) {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [mounted, setMounted] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => setMounted(true), []);
 
@@ -48,6 +54,9 @@ export default function PropertyCard({ item }: { item: any }) {
     (url) => Boolean(url) && !failedImages.has(toMediaUrl(url)),
   );
 
+  // Tối đa 5 ảnh cho popup xem trước — không cần tải/đảo toàn bộ ảnh của tin.
+  const previewImages = validImages.slice(0, 5);
+
   const handleImageError = (url: string) =>
     setFailedImages((prev) => new Set(prev).add(toMediaUrl(url)));
 
@@ -56,6 +65,21 @@ export default function PropertyCard({ item }: { item: any }) {
     e.stopPropagation();
     addCompareItem({ id: item.id, title: item.title, price: item.price, images: imagesList });
   };
+
+  const handleMouseMove = (e: React.MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
+
+  // Chỉ đảo ảnh khi đang hover và có nhiều hơn 1 ảnh xem trước.
+  useEffect(() => {
+    if (!isHovered || previewImages.length <= 1) {
+      setCurrentImageIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % previewImages.length);
+    }, 1500);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHovered, previewImages.length]);
 
   // ----- Giá -----
   const numericPrice = Number(item.price);
@@ -92,13 +116,66 @@ export default function PropertyCard({ item }: { item: any }) {
   if (item.bedrooms) metaParts.push(`${item.bedrooms} phòng ngủ`);
   if (item.bathrooms && item.transactionType !== 'CHO_THUE') metaParts.push(`${item.bathrooms} WC`);
 
+  const renderPopup = () => {
+    if (!mounted || !isHovered || previewImages.length === 0) return null;
+
+    const popupWidth = 400;
+    const popupHeight = 300;
+    const margin = 20;
+    let left = mousePos.x + margin;
+    let top = mousePos.y + margin;
+    if (typeof window !== 'undefined') {
+      if (left + popupWidth > window.innerWidth) left = mousePos.x - popupWidth - margin;
+      if (top + popupHeight > window.innerHeight) top = window.innerHeight - popupHeight - margin;
+    }
+
+    return createPortal(
+      <div
+        className="fixed z-[9999] pointer-events-none rounded-2xl overflow-hidden shadow-2xl border-2 border-white animate-fade-in hidden md:block bg-gray-100"
+        style={{ left, top, width: popupWidth, height: popupHeight }}
+      >
+        <Image
+          fill
+          src={toMediaUrl(previewImages[currentImageIndex])}
+          alt={item.title}
+          sizes="400px"
+          className="object-cover transition-opacity duration-300"
+          onError={() => handleImageError(previewImages[currentImageIndex])}
+        />
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 pt-12 flex flex-col justify-end z-20">
+          <h3 className="text-white font-bold text-base line-clamp-1 mb-1">{item.title}</h3>
+          {placeLine && <p className="text-white/80 text-xs line-clamp-1">{placeLine}</p>}
+        </div>
+
+        {previewImages.length > 1 && (
+          <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 z-30">
+            {previewImages.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === currentImageIndex ? 'w-6 bg-white' : 'w-2 bg-white/60'}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>,
+      document.body,
+    );
+  };
+
   return (
+    <>
     <Link
       href={listingDetailPath(generateSlug(item.title), item.shortCode, item.id)}
       className="flex flex-col card-lift group bg-white rounded-2xl overflow-hidden border border-borderLight shadow-sm animate-fade-in"
     >
       {/* ẢNH — chiếm toàn bộ chiều ngang card */}
-      <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] bg-gray-100 overflow-hidden">
+      <div
+        className="relative w-full aspect-[16/9] sm:aspect-[2/1] bg-gray-100 overflow-hidden"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onMouseMove={handleMouseMove}
+      >
         {validImages.length > 0 ? (
           <Image
             fill
@@ -203,5 +280,7 @@ export default function PropertyCard({ item }: { item: any }) {
         </div>
       </div>
     </Link>
+    {renderPopup()}
+    </>
   );
 }
