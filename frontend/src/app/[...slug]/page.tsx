@@ -249,7 +249,7 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                     Bất động sản VIP nổi bật
                   </h2>
                 </div>
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {data.vips.map((item: any) => (
                     <PropertyCard key={item.id} item={item} />
                   ))}
@@ -272,7 +272,7 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
               </div>
               {data.normals && data.normals.filter((item: any) => !data.vips?.some((vip: any) => vip.id === item.id)).length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {data.normals.filter((item: any) => !data.vips?.some((vip: any) => vip.id === item.id)).map((item: any) => (
                       <PropertyCard key={item.id} item={item} />
                     ))}

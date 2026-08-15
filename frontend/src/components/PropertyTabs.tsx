@@ -62,7 +62,7 @@ export default function PropertyTabs({
       </div>
       
       {displayItems.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
           {displayItems.slice(0, 10).map((item, index) => (
             <div key={item.id} className={`h-full ${index > 4 ? 'hidden lg:block' : (index > 3 ? 'hidden md:block' : '')}`}>
               <PropertyCard item={item} />

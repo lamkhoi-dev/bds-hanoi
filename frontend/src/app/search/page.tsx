@@ -243,7 +243,7 @@ export default async function SearchPage({
                     Bất động sản VIP nổi bật
                   </h2>
                 </div>
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {vips.map((item: any) => (
                     <PropertyCard key={item.id} item={item} />
                   ))}
@@ -258,7 +258,7 @@ export default async function SearchPage({
                   <h2 className="text-xl font-bold text-gray-800">Tin Cập Nhật Mới Nhất</h2>
                   <SearchControls />
                 </div>
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {normals.filter((item: any) => !vips.some((vip: any) => vip.id === item.id)).map((item: any) => (
                     <PropertyCard key={item.id} item={item} />
                   ))}
