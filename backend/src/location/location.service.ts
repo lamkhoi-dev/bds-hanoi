@@ -180,7 +180,10 @@ export class LocationService {
   /** Cây tỉnh -> quận/huyện -> (phường xã mới + cũ), cho bộ lọc và form đăng tin. */
   async getTree() {
     const snap = await this.getSnapshot();
-    const province = snap.all.find((n) => n.type === LocationType.CITY) ?? null;
+    // Lấy tỉnh ĐẦU TIÊN theo thứ tự khai trong ACTIVE_PROVINCE_SLUG, không phải tỉnh
+    // đầu tiên tình cờ xuất hiện trong snapshot. `getTree` chỉ mô tả một cây nên khi
+    // site phục vụ nhiều tỉnh, tỉnh chính phải là tỉnh khai trước.
+    const province = this.primaryProvince(snap);
     if (!province) return null;
 
     const districts = (snap.childrenOf.get(province.id) ?? []).map((district) => {
@@ -217,32 +220,51 @@ export class LocationService {
    */
   async getLocations(city?: string) {
     const snap = await this.getSnapshot();
-    const province = snap.all.find((n) => n.type === LocationType.CITY);
-    if (!province) return [];
-    if (city && city.trim() && city.trim() !== province.name && city.trim() !== province.shortName) {
-      return [];
-    }
 
-    return (snap.childrenOf.get(province.id) ?? []).map((district) => ({
-      id: district.id,
-      name: district.name,
-      shortName: district.shortName,
-      type: district.type,
-      slug: district.urlSegment,
-      parentId: district.parentId,
-      // Nhãn nhóm menu ngang. null với tỉnh không phân nhóm (Nghệ An) -> frontend
-      // giữ menu phẳng, nên cùng một build phục vụ được cả hai site.
-      group: district.group,
-      groupOrder: district.groupOrder,
-      parent: { id: province.id, name: province.name },
-      children: (snap.childrenOf.get(district.id) ?? []).map((child) => ({
-        id: child.id,
-        name: child.name,
-        shortName: child.shortName,
-        type: child.type,
-        slug: child.urlSegment,
-        isSeoEnabled: child.isSeoEnabled,
+    // Gộp quận/huyện của TẤT CẢ tỉnh đang phục vụ. Bản trước lấy `find(type===CITY)`
+    // tức chỉ MỘT tỉnh — khi ACTIVE_PROVINCE_SLUG nhận danh sách ("nghe-an,ha-tinh")
+    // thì bộ lọc chỉ hiện được một tỉnh, tỉnh còn lại biến mất khỏi giao diện dù dữ
+    // liệu vẫn nạp đủ.
+    const provinces = snap.all.filter((n) => n.type === LocationType.CITY);
+    if (provinces.length === 0) return [];
+
+    const wanted = city?.trim()
+      ? provinces.filter((p) => p.name === city.trim() || p.shortName === city.trim())
+      : provinces;
+    if (wanted.length === 0) return [];
+
+    return wanted.flatMap((province) =>
+      (snap.childrenOf.get(province.id) ?? []).map((district) => ({
+        id: district.id,
+        name: district.name,
+        shortName: district.shortName,
+        type: district.type,
+        slug: district.urlSegment,
+        parentId: district.parentId,
+        // Nhãn nhóm menu ngang. null với tỉnh không phân nhóm (Nghệ An) -> frontend
+        // giữ menu phẳng, nên cùng một build phục vụ được cả hai site.
+        group: district.group,
+        groupOrder: district.groupOrder,
+        parent: { id: province.id, name: province.name },
+        children: (snap.childrenOf.get(district.id) ?? []).map((child) => ({
+          id: child.id,
+          name: child.name,
+          shortName: child.shortName,
+          type: child.type,
+          slug: child.urlSegment,
+          isSeoEnabled: child.isSeoEnabled,
+        })),
       })),
-    }));
+    );
+  }
+
+  /** Tỉnh chính = tỉnh khai TRƯỚC trong ACTIVE_PROVINCE_SLUG. */
+  private primaryProvince(snap: Snapshot): LocationNodeDto | null {
+    const cities = snap.all.filter((n) => n.type === LocationType.CITY);
+    for (const slug of this.provinceSlugs) {
+      const hit = cities.find((c) => c.urlSegment === slug || c.path === slug);
+      if (hit) return hit;
+    }
+    return cities[0] ?? null;
   }
 }
