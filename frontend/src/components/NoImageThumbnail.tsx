@@ -42,7 +42,7 @@ export default function NoImageThumbnail({
     // Nền xám xanh rất nhạt theo gợi ý màu của khách.
     <div className="w-full h-full flex bg-[#EEF3F1]">
       {/* 40% trái: logo + tên site */}
-      <div className="w-[40%] flex flex-col items-center justify-center gap-2 border-r border-black/5 px-2">
+      <div className="w-[40%] flex flex-col items-center justify-center gap-2 border-r border-gray-200 px-2">
         <img
           src="/logo/ngoi_nha.svg"
           alt=""
@@ -58,9 +58,11 @@ export default function NoImageThumbnail({
       {/* 60% phải: 4 dòng */}
       <div className="w-[60%] flex flex-col items-start justify-center gap-1.5 px-3 sm:px-4">
         {/* Nhãn ngắn, không viết "Giao dịch: Bán" */}
+        {/* Màu theo đúng đặc tả: nhãn Bán nền ĐỎ CAM chữ trắng, nhãn Cho thuê nền
+            XANH DƯƠNG chữ trắng. */}
         <span
-          className={`px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wide ${
-            isRent ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+          className={`px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-wide text-white ${
+            isRent ? 'bg-blue-600' : 'bg-orange-600'
           }`}
         >
           {isRent ? 'Cho thuê' : 'Bán'}
