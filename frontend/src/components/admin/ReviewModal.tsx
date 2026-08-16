@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
+import LocationPicker, { resolveLocationIds, LocationValue } from '@/components/LocationPicker';
 
 /**
  * Hộp kiểm duyệt tin cho admin — lựa chọn thứ hai và thứ ba trong quy trình khách yêu cầu:
@@ -33,8 +34,20 @@ export default function ReviewModal({
     price: post.price ?? '',
     area: post.area ?? '',
   });
+  const [location, setLocation] = useState<LocationValue>({
+    city: post.city ?? '',
+    district: post.district ?? '',
+    ward: post.ward ?? '',
+    oldWard: post.oldWard ?? '',
+  });
+  const [locations, setLocations] = useState<any[]>([]);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Danh sách khu vực cho LocationPicker — cùng nguồn /locations dùng ở form đăng tin.
+  useEffect(() => {
+    api.get('/locations').then((res) => setLocations(res.data)).catch(() => undefined);
+  }, []);
 
   const changedFields = () => {
     const out: Record<string, any> = {};
@@ -43,6 +56,19 @@ export default function ReviewModal({
     if (form.propertyType !== (post.propertyType ?? '')) out.propertyType = form.propertyType;
     if (String(form.price) !== String(post.price ?? '')) out.price = form.price === '' ? null : Number(form.price);
     if (String(form.area) !== String(post.area ?? '')) out.area = form.area === '' ? null : Number(form.area);
+
+    // Địa điểm: đổi bất kỳ trong 4 field thì gửi cả 4 field TÊN lẫn 3 FK id (tính lại
+    // từ locations qua resolveLocationIds) — tránh lệch nhau giữa text hiển thị và
+    // wardId dùng cho breadcrumb/bộ lọc.
+    const locationChanged =
+      location.city !== (post.city ?? '') ||
+      location.district !== (post.district ?? '') ||
+      location.ward !== (post.ward ?? '') ||
+      location.oldWard !== (post.oldWard ?? '');
+    if (locationChanged) {
+      const ids = resolveLocationIds(locations, location);
+      Object.assign(out, location, ids);
+    }
     return out;
   };
 
@@ -105,6 +131,11 @@ export default function ReviewModal({
               <label className="block text-xs font-semibold text-gray-600 mb-1">Diện tích (m²)</label>
               <input className={field} type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Địa điểm</label>
+            <LocationPicker locations={locations} value={location} onChange={setLocation} />
           </div>
 
           <div>

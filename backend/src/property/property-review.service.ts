@@ -46,6 +46,14 @@ const FIELD_LABEL: Record<string, string> = {
 /** Trường được phép sửa khi kiểm duyệt. Không cho đụng chủ tin, gói tin hay trạng thái. */
 const EDITABLE_FIELDS = Object.keys(FIELD_LABEL);
 
+/**
+ * 3 FK địa điểm — ghi ĐỒNG THỜI với city/district/ward/oldWard ở trên khi admin sửa
+ * địa điểm, để breadcrumb và bộ lọc theo wardId không lệch với địa chỉ hiển thị. Cố
+ * tình KHÔNG đưa vào FIELD_LABEL/EDITABLE_FIELDS: đây là cột kỹ thuật (uuid), hiện
+ * "provinceId: uuid-xxx → uuid-yyy" trong lịch sử/thông báo cho người đăng là vô nghĩa.
+ */
+const LOCATION_ID_FIELDS = ['provinceId', 'districtId', 'wardId'];
+
 export interface FieldChange {
   field: string;
   label: string;
@@ -112,6 +120,10 @@ export class PropertyReviewService {
     // Chỉ nhận đúng các trường cho phép — payload thừa bị bỏ, không ghi đè bừa.
     const safePatch: Record<string, any> = {};
     for (const f of EDITABLE_FIELDS) {
+      if (f in normalized) safePatch[f] = (normalized as any)[f];
+    }
+    // Đồng bộ FK địa điểm cùng lúc — xem giải thích ở LOCATION_ID_FIELDS.
+    for (const f of LOCATION_ID_FIELDS) {
       if (f in normalized) safePatch[f] = (normalized as any)[f];
     }
 

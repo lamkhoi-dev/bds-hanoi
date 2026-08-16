@@ -172,21 +172,23 @@ export default function SearchForm({
           />
         </div>
 
-        {/* Khách yêu cầu BỎ chữ "Lọc tìm kiếm" — nút chỉ còn biểu tượng. */}
+        {/* Khách yêu cầu bỏ chữ "Lọc tìm kiếm" (dòng chữ nhỏ phía trên popup) nhưng
+            nút này thì ngược lại — phải có chữ và dài bằng nút "Tìm kiếm" cạnh nó,
+            giống cách MobileFilterButton.tsx đã làm ở trang chuyên mục. */}
         <button
           type="button"
           onClick={() => setPopupOpen(true)}
-          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 rounded-lg text-gray-600 border border-gray-200 hover:bg-gray-100 sm:w-auto"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 rounded-lg text-gray-600 border border-gray-200 hover:bg-gray-100 font-bold"
           aria-label="Bộ lọc"
           title="Bộ lọc"
         >
-          <SlidersHorizontal className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4" /> Bộ lọc
         </button>
 
         <button
           type="button"
           onClick={() => setPopupOpen(true)}
-          className="bg-accent hover:bg-accent-light text-white px-8 py-3 rounded-lg font-bold transition-all shadow-glow-accent flex justify-center items-center gap-2"
+          className="flex-1 bg-accent hover:bg-accent-light text-white px-8 py-3 rounded-lg font-bold transition-all shadow-glow-accent flex justify-center items-center gap-2"
         >
           <Search className="w-4 h-4 sm:hidden" /> Tìm kiếm
         </button>

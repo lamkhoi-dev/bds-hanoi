@@ -222,6 +222,11 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
             initialDistrict={khuVuc !== 'toan-quoc' ? formattedKhuVuc : ''}
           />
         </div>
+        {/* Khách yêu cầu bộ lọc mobile nằm ngay dưới ô tìm kiếm — trước đây đặt sau
+            khối VIP + banner quảng cáo bên dưới. */}
+        <div className="mb-6 lg:hidden w-full">
+          <MobileFilterButton />
+        </div>
 <div className="flex flex-col lg:flex-row gap-8">
           <div className="hidden lg:block lg:w-[320px] shrink-0">
             <SidebarFilter />
@@ -266,9 +271,6 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
                 <h2 className="text-xl font-bold text-gray-800">Tin Cập Nhật Mới Nhất</h2>
                 <SearchControls />
-              </div>
-              <div className="mb-6 lg:hidden w-full">
-                <MobileFilterButton />
               </div>
               {data.normals && data.normals.filter((item: any) => !data.vips?.some((vip: any) => vip.id === item.id)).length > 0 ? (
                 <>

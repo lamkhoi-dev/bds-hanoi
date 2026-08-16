@@ -89,6 +89,30 @@ describe('breadcrumb trang chi tiết tin', () => {
     expect(urls[1]).toBe('/dat-nen');
     expect(urls).not.toContain('/tat-ca');
   });
+
+  // Tin thuộc Dự án: breadcrumb riêng theo Dự án, KHÔNG theo huyện/xã — tài liệu khách
+  // "Đối với Dự án sẽ hơi khác tý (không có khu vực)".
+  it('tin thuộc Dự án dùng breadcrumb Trang chủ / Dự án / tên dự án / tiêu đề', () => {
+    const propertyInProject = {
+      ...property,
+      project: { id: 'p1', name: 'Eco Central Park', slug: 'eco-central-park', shortCode: '6wqpk' },
+    };
+    expect(listingBreadcrumb(propertyInProject)).toEqual([
+      { name: 'Dự án', url: '/du-an' },
+      { name: 'Eco Central Park', url: '/du-an/eco-central-park-6wqpk' },
+      { name: property.title },
+    ]);
+  });
+
+  it('tin thuộc Dự án KHÔNG dùng breadcrumb theo huyện/xã dù có đủ dữ liệu địa điểm', () => {
+    const propertyInProject = {
+      ...property,
+      project: { id: 'p1', name: 'Eco Central Park', slug: 'eco-central-park', shortCode: '6wqpk' },
+    };
+    const names = listingBreadcrumb(propertyInProject).map((i) => i.name);
+    expect(names).not.toContain('Cầu Giấy');
+    expect(names).not.toContain('Phường Yên Hòa');
+  });
 });
 
 describe('breadcrumb trang danh mục', () => {

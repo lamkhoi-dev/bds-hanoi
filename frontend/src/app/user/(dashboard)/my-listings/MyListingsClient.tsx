@@ -329,6 +329,12 @@ export default function MyListingsClient() {
                           >
                             Xem admin đã sửa gì
                           </button>
+                          {/* Khách yêu cầu "mở lại bài viết, sửa lại toàn bộ rồi nhấn
+                              đăng" — trước đây chỉ có nút gửi duyệt lại suông, không
+                              sửa được gì. Tái dùng nguyên form đăng tin qua editId. */}
+                          <Link href={`/post?editId=${property.id}`} className="flex-1 md:flex-none flex items-center justify-center gap-2 text-sm font-bold bg-primary/10 text-primary px-4 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-colors border border-primary/20 hover:border-transparent">
+                            <Edit size={16} /> Sửa
+                          </Link>
                           <button
                             onClick={() => handleResubmit(property.id)}
                             className="flex-1 md:flex-none flex items-center justify-center gap-2 text-sm font-bold bg-amber-500 text-white px-4 py-2.5 rounded-xl hover:bg-amber-600 transition-colors"

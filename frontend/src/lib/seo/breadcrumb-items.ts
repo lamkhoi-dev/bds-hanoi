@@ -16,6 +16,18 @@ import { propertyTypeBySlug, propertyTypeByEnum, transactionByEnum } from './tax
  * Cấp nào thiếu dữ liệu thì LƯỢC BỎ, không để trống.
  */
 export function listingBreadcrumb(property: any): BreadcrumbItem[] {
+  // Tin thuộc Dự án: breadcrumb theo Dự án, KHÔNG theo khu vực (tài liệu khách: "Đối
+  // với Dự án sẽ hơi khác tý (không có khu vực)" — Trang chủ / Dự án / {tên dự án} /
+  // {tiêu đề tin}).
+  if (property?.project) {
+    const items: BreadcrumbItem[] = [
+      { name: 'Dự án', url: '/du-an' },
+      { name: property.project.name, url: `/du-an/${property.project.slug}-${property.project.shortCode}` },
+    ];
+    if (property?.title) items.push({ name: property.title });
+    return items;
+  }
+
   const items: BreadcrumbItem[] = [];
 
   const tx = transactionByEnum(property?.transactionType);

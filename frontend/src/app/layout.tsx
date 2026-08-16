@@ -27,17 +27,6 @@ const beVietnamPro = Be_Vietnam_Pro({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   variable: '--font-be-vietnam-pro',
 });
-// Tách tên thương hiệu thành 2 dòng cho logo: "Nhà Đất Hà Nội" -> "Nhà Đất" / "Hà Nội".
-// Không tách được thì dồn về 1 dòng.
-const brandSuffix = siteConfig.name.endsWith(siteConfig.province.name)
-  ? siteConfig.province.name
-  : '';
-const brandPrefix = brandSuffix
-  ? siteConfig.name.slice(0, siteConfig.name.length - brandSuffix.length).trim()
-  : '';
-const brandLine1 = brandPrefix || siteConfig.name;
-const brandLine2 = brandPrefix ? brandSuffix : '';
-
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicSettings();
   const verification = settings?.googleSearchConsoleId
@@ -239,13 +228,13 @@ export default async function RootLayout({
                       Tạm render bằng chữ từ siteConfig cho tới khi khách gửi bộ logo mới
                       (mục C2 trong danh sách câu hỏi).
                     */}
-                    <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black uppercase tracking-tight drop-shadow-sm">
+                    <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black tracking-tight drop-shadow-sm">
                       <span className="text-[#1E88E5] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
-                        {brandLine1}
+                        {siteConfig.brand.line1}
                       </span>
-                      {brandLine2 && (
+                      {siteConfig.brand.line2 && (
                         <span className="text-[#FFB300] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
-                          {brandLine2}
+                          {siteConfig.brand.line2}
                         </span>
                       )}
                     </div>

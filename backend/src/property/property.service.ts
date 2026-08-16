@@ -828,6 +828,9 @@ export class PropertyService {
         province: locationFields,
         districtLocation: locationFields,
         wardLocation: locationFields,
+        // Tin thuộc Dự án có breadcrumb RIÊNG (Trang chủ / Dự án / {tên dự án} / tiêu
+        // đề tin), không theo huyện/xã — xem listingBreadcrumb() ở frontend.
+        project: { select: { id: true, name: true, slug: true, shortCode: true } },
       },
     });
     if (!property) throw new NotFoundException('Không tìm thấy bất động sản');
@@ -1109,8 +1112,14 @@ export class PropertyService {
       if (userBalance < postCostInPoints) {
         throw new BadRequestException({ message: `Số dư trong ví không đủ để đăng tin (Phí: ${postCost}đ). Vui lòng nạp thêm tiền.`, requiresPayment: true });
       }
+    } else if (property.status === 'AWAITING_AUTHOR') {
+      // Sửa từ trạng thái "chờ người đăng kiểm tra lại" LUÔN là hành động "gửi duyệt
+      // lại" (khách: "Người đăng kiểm tra và nhấn Đăng tin lần nữa. Tin quay lại trạng
+      // thái Chờ duyệt") — không phụ thuộc có đổi field "quan trọng" hay không, khác
+      // với nhánh isPreModerationEnabled bên dưới (chỉ áp cho tin APPROVED/PENDING).
+      status = 'PENDING';
     } else if (isPreModerationEnabled) {
-      const criticalFieldsChanged = 
+      const criticalFieldsChanged =
         (normalizedData.title !== undefined && normalizedData.title !== property.title) ||
         (normalizedData.price !== undefined && Number(normalizedData.price) !== Number(property.price)) ||
         (normalizedData.area !== undefined && Number(normalizedData.area) !== Number(property.area)) ||
