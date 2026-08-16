@@ -165,23 +165,34 @@ export default async function Home() {
             <GoogleAdPlaceholder />
           </div>
 
-          {/* Khách yêu cầu kéo khối khu vực LÊN TRÊN chuyên mục Đất nền, ngay dưới
-              quảng cáo. Khối "BĐS tại {tỉnh lỵ}" cũ (getVinhProperties viết cứng 6
-              phường TP Vinh) đã được gộp vào đây dưới dạng các tab Location.isFeatured. */}
-          {(homepageData?.mainWardBlocks?.length || homepageData?.otherLocationTabs?.length) ? (
+          {/* Khách yêu cầu kéo 2 khối khu vực LÊN TRÊN chuyên mục Đất nền, ngay dưới
+              quảng cáo — giữ TÁCH RIÊNG 2 khối như bản gốc ("BĐS tại Vinh" và "Bất
+              động sản theo khu vực"), không gộp chung 1 khối như một đợt sửa trước đã
+              làm nhầm. "BĐS tại Vinh" lấy từ các phường được đánh dấu nổi bật, "Bất
+              động sản theo khu vực" lấy từ các huyện được đánh dấu nổi bật (đánh dấu
+              qua /admin/locations) + tab "Tất cả các khu vực" cuối cùng. */}
+          {homepageData?.mainWardBlocks?.length > 0 && (
             <PropertyTabs
-              title="Bất động sản theo khu vực"
-              tabs={[
-                ...(homepageData?.mainWardBlocks || []),
-                ...(homepageData?.otherLocationTabs || []),
-              ].map((b: any) => ({
+              title="BĐS tại Vinh"
+              tabs={homepageData.mainWardBlocks.map((b: any) => ({
                 id: b.key,
                 label: b.title,
                 items: b.items,
                 href: b.href,
               }))}
             />
-          ) : null}
+          )}
+          {homepageData?.otherLocationTabs?.length > 0 && (
+            <PropertyTabs
+              title="Bất động sản theo khu vực"
+              tabs={homepageData.otherLocationTabs.map((b: any) => ({
+                id: b.key,
+                label: b.title,
+                items: b.items,
+                href: b.href,
+              }))}
+            />
+          )}
 
           {homepageData?.categoryBlocks?.map((block: any, idx: number) => (
             <PropertyBlock

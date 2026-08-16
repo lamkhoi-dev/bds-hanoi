@@ -564,34 +564,45 @@ export class PropertyService {
       include: includeOptions
     });
 
-    const featuredLocations = await this.prisma.location.findMany({
-      where: { isFeatured: true },
-      take: 6
-    });
+    // Hai khối RIÊNG BIỆT trên trang chủ — "BĐS tại Vinh" (phường nổi bật) và "Bất
+    // động sản theo khu vực" (huyện nổi bật). Một đợt sửa trước gộp chung 1 danh sách
+    // isFeatured không phân biệt type, nên 2 khối bị nhét vào 1 tab bar duy nhất và mất
+    // tiêu đề "BĐS tại Vinh" — sửa lại bằng cách lọc riêng theo type ngay từ truy vấn.
+    const [featuredWards, featuredDistricts] = await Promise.all([
+      this.prisma.location.findMany({
+        where: { isFeatured: true, type: { in: ['WARD', 'OLD_WARD'] } },
+        take: 6,
+      }),
+      this.prisma.location.findMany({
+        where: { isFeatured: true, type: 'DISTRICT' },
+        take: 8,
+      }),
+    ]);
 
     // Trước đây có mảng fallback 6 phường của TP Vinh kèm một hàm slugify viết nội tuyến
     // và trường hợp đặc biệt 'Phường Cửa Lò' -> 'tx-cua-lo'. Slug tự chế đó lệch với
     // urlSegment thật trong DB, và mảng cứng thì vô nghĩa khi đổi tỉnh.
     // Không có khu vực nào được đánh dấu nổi bật thì trả rỗng, trang chủ tự ẩn khối.
-    const mainWardBlocksData = await Promise.all(
-      featuredLocations.map(async (loc) => {
-        const items = await getItems(
-          loc.type === 'WARD' || loc.type === 'OLD_WARD'
-            ? { wardId: loc.id }
-            : loc.type === 'DISTRICT'
-              ? { districtId: loc.id }
-              : { provinceId: loc.id },
-        );
-        return {
-          key: loc.urlSegment,
-          title: loc.name,
-          // Qua listingPath để chế độ enforce có tiền tố /ban, chế độ report giữ dạng
-          // phẳng đang chạy — cùng một build phục vụ cả hai site.
-          href: listingPath({ locationSlug: loc.urlSegment }),
-          items,
-        };
-      }),
-    );
+    const buildLocationBlock = async (loc: { id: string; type: string; urlSegment: string; name: string }) => {
+      const items = await getItems(
+        loc.type === 'WARD' || loc.type === 'OLD_WARD'
+          ? { wardId: loc.id }
+          : loc.type === 'DISTRICT'
+            ? { districtId: loc.id }
+            : { provinceId: loc.id },
+      );
+      return {
+        key: loc.urlSegment,
+        title: loc.name,
+        // Qua listingPath để chế độ enforce có tiền tố /ban, chế độ report giữ dạng
+        // phẳng đang chạy — cùng một build phục vụ cả hai site.
+        href: listingPath({ locationSlug: loc.urlSegment }),
+        items,
+      };
+    };
+
+    const mainWardBlocksData = await Promise.all(featuredWards.map(buildLocationBlock));
+    const featuredDistrictBlocksData = await Promise.all(featuredDistricts.map(buildLocationBlock));
 
     const [
       featuredVip,
@@ -676,8 +687,10 @@ export class PropertyService {
       // theo sheet "hot" của khách) thay vì 4 khối gán cứng TP Vinh / Diễn Châu /
       // Thái Hòa / Hà Tĩnh với href trỏ vào slug tự chế.
       mainWardBlocks: mainWardBlocksData,
+      // 8 huyện nổi bật (đánh dấu qua /admin/locations) + tab "Tất cả các khu vực" ở
+      // cuối cùng. Khách yêu cầu đổi nhãn "Khu vực khác" -> "Tất cả các khu vực" (PHẦN I).
       otherLocationTabs: [
-        // Khách yêu cầu đổi nhãn "Khu vực khác" -> "Tất cả các khu vực" (PHẦN I).
+        ...featuredDistrictBlocksData,
         { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems }
       ],
       stats: { properties: totalProperties, users: totalUsers, projects: 15, satisfaction: 99 },
