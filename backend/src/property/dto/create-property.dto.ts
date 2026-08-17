@@ -17,6 +17,15 @@ export class CreatePropertyDto {
   @IsString()
   categoryId?: string;
 
+  // `applyProjectLocation` (property-utils.ts) đọc field này để khoá 4 field địa điểm
+  // theo đúng dự án — nhưng DTO chưa từng khai báo nó, nên ValidationPipe({whitelist:
+  // true}) âm thầm xoá khỏi MỌI request tạo/sửa tin. Hậu quả: tính năng "gắn tin vào Dự
+  // án" không hoạt động qua API dù đã viết đủ logic — kiểm chứng trên Nghệ An chỉ có
+  // 2/178 tin có projectId (chắc chắn set tay, không qua form đăng tin).
+  @IsOptional()
+  @IsString()
+  projectId?: string;
+
   @IsOptional()
   @IsString()
   city?: string;
