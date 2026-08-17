@@ -78,16 +78,9 @@ export class PropertyController {
     return this.propertyService.getStats();
   }
 
-  @UseGuards(OptionalJwtAuthGuard)
   @Get('homepage')
-  async getHomepage(
-    @Request() req,
-    @Query('page') pageStr?: string,
-    @Query('limit') limitStr?: string
-  ) {
-    const page = pageStr ? parseInt(pageStr, 10) : 1;
-    const limit = limitStr ? parseInt(limitStr, 10) : 20;
-    return this.propertyService.getHomepageProperties(req.user?.id);
+  async getHomepage() {
+    return this.propertyService.getHomepageProperties();
   }
 
   @Get('hot-locations')

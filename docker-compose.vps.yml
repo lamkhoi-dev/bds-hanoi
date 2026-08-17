@@ -80,6 +80,12 @@ services:
         # trùng đuôi, xem site-config.ts).
         NEXT_PUBLIC_BRAND_LINE1: ${NEXT_PUBLIC_BRAND_LINE1:-}
         NEXT_PUBLIC_BRAND_LINE2: ${NEXT_PUBLIC_BRAND_LINE2:-}
+        # Tên rút gọn PWA + thông tin liên hệ hiển thị (header/footer/trang hỗ trợ) —
+        # trước đây THIẾU ở đây, nên siteConfig.contact.* luôn rỗng mọi bản build.
+        NEXT_PUBLIC_SITE_SHORT_NAME: ${NEXT_PUBLIC_SITE_SHORT_NAME:-}
+        NEXT_PUBLIC_SUPPORT_PHONE: ${NEXT_PUBLIC_SUPPORT_PHONE:-}
+        NEXT_PUBLIC_SUPPORT_EMAIL: ${NEXT_PUBLIC_SUPPORT_EMAIL:-}
+        NEXT_PUBLIC_FACEBOOK_URL: ${NEXT_PUBLIC_FACEBOOK_URL:-}
         # staging => robots.ts chặn index toàn site. Chỉ đổi sang "production"
         # khi đã có dữ liệu Hà Nội và domain chính thức, nếu không site mới sẽ bị
         # Google coi là bản trùng nội dung của nhadatxunghe.vn.

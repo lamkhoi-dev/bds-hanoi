@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException,
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import type { LocationType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchService } from '../search/search.service';
 import { NotificationService } from '../notification/notification.service';
@@ -34,6 +35,29 @@ type PropertyWhereInput = any;
  * danh mục, tin VIP, tin UP và các tab khu vực — sửa lẻ từng chỗ là chắc chắn lệch.
  */
 const HOMEPAGE_ITEMS_PER_BLOCK = 3;
+
+/**
+ * Số TAB khu vực hiện ra mỗi khối trên trang chủ (khác `HOMEPAGE_ITEMS_PER_BLOCK` —
+ * đó là số CARD tin trong 1 tab). Khách chốt 9 tab + 1 tab "Tất cả các khu vực" ở cuối
+ * cho mọi khối (quận/huyện, phường/xã mới, phường/xã cũ) — dùng chung cho mọi tỉnh.
+ */
+const HOMEPAGE_TABS_PER_BLOCK = 9;
+
+/**
+ * 3 loại khối "khu vực" trên trang chủ — CÙNG một cơ chế xếp hạng (xem
+ * `buildDynamicLocationBlock`), chỉ khác field groupBy và có bắt buộc `isFeatured` hay
+ * không. KHÔNG rẽ nhánh theo tỉnh: Nghệ An và Hà Nội chạy chung định nghĩa này, khối
+ * nào 0 dữ liệu thì tự ẩn (xem chỗ dùng ở `getHomepageProperties`).
+ *
+ * `requireFeatured: false` cho DISTRICT vì cấp quận/huyện của một tỉnh vốn LÀ toàn bộ
+ * danh sách hành chính, không có khái niệm "được chọn nổi bật" như 736 phường/xã —
+ * khác WARD/OLD_WARD cần một tập ứng viên đã chọn lọc qua `isFeatured`.
+ */
+const LOCATION_BLOCK_DEFS = [
+  { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false, key: 'districts', title: 'Bất động sản theo quận, huyện' },
+  { type: 'WARD', groupField: 'wardId', requireFeatured: true, key: 'wards-new', title: 'Bất động sản theo phường, xã mới' },
+  { type: 'OLD_WARD', groupField: 'wardId', requireFeatured: true, key: 'wards-old', title: 'Bất động sản theo phường, xã cũ' },
+] as const;
 
 /** Nhận dạng UUID v4 để phân biệt URL tin dạng cũ với mã ngắn dạng mới. */
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -549,8 +573,80 @@ export class PropertyService {
     return [...newestVips, ...randomVips];
   }
 
-  async getHomepageProperties(userId?: string) {
-    const cacheKey = userId ? `homepage:structured:${userId}` : `homepage:structured`;
+  /**
+   * Chọn ĐÚNG N khu vực (trong danh sách ứng viên của MỘT type) có tin đăng MỚI NHẤT —
+   * cùng pattern với `ProjectService.findLatestForHomepage()`: groupBy + _max(publishedAt)
+   * + sort JS + slice. Khu vực ứng viên nhưng 0 tin sẽ KHÔNG có mặt trong `groups`
+   * (Prisma groupBy chỉ trả nhóm có ≥1 dòng khớp `where`), nên tự động bị loại — không
+   * cần lọc thêm. Không tab nào mặc định đứng số 1: tab có tin mới hơn luôn lên đầu.
+   */
+  private async buildDynamicLocationBlock(
+    def: { type: LocationType; groupField: 'districtId' | 'wardId'; requireFeatured: boolean },
+    limit: number,
+    getItems: (where: any) => Promise<any>,
+  ) {
+    const candidates = await this.prisma.location.findMany({
+      where: {
+        type: def.type,
+        isActive: true,
+        ...(def.requireFeatured ? { isFeatured: true } : {}),
+      },
+      select: { id: true, type: true, urlSegment: true, name: true },
+    });
+    if (candidates.length === 0) return [];
+
+    const candidateIds = candidates.map((c) => c.id);
+
+    const groups = await this.prisma.property.groupBy({
+      by: [def.groupField],
+      where: {
+        [def.groupField]: { in: candidateIds },
+        status: { in: [...this.publicStatuses] },
+        deletedAt: null,
+      } as any,
+      _max: { publishedAt: true },
+    });
+
+    const rankedIds = groups
+      .filter((g: any) => g[def.groupField])
+      .sort((a: any, b: any) => {
+        const at = a._max.publishedAt?.getTime() ?? 0;
+        const bt = b._max.publishedAt?.getTime() ?? 0;
+        return bt - at;
+      })
+      .slice(0, limit)
+      .map((g: any) => g[def.groupField] as string);
+
+    if (rankedIds.length === 0) return [];
+
+    const byId = new Map(candidates.map((c) => [c.id, c]));
+    // Giữ ĐÚNG thứ tự đã xếp hạng, không theo thứ tự findMany trả về.
+    const orderedLocations = rankedIds.map((id) => byId.get(id)).filter(Boolean) as typeof candidates;
+
+    return Promise.all(
+      orderedLocations.map((loc) =>
+        getItems(
+          loc.type === 'WARD' || loc.type === 'OLD_WARD' ? { wardId: loc.id } : { districtId: loc.id },
+        ).then((items: any) => ({
+          key: loc.urlSegment,
+          title: loc.name,
+          // Qua listingPath để chế độ enforce có tiền tố /ban, chế độ report giữ dạng
+          // phẳng đang chạy — cùng một build phục vụ cả hai site.
+          href: listingPath({ locationSlug: loc.urlSegment }),
+          items,
+        })),
+      ),
+    );
+  }
+
+  /** Xoá cache trang chủ — gọi khi một tin chuyển sang APPROVED để các tab khu vực
+   *  phản ánh ngay, không chờ hết TTL 60s thụ động. */
+  async invalidateHomepageCache() {
+    await this.cacheManager.del('homepage:structured').catch(() => null);
+  }
+
+  async getHomepageProperties() {
+    const cacheKey = 'homepage:structured';
     const cached: any = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
 
@@ -564,45 +660,12 @@ export class PropertyService {
       include: includeOptions
     });
 
-    // Hai khối RIÊNG BIỆT trên trang chủ — "BĐS tại Vinh" (phường nổi bật) và "Bất
-    // động sản theo khu vực" (huyện nổi bật). Một đợt sửa trước gộp chung 1 danh sách
-    // isFeatured không phân biệt type, nên 2 khối bị nhét vào 1 tab bar duy nhất và mất
-    // tiêu đề "BĐS tại Vinh" — sửa lại bằng cách lọc riêng theo type ngay từ truy vấn.
-    const [featuredWards, featuredDistricts] = await Promise.all([
-      this.prisma.location.findMany({
-        where: { isFeatured: true, type: { in: ['WARD', 'OLD_WARD'] } },
-        take: 6,
-      }),
-      this.prisma.location.findMany({
-        where: { isFeatured: true, type: 'DISTRICT' },
-        take: 8,
-      }),
-    ]);
-
-    // Trước đây có mảng fallback 6 phường của TP Vinh kèm một hàm slugify viết nội tuyến
-    // và trường hợp đặc biệt 'Phường Cửa Lò' -> 'tx-cua-lo'. Slug tự chế đó lệch với
-    // urlSegment thật trong DB, và mảng cứng thì vô nghĩa khi đổi tỉnh.
-    // Không có khu vực nào được đánh dấu nổi bật thì trả rỗng, trang chủ tự ẩn khối.
-    const buildLocationBlock = async (loc: { id: string; type: string; urlSegment: string; name: string }) => {
-      const items = await getItems(
-        loc.type === 'WARD' || loc.type === 'OLD_WARD'
-          ? { wardId: loc.id }
-          : loc.type === 'DISTRICT'
-            ? { districtId: loc.id }
-            : { provinceId: loc.id },
-      );
-      return {
-        key: loc.urlSegment,
-        title: loc.name,
-        // Qua listingPath để chế độ enforce có tiền tố /ban, chế độ report giữ dạng
-        // phẳng đang chạy — cùng một build phục vụ cả hai site.
-        href: listingPath({ locationSlug: loc.urlSegment }),
-        items,
-      };
-    };
-
-    const mainWardBlocksData = await Promise.all(featuredWards.map(buildLocationBlock));
-    const featuredDistrictBlocksData = await Promise.all(featuredDistricts.map(buildLocationBlock));
+    // 3 khối "khu vực" (quận/huyện, phường/xã mới, phường/xã cũ) — Nghệ An hiện chỉ đủ
+    // dữ liệu cho 2 khối (OLD_WARD chưa có ứng viên/tin), Hà Nội đủ cả 3 — không có
+    // dòng code nào rẽ nhánh theo tỉnh, khối 0 dữ liệu tự ẩn ở bước lọc bên dưới.
+    const locationBlocksRaw = await Promise.all(
+      LOCATION_BLOCK_DEFS.map((def) => this.buildDynamicLocationBlock(def, HOMEPAGE_TABS_PER_BLOCK, getItems)),
+    );
 
     const [
       featuredVip,
@@ -683,16 +746,21 @@ export class PropertyService {
         { key: 'MAT_BANG', ...blockMeta('MAT_BANG'), items: matBang },
         { key: 'BDS_KHAC', ...blockMeta('BDS_KHAC'), items: bdsKhac },
       ],
-      // Các tab khu vực trên trang chủ giờ lấy từ Location.isFeatured (do importer đặt
-      // theo sheet "hot" của khách) thay vì 4 khối gán cứng TP Vinh / Diễn Châu /
-      // Thái Hòa / Hà Tĩnh với href trỏ vào slug tự chế.
-      mainWardBlocks: mainWardBlocksData,
-      // 8 huyện nổi bật (đánh dấu qua /admin/locations) + tab "Tất cả các khu vực" ở
-      // cuối cùng. Khách yêu cầu đổi nhãn "Khu vực khác" -> "Tất cả các khu vực" (PHẦN I).
-      otherLocationTabs: [
-        ...featuredDistrictBlocksData,
-        { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems }
-      ],
+      // Khối "khu vực" — quận/huyện, phường/xã mới, phường/xã cũ. Mỗi khối là "tab
+      // động": 9 khu vực có tin MỚI NHẤT (xem buildDynamicLocationBlock), kèm 1 tab
+      // "Tất cả các khu vực" ở cuối. Khối 0 dữ liệu (0 ứng viên hoặc ứng viên toàn 0
+      // tin) bị loại nguyên khối — vì vậy Nghệ An/Hà Nội tự nhiên có số khối khác nhau
+      // mà không cần dòng code nào rẽ nhánh theo tỉnh.
+      locationBlocks: LOCATION_BLOCK_DEFS
+        .map((def, i) => ({ key: def.key, title: def.title, tabs: locationBlocksRaw[i] }))
+        .filter((block) => block.tabs.length > 0)
+        .map((block) => ({
+          ...block,
+          tabs: [
+            ...block.tabs,
+            { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems },
+          ],
+        })),
       stats: { properties: totalProperties, users: totalUsers, projects: 15, satisfaction: 99 },
       adsSlots: []
     };
@@ -994,7 +1062,7 @@ export class PropertyService {
 
     if (updatedProperty.status === 'APPROVED') {
       await this.searchService.addDocument(updatedProperty).catch(() => null);
-      await this.cacheManager.del('homepage:structured').catch(() => null);
+      await this.invalidateHomepageCache();
     }
     await this.clearPropertyCache(updatedProperty.id);
     return updatedProperty;

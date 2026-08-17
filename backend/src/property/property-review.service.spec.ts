@@ -35,11 +35,13 @@ function makeService() {
   };
   const notification: any = { createNotification: jest.fn().mockResolvedValue({}) };
   const seo: any = { invalidate: jest.fn().mockResolvedValue(undefined) };
+  const propertyService: any = { invalidateHomepageCache: jest.fn().mockResolvedValue(undefined) };
 
   return {
-    service: new PropertyReviewService(prisma, notification, seo),
+    service: new PropertyReviewService(prisma, notification, seo, propertyService),
     prisma,
     notification,
+    propertyService,
     property,
   };
 }
@@ -90,6 +92,18 @@ describe('so sánh thay đổi khi admin kiểm duyệt', () => {
     const { service } = makeService();
     const res = await service.review('admin1', 'p1', { title: 'x' }, false);
     expect(res.property.status).toBe('APPROVED');
+  });
+
+  it('duyệt luôn (APPROVED) thì phải làm mới cache trang chủ đúng 1 lần', async () => {
+    const { service, propertyService } = makeService();
+    await service.review('admin1', 'p1', { title: 'x' }, false);
+    expect(propertyService.invalidateHomepageCache).toHaveBeenCalledTimes(1);
+  });
+
+  it('trả về người đăng (AWAITING_AUTHOR) thì KHÔNG làm mới cache trang chủ', async () => {
+    const { service, propertyService } = makeService();
+    await service.review('admin1', 'p1', { title: 'x' }, true);
+    expect(propertyService.invalidateHomepageCache).not.toHaveBeenCalled();
   });
 
   it('bỏ qua trường không nằm trong danh sách được sửa', async () => {

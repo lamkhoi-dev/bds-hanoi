@@ -165,34 +165,24 @@ export default async function Home() {
             <GoogleAdPlaceholder />
           </div>
 
-          {/* Khách yêu cầu kéo 2 khối khu vực LÊN TRÊN chuyên mục Đất nền, ngay dưới
-              quảng cáo — giữ TÁCH RIÊNG 2 khối như bản gốc ("BĐS tại Vinh" và "Bất
-              động sản theo khu vực"), không gộp chung 1 khối như một đợt sửa trước đã
-              làm nhầm. "BĐS tại Vinh" lấy từ các phường được đánh dấu nổi bật, "Bất
-              động sản theo khu vực" lấy từ các huyện được đánh dấu nổi bật (đánh dấu
-              qua /admin/locations) + tab "Tất cả các khu vực" cuối cùng. */}
-          {homepageData?.mainWardBlocks?.length > 0 && (
+          {/* Khách yêu cầu kéo các khối khu vực LÊN TRÊN chuyên mục Đất nền, ngay dưới
+              quảng cáo — giữ TÁCH RIÊNG từng khối như bản gốc, không gộp chung 1 khối
+              như một đợt sửa trước đã làm nhầm. Mỗi khối là "tab động": 9 khu vực có
+              tin đăng mới nhất trong danh sách ứng viên của backend + tab "Tất cả các
+              khu vực" cuối cùng. Số khối hiện ra tuỳ tỉnh (khối 0 dữ liệu tự ẩn ở
+              backend) — không rẽ nhánh theo tỉnh ở đây. */}
+          {homepageData?.locationBlocks?.map((block: any) => (
             <PropertyTabs
-              title="BĐS tại Vinh"
-              tabs={homepageData.mainWardBlocks.map((b: any) => ({
+              key={block.key}
+              title={block.title}
+              tabs={block.tabs.map((b: any) => ({
                 id: b.key,
                 label: b.title,
                 items: b.items,
                 href: b.href,
               }))}
             />
-          )}
-          {homepageData?.otherLocationTabs?.length > 0 && (
-            <PropertyTabs
-              title="Bất động sản theo khu vực"
-              tabs={homepageData.otherLocationTabs.map((b: any) => ({
-                id: b.key,
-                label: b.title,
-                items: b.items,
-                href: b.href,
-              }))}
-            />
-          )}
+          ))}
 
           {homepageData?.categoryBlocks?.map((block: any, idx: number) => (
             <PropertyBlock

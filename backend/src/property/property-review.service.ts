@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { SeoService } from '../seo/seo.service';
+import { PropertyService } from './property.service';
 import { normalizePropertyPayload } from './property-utils';
 
 /**
@@ -67,6 +68,7 @@ export class PropertyReviewService {
     private prisma: PrismaService,
     private notificationService: NotificationService,
     private seoService: SeoService,
+    private propertyService: PropertyService,
   ) {}
 
   private format(value: unknown): string {
@@ -157,6 +159,11 @@ export class PropertyReviewService {
     });
 
     await this.seoService.invalidate().catch(() => undefined);
+    if (nextStatus === 'APPROVED') {
+      // Tab "khu vực" trên trang chủ phản ánh ngay khi tin được duyệt, không chờ hết
+      // TTL 60s thụ động — xem PropertyService.invalidateHomepageCache().
+      await this.propertyService.invalidateHomepageCache();
+    }
     await this.notifyAuthor(property.userId, property.title, changes, returnToAuthor, note);
     return { property: updated, changes };
   }

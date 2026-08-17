@@ -46,7 +46,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: siteConfig.description,
     keywords: [...siteConfig.keywords],
-    manifest: "/manifest.json",
     appleWebApp: {
       capable: true,
       statusBarStyle: "default",
@@ -113,7 +112,6 @@ export default async function RootLayout({
   return (
     <html lang="vi" data-scroll-behavior="smooth" className="overflow-x-clip" suppressHydrationWarning>
       <head>
-        <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content={siteConfig.shortName} />
@@ -196,12 +194,12 @@ export default async function RootLayout({
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1.5">
                     <Phone className="w-3.5 h-3.5" />
-                    Hotline: {process.env.NEXT_PUBLIC_SUPPORT_PHONE || '0868126826'}
+                    Hotline: {siteConfig.contact.phone || '0868126826'}
                   </span>
-                  {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+                  {siteConfig.contact.email && (
                     <span className="flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5" />
-                      {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+                      {siteConfig.contact.email}
                     </span>
                   )}
                 </div>
