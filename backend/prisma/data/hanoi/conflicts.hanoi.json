@@ -2,9 +2,11 @@
   "note": "Các mục KHÔNG import được, cần khách làm rõ.",
   "items": [
     {
-      "kind": "FEATURED_AMBIGUOUS",
+      "kind": "FEATURED_AMBIGUOUS_RESOLVED_PENDING_CONFIRM",
       "sheet": "Phường xã cũ hot",
       "value": "Vạn Phúc",
+      "resolvedTo": { "district": "Hà Đông", "shortName": "Vạn Phúc" },
+      "reason": "Làng lụa Vạn Phúc + khu đô thị lớn, phổ biến hơn hẳn 2 ứng viên còn lại — đã thêm vào featured.hanoi.json. Giả định tạm, chưa hỏi khách xác nhận.",
       "candidates": [
         {
           "district": "Hà Đông",
@@ -21,9 +23,11 @@
       ]
     },
     {
-      "kind": "FEATURED_AMBIGUOUS",
+      "kind": "FEATURED_AMBIGUOUS_RESOLVED_PENDING_CONFIRM",
       "sheet": "Phường xã cũ hot",
       "value": "Minh Khai",
+      "resolvedTo": { "district": "Hai Bà Trưng", "shortName": "Minh Khai" },
+      "reason": "Phố Minh Khai, trục BĐS lớn gần Times City, phổ biến hơn hẳn 2 ứng viên còn lại — đã thêm vào featured.hanoi.json. Giả định tạm, chưa hỏi khách xác nhận.",
       "candidates": [
         {
           "district": "Hai Bà Trưng",

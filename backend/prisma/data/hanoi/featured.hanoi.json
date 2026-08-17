@@ -291,6 +291,16 @@
       "district": "Đông Anh",
       "shortName": "Kim Nỗ",
       "label": "Kim Nỗ"
+    },
+    {
+      "district": "Hà Đông",
+      "shortName": "Vạn Phúc",
+      "label": "Vạn Phúc"
+    },
+    {
+      "district": "Hai Bà Trưng",
+      "shortName": "Minh Khai",
+      "label": "Minh Khai"
     }
   ]
 }
