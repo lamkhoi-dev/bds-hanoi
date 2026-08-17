@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import PropertyCard from '@/components/PropertyCard';
 import Link from 'next/link';
 
-export default function PropertyTabs({ 
-  title, 
-  tabs, 
-}: { 
-  title: string, 
-  tabs: { id: string, label: string, items: any[], href: string }[], 
+export default function PropertyTabs({
+  title,
+  tabs,
+}: {
+  title: string,
+  tabs: { id: string, label: string, items: any[], href: string, asLink?: boolean }[],
 }) {
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id);
 
@@ -32,8 +32,11 @@ export default function PropertyTabs({
         </h2>
         <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
           {tabs.map(tab => {
-            if (tab.id === 'khu-vuc-khac') {
-              // Custom link for Khu vuc khac tab to navigate directly
+            // Tab cuối kiểu "xem tất cả" (khu vực khác / xem toàn bộ dự án) là LINK điều
+            // hướng thẳng, không phải tab chọn nội dung. `asLink` là cờ tường minh backend
+            // gắn cho khối mới (vd project-tabs); giữ nguyên nhánh id cũ làm dây bảo hiểm
+            // cho trường hợp frontend mới chạy cùng backend cũ chưa gắn `asLink`.
+            if (tab.asLink || tab.id === 'khu-vuc-khac') {
               return (
                 <Link
                   key={tab.id}

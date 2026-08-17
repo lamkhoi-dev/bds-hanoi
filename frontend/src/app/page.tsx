@@ -1,22 +1,17 @@
 import React from 'react';
 import { siteConfig } from '@/lib/site-config';
-import { Home as HomeIcon, Users, Building2, Star, Search } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import HomeFilterButton from '@/components/HomeFilterButton';
-import PropertyCard from '@/components/PropertyCard';
-import PropertyBlock from '@/components/PropertyBlock';
-import PropertyTabs from '@/components/PropertyTabs';
+import HomepageSection from '@/components/HomepageSection';
 import RecentlyViewed from '@/components/RecentlyViewed';
 import FavoriteTags from '@/components/FavoriteTags';
 import SearchForm from '@/components/SearchForm';
 import { listingPath } from '@/lib/seo/canonical';
 import Adsense from '@/components/Adsense';
-import GoogleAdPlaceholder from '@/components/GoogleAdPlaceholder';
 import OnlineStatsGridItem from '@/components/OnlineStatsGridItem';
 import { serverApiUrl } from '@/lib/server-api';
 import ExploreMoreBehavioral from '@/components/ExploreMoreBehavioral';
-import { toMediaUrl } from '@/lib/media';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -66,27 +61,20 @@ async function getLocations() {
   }
 }
 
-async function getLatestProjects() {
-  try {
-    const res = await fetch(serverApiUrl('/projects/homepage?limit=4'), { next: { revalidate: 300 } });
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
 // getVinhProperties() đã bị xoá: nó gọi 6 lượt fetch SSR cho 6 phường của TP Vinh
 // viết cứng, kèm slug tự chế. Khối "BĐS theo khu vực" giờ lấy từ Location.isFeatured
 // do importer đặt theo sheet "hot" của khách.
 
+// getLatestProjects() đã bị xoá: khối "Dự án" giờ nằm trong `sections[]` của
+// /properties/homepage (xem HomepageSection.tsx) — bớt một lượt fetch SSR riêng mỗi
+// lần tải trang chủ.
+
 export default async function Home() {
-  const [homepageData, hotLocations, locations, settings, latestProjects] = await Promise.all([
+  const [homepageData, hotLocations, locations, settings] = await Promise.all([
     getHomepageData(),
     getHotLocations(),
     getLocations(),
     getPublicSettings(),
-    getLatestProjects(),
   ]);
 
   const stats = homepageData?.stats || { properties: 100, users: 50, projects: 10, satisfaction: 99 };
@@ -143,121 +131,13 @@ export default async function Home() {
         
         {/* Left Content (Listings) */}
         <div className="flex-1 overflow-hidden min-w-0">
-          {homepageData?.featuredVip && (
-            <PropertyBlock 
-              title={homepageData.featuredVip.title} 
-              items={homepageData.featuredVip.items} 
-              moreLink={homepageData.featuredVip.href} 
-            />
-          )}
-          {homepageData?.upTab && homepageData.upTab.length > 0 && (
-            <PropertyBlock 
-              title="Tin UP Mới Nhất" 
-              items={homepageData.upTab} 
-              moreLink="/search?tier=UP" 
-            />
-          )}
-          {/* Khối "Dành cho bạn" đã bị khách yêu cầu BỎ HẲN (PHẦN I) — phần tính toán
-              phía backend cũng đã gỡ, không chỉ ngừng render. */}
-
-          {/* ===== BANNER QUẢNG CÁO ===== */}
-          <div className="w-full mb-8">
-            <GoogleAdPlaceholder />
-          </div>
-
-          {/* Khách yêu cầu kéo các khối khu vực LÊN TRÊN chuyên mục Đất nền, ngay dưới
-              quảng cáo — giữ TÁCH RIÊNG từng khối như bản gốc, không gộp chung 1 khối
-              như một đợt sửa trước đã làm nhầm. Mỗi khối là "tab động": 9 khu vực có
-              tin đăng mới nhất trong danh sách ứng viên của backend + tab "Tất cả các
-              khu vực" cuối cùng. Số khối hiện ra tuỳ tỉnh (khối 0 dữ liệu tự ẩn ở
-              backend) — không rẽ nhánh theo tỉnh ở đây. */}
-          {homepageData?.locationBlocks?.map((block: any) => (
-            <PropertyTabs
-              key={block.key}
-              title={block.title}
-              tabs={block.tabs.map((b: any) => ({
-                id: b.key,
-                label: b.title,
-                items: b.items,
-                href: b.href,
-              }))}
-            />
+          {/* Backend quyết thứ tự + nội dung từng khối qua `sections[]` (xem
+              homepage-layout.ts) — frontend chỉ vẽ theo `kind`, không biết site nào
+              đang chạy layout nào. Nghệ An (`classic`) và Hà Nội (`grouped`) dùng
+              chung code này, khác nhau nhờ biến môi trường backend `SITE_LAYOUT`. */}
+          {homepageData?.sections?.map((section: any, idx: number) => (
+            <HomepageSection key={`${section.id}-${idx}`} section={section} />
           ))}
-
-          {homepageData?.categoryBlocks?.map((block: any, idx: number) => (
-            <PropertyBlock
-              key={`cat-${idx}`}
-              title={block.title}
-              items={block.items}
-              moreLink={block.href}
-            />
-          ))}
-
-          {/* Khối Dự án (mục 11 PHẦN I) — 4 dự án có tin đăng mới nhất. */}
-          {latestProjects.length > 0 && (
-            <section className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-800">Dự án nổi bật</h2>
-                <Link href="/du-an" className="text-sm font-semibold text-primary hover:underline whitespace-nowrap">
-                  Xem toàn bộ
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {latestProjects.map((project: any) => (
-                  <Link
-                    key={project.id}
-                    href={`/du-an/${project.slug}-${project.shortCode}`}
-                    className="group bg-white rounded-2xl overflow-hidden border border-borderLight shadow-sm card-lift"
-                  >
-                    <div className="relative aspect-[4/3] bg-gray-100">
-                      {project.thumbnail ? (
-                        <Image
-                          src={toMediaUrl(project.thumbnail)}
-                          alt={project.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center w-full h-full text-gray-300">
-                          <Building2 className="w-10 h-10" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <h3 className="text-sm font-bold text-textMain group-hover:text-primary transition-colors line-clamp-2">
-                        {project.name}
-                      </h3>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Khách yêu cầu Cho thuê thành tab ngang thay vì một khối gộp. */}
-          {homepageData?.rentTabs && homepageData.rentTabs.length > 0 && (
-            <PropertyTabs
-              title="Cho thuê"
-              tabs={homepageData.rentTabs.map((b: any) => ({
-                id: b.key,
-                label: b.title,
-                items: b.items,
-                href: b.href
-              }))}
-            />
-          )}
-
-          {homepageData?.otherRealEstateTabs && homepageData.otherRealEstateTabs.length > 0 && (
-            <PropertyTabs
-              title="Bất động sản khác"
-              tabs={homepageData.otherRealEstateTabs.map((b: any) => ({
-                id: b.key,
-                label: b.title,
-                items: b.items,
-                href: b.href
-              }))}
-            />
-          )}
         </div>
 
         {/* Right Sidebar (Stats & Banner) */}

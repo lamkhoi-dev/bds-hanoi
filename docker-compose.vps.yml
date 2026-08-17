@@ -141,6 +141,11 @@ services:
       PUBLIC_API_URL: https://${SITE_DOMAIN}/api/v1
       SITE_NAME: ${SITE_NAME:-Nhà Đất Hà Nội}
       ACTIVE_PROVINCE_SLUG: ${PROVINCE_SLUG:-ha-noi}
+      # Bố cục trang chủ (PHẦN II mục 25) — 'classic' = bố cục Nghệ An đang chạy thật đã
+      # duyệt (mặc định, an toàn), 'grouped' = bố cục Hà Nội. Đọc RUNTIME phía backend
+      # (không tiền tố NEXT_PUBLIC_) nên chỉ cần 1 image cho cả 2 site — xem
+      # backend/src/property/homepage-layout.ts.
+      SITE_LAYOUT: ${SITE_LAYOUT:-classic}
       # Backend dựng URL sitemap phải khớp dạng URL frontend đang phục vụ.
       SEO_MODE: ${SEO_MODE:-report}
       # Mặc định TẮT — xem chú thích trong backend/start.sh. Bật đúng một lần cho

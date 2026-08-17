@@ -25,6 +25,7 @@ import {
   type NormalizedFilters,
 } from './property-utils';
 import { listingPath, PROPERTY_TYPE_LABEL, PROPERTY_TYPE_SLUG } from '../seo/seo-urls';
+import { HOMEPAGE_LAYOUTS, resolveLayout, homepageCacheKey, type SectionId } from './homepage-layout';
 
 type PropertyWhereInput = any;
 
@@ -64,6 +65,15 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 /** Thứ tự tab của khối "Cho thuê" trên trang chủ, đúng như khách liệt kê. */
 const RENT_TAB_TYPES = ['NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'DAT_NEN', 'BDS_KHAC'] as const;
+
+/**
+ * 5 tab của khối "Bán" trong bố cục `grouped` (PHẦN II mục 25) — gộp 6 loại BĐS thành 1
+ * khối tab ngang thay vì 4 khối rời + 2 tab riêng như bố cục `classic`. CHỈ lọc đúng
+ * `transactionType: 'BAN'` — khác `categoryBlocks` (bố cục classic) hiện KHÔNG lọc
+ * transactionType nên đang lẫn cả tin cho thuê; đây là bug có sẵn, CỐ TÌNH không sửa
+ * cho classic ở đợt này vì đó là thay đổi nội dung trên site Nghệ An đã duyệt.
+ */
+const SALE_TAB_TYPES = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'BDS_KHAC'] as const;
 
 /** Tiêu đề + đường dẫn của một khối theo loại BĐS, lấy từ một nguồn duy nhất. */
 function blockMeta(propertyTypeEnum: string, transaction: 'ban' | 'cho-thue' = 'ban') {
@@ -639,14 +649,79 @@ export class PropertyService {
     );
   }
 
-  /** Xoá cache trang chủ — gọi khi một tin chuyển sang APPROVED để các tab khu vực
-   *  phản ánh ngay, không chờ hết TTL 60s thụ động. */
+  /**
+   * Danh sách projectId xếp hạng theo tin mới nhất — CÙNG thuật toán với
+   * `ProjectService.findLatestForHomepage()`, viết lại tại đây thay vì gọi chéo sang
+   * `ProjectModule` để tránh vòng phụ thuộc (`ProjectModule` đã `imports:
+   * [PropertyModule]`, chiều ngược lại sẽ phải `forwardRef`). Đúng khuôn với
+   * `buildDynamicLocationBlock` gọi thẳng `this.prisma.location` thay vì inject
+   * `LocationService`.
+   */
+  private async rankedProjectIds(limit: number): Promise<string[]> {
+    const groups = await this.prisma.property.groupBy({
+      by: ['projectId'],
+      where: {
+        projectId: { not: null },
+        status: { in: [...this.publicStatuses] },
+        deletedAt: null,
+        project: { status: 'VISIBLE' },
+      } as any,
+      _max: { publishedAt: true },
+    });
+    return groups
+      .filter((g: any) => g.projectId)
+      .sort((a: any, b: any) => (b._max.publishedAt?.getTime() ?? 0) - (a._max.publishedAt?.getTime() ?? 0))
+      .slice(0, limit)
+      .map((g: any) => g.projectId as string);
+  }
+
+  /** Khối "Dự án nổi bật" dạng grid ảnh (bố cục `classic`) — N dự án có tin mới nhất. */
+  private async buildProjectGrid(limit: number) {
+    const ids = await this.rankedProjectIds(limit);
+    if (ids.length === 0) return [];
+    const projects = await this.prisma.project.findMany({ where: { id: { in: ids } } });
+    const byId = new Map(projects.map((p) => [p.id, p]));
+    return ids.map((id) => byId.get(id)).filter(Boolean);
+  }
+
+  /** Khối "Dự án" dạng tab động (bố cục `grouped`, mục 9 PHẦN II) — mỗi tab là 1 dự án
+   *  kèm tin đăng thuộc dự án đó. */
+  private async buildProjectTabsBlock(limit: number, getItems: (where: any) => Promise<any>) {
+    const ids = await this.rankedProjectIds(limit);
+    if (ids.length === 0) return [];
+    const projects = await this.prisma.project.findMany({ where: { id: { in: ids } } });
+    const byId = new Map(projects.map((p) => [p.id, p]));
+    const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as typeof projects;
+    return Promise.all(
+      ordered.map((p) =>
+        getItems({ projectId: p.id }).then((items: any) => ({
+          key: p.shortCode,
+          title: p.name,
+          href: `/du-an/${p.slug}-${p.shortCode}`,
+          items,
+        })),
+      ),
+    );
+  }
+
+  /** Xoá cache trang chủ — gọi khi một tin chuyển sang APPROVED để các khối phản ánh
+   *  ngay, không chờ hết TTL 60s thụ động. Xoá CẢ HAI cache key (classic + grouped): một
+   *  site chỉ chạy 1 layout tại một thời điểm nên xoá dư 1 key không tốn kém, còn xoá
+   *  thiếu (do quên đổi theo layout đang cấu hình) sẽ để lại cache cũ — bug đã từng gặp
+   *  với key không đổi theo tham số. */
   async invalidateHomepageCache() {
-    await this.cacheManager.del('homepage:structured').catch(() => null);
+    await Promise.all(
+      (Object.keys(HOMEPAGE_LAYOUTS) as Array<keyof typeof HOMEPAGE_LAYOUTS>).map((layout) =>
+        this.cacheManager.del(homepageCacheKey(layout)).catch(() => null),
+      ),
+    );
   }
 
   async getHomepageProperties() {
-    const cacheKey = 'homepage:structured';
+    // Bố cục trang chủ — cơ chế rẽ nhánh DUY NHẤT giữa 2 site cho phần này (xem
+    // homepage-layout.ts). Không đọc qua NEXT_PUBLIC_* nên không bị bake lúc build.
+    const layout = resolveLayout();
+    const cacheKey = homepageCacheKey(layout);
     const cached: any = await this.cacheManager.get(cacheKey);
     if (cached) return cached;
 
@@ -719,7 +794,91 @@ export class PropertyService {
     // lần tải trang chủ của người đã đăng nhập (lịch sử xem, lịch sử tìm, tin đã lưu,
     // rồi một truy vấn gợi ý) — giữ lại là tốn công vô ích.
 
+    // Dữ liệu RIÊNG cho bố cục `grouped` (PHẦN II) — chỉ tính khi thật sự cần, để
+    // Nghệ An (`classic`) không phải trả thêm 5 truy vấn `sale-type-tabs`/`project-tabs`
+    // vô ích mỗi lần rebuild cache. `project-grid` ngược lại chỉ `classic` mới dùng.
+    const isGrouped = layout === 'grouped';
+    const [projectGridRows, projectTabsRaw, saleItems] = await Promise.all([
+      isGrouped ? Promise.resolve([]) : this.buildProjectGrid(4),
+      isGrouped ? this.buildProjectTabsBlock(5, getItems) : Promise.resolve([]),
+      isGrouped
+        ? Promise.all(SALE_TAB_TYPES.map((type) => getItems({ transactionType: 'BAN', propertyType: type })))
+        : Promise.resolve([] as any[]),
+    ]);
+
+    // ---- Lắp ráp `sections[]` theo đúng thứ tự của layout đang chạy ----
+    // Đây là NƠI DUY NHẤT quyết định khối nào hiện, hiện theo thứ tự gì — xem
+    // HOMEPAGE_LAYOUTS. Các field cũ bên dưới (`categoryBlocks`, `rentTabs`...) VẪN giữ
+    // nguyên để không phá consumer hiện tại trong 1 đợt release, sẽ dọn ở đợt sau.
+    const locationBlocksByKey = new Map(LOCATION_BLOCK_DEFS.map((def, i) => [def.key, locationBlocksRaw[i]]));
+    const catchAllLocationTab = { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems };
+    const locationSection = (key: 'districts' | 'wards-new' | 'wards-old') => {
+      const def = LOCATION_BLOCK_DEFS.find((d) => d.key === key)!;
+      const tabsRaw = locationBlocksByKey.get(key) ?? [];
+      if (tabsRaw.length === 0) return null;
+      return { id: key as SectionId, kind: 'tabs' as const, title: def.title, tabs: [...tabsRaw, catchAllLocationTab] };
+    };
+
+    const sectionBuilders: Record<SectionId, () => any> = {
+      vip: () => ({ id: 'vip', kind: 'block', title: 'Tin nổi bật', href: '/search?tier=VIP', items: featuredVip }),
+      up: () => (upTabItems.length > 0 ? { id: 'up', kind: 'block', title: 'Tin UP Mới Nhất', href: '/search?tier=UP', items: upTabItems } : null),
+      ad: () => ({ id: 'ad', kind: 'ad' }),
+      districts: () => locationSection('districts'),
+      'wards-new': () => locationSection('wards-new'),
+      'wards-old': () => locationSection('wards-old'),
+      // Chờ khách trả lời câu A4 (khối "khu vực hot" là Dự án hay thực thể riêng) — xem
+      // plan/cau-hoi-gui-khach-2026-08-18.txt. Đã đăng ký ĐÚNG vị trí thứ 5 trong
+      // HOMEPAGE_LAYOUTS.grouped, khi có câu trả lời chỉ cần viết lại builder này.
+      'hot-areas': () => null,
+      'cat-DAT_NEN': () => ({ id: 'cat-DAT_NEN', kind: 'block', ...blockMeta('DAT_NEN'), items: datNen }),
+      'cat-NHA_RIENG': () => ({ id: 'cat-NHA_RIENG', kind: 'block', ...blockMeta('NHA_RIENG'), items: nhaRieng }),
+      'cat-CHUNG_CU': () => ({ id: 'cat-CHUNG_CU', kind: 'block', ...blockMeta('CHUNG_CU'), items: chungCu }),
+      'cat-DU_AN': () => ({ id: 'cat-DU_AN', kind: 'block', ...blockMeta('DU_AN'), items: duAn }),
+      'sale-type-tabs': () =>
+        saleItems.length > 0
+          ? {
+              id: 'sale-type-tabs',
+              kind: 'tabs',
+              title: 'Nhà đất bán',
+              tabs: SALE_TAB_TYPES.map((type, i) => ({ key: type, ...blockMeta(type, 'ban'), items: saleItems[i] })),
+            }
+          : null,
+      'project-grid': () =>
+        projectGridRows.length > 0
+          ? { id: 'project-grid', kind: 'project-grid', title: 'Dự án nổi bật', href: '/du-an', projects: projectGridRows }
+          : null,
+      'project-tabs': () =>
+        projectTabsRaw.length > 0
+          ? {
+              id: 'project-tabs',
+              kind: 'tabs',
+              title: 'Dự án',
+              tabs: [...projectTabsRaw, { key: 'xem-toan-bo', title: 'Xem toàn bộ', href: '/du-an', items: [], asLink: true }],
+            }
+          : null,
+      'rent-type-tabs': () => ({
+        id: 'rent-type-tabs',
+        kind: 'tabs',
+        title: 'Cho thuê',
+        tabs: RENT_TAB_TYPES.map((type, i) => ({ key: type, ...blockMeta(type, 'cho-thue'), items: rentItems[i] })),
+      }),
+      'other-type-tabs': () => ({
+        id: 'other-type-tabs',
+        kind: 'tabs',
+        title: 'Bất động sản khác',
+        tabs: [
+          { key: 'MAT_BANG', ...blockMeta('MAT_BANG'), items: matBang },
+          { key: 'BDS_KHAC', ...blockMeta('BDS_KHAC'), items: bdsKhac },
+        ],
+      }),
+    };
+
+    const sections = HOMEPAGE_LAYOUTS[layout]
+      .map((id) => sectionBuilders[id]())
+      .filter((section): section is NonNullable<typeof section> => section !== null);
+
     const result = {
+      sections,
       featuredVip: { title: 'Tin nổi bật', href: '/search?tier=VIP', items: featuredVip },
       
       upTab: upTabItems,
