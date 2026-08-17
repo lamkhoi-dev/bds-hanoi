@@ -62,7 +62,9 @@ export default function PrivacyPage() {
           <p className="mb-2 mt-4">Nếu bạn có bất kỳ câu hỏi nào về Chính sách bảo mật này hoặc cần hỗ trợ về dữ liệu cá nhân, vui lòng liên hệ với chúng tôi qua:</p>
           <ul className="list-disc pl-5 space-y-2">
             {siteConfig.contact.email && <li><strong>Email:</strong> {siteConfig.contact.email}</li>}
-            <li><strong>Hotline:</strong> {siteConfig.contact.phone || '0868126826'}</li>
+            {/* Không còn fallback cứng '0868126826' (số Nghệ An) — thiếu biến thì ẩn
+                hẳn dòng này thay vì hiện nhầm số của site khác. */}
+            {siteConfig.contact.phone && <li><strong>Hotline:</strong> {siteConfig.contact.phone}</li>}
             <li><strong>Địa chỉ:</strong> {siteConfig.province.name}, Việt Nam</li>
           </ul>
         </div>

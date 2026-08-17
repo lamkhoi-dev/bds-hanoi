@@ -192,10 +192,15 @@ export default async function RootLayout({
               {/* Top Bar */}
               <div className="hidden md:flex justify-between items-center py-1.5 text-xs text-textSecondary border-b border-borderLight/50">
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5" />
-                    Hotline: {siteConfig.contact.phone || '0868126826'}
-                  </span>
+                  {/* Không còn fallback cứng '0868126826' (số của site Nghệ An) — quên
+                      set NEXT_PUBLIC_SUPPORT_PHONE cho site khác thì ẩn hẳn, không lộ
+                      nhầm số của site kia. */}
+                  {siteConfig.contact.phone && (
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5" />
+                      Hotline: {siteConfig.contact.phone}
+                    </span>
+                  )}
                   {siteConfig.contact.email && (
                     <span className="flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5" />

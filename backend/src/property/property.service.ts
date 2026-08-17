@@ -672,7 +672,7 @@ export class PropertyService {
       datNen, nhaRieng, chungCu, duAn,
       matBang, bdsKhac,
       rentItems,
-      totalProperties, totalUsers
+      totalProperties, totalUsers, totalProjects
     ] = await Promise.all([
       this.getHomepageVipItems(baseWhere, includeOptions),
       getItems({ propertyType: 'DAT_NEN' }),
@@ -689,7 +689,8 @@ export class PropertyService {
         ),
       ),
       this.prisma.property.count({ where: baseWhere }),
-      this.prisma.user.count()
+      this.prisma.user.count(),
+      this.prisma.project.count({ where: { status: 'VISIBLE' } }),
     ]);
 
     
@@ -761,7 +762,9 @@ export class PropertyService {
             { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems },
           ],
         })),
-      stats: { properties: totalProperties, users: totalUsers, projects: 15, satisfaction: 99 },
+      // "projects" trước đây hard-code 15 — site trắng (0 dự án thật) vẫn khoe "15+ dự
+      // án". Đếm thật để không nói sai với site mới dựng.
+      stats: { properties: totalProperties, users: totalUsers, projects: totalProjects, satisfaction: 99 },
       adsSlots: []
     };
 

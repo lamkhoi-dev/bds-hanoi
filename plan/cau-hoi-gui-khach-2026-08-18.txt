@@ -1,0 +1,56 @@
+Kính gửi anh/chị,
+
+Bên em đang triển khai PHẦN II (nhân bản site sang Hà Nội). Có vài điểm trong tài liệu
+cần anh/chị xác nhận lại để làm cho đúng, mong anh/chị trả lời giúp từng mục bên dưới.
+
+1. KHỐI "KHU VỰC HOT" (mục 25, Bảng 4)
+Bảng 4 anh/chị gửi có 31 tên khu vực (Vinhomes Smart City, Royal City, Times City,
+Hồ Tây, Láng Hạ, Mỹ Đình 1, Mỹ Đình 2, Ngoại Giao Đoàn...), trong đó khoảng 26/31 tên là
+tên dự án/khu đô thị chứ không phải đơn vị hành chính. Bên em đã có sẵn mục "Dự án"
+(trang /du-an, khách xem trước đó đã duyệt phần này cho Nghệ An).
+   a. Khối "khu vực hot" này có phải chính là các Dự án không, hay là một mục riêng biệt
+      có trang liệt kê riêng?
+   b. Nếu là mục riêng: mỗi tên trong 31 tên đó thuộc quận/huyện nào? (file gửi không có
+      cột quận cha nên bên em không tự gán được, sợ gán sai)
+   c. Ecopark thực tế nằm ở tỉnh Hưng Yên, không phải Hà Nội — vẫn đưa vào khối này chứ ạ?
+
+2. XÁC NHẬN 2 TÊN TRÙNG NHIỀU QUẬN (sheet "Phường xã cũ hot")
+Bên em tạm chọn theo suy đoán, nhờ anh/chị xác nhận lại hoặc chỉnh nếu sai:
+   - "Vạn Phúc" → bên em chọn quận Hà Đông (vì có làng lụa Vạn Phúc + khu đô thị lớn).
+     Trong khi đó tên này còn trùng ở Thanh Trì và Phúc Thọ.
+   - "Minh Khai" → bên em chọn quận Hai Bà Trưng (phố Minh Khai, gần Times City).
+     Trong khi đó tên này còn trùng ở Bắc Từ Liêm và Hoài Đức.
+
+3. SHEET "PHƯỜNG XÃ MỚI HOT" (Bảng 2) THIẾU 4 DÒNG
+Sheet đánh số tới 32 nhưng dòng số 5, 26, 27, 32 không có tên. Anh/chị bổ sung giúp
+được không, hay để bên em bỏ qua 4 dòng này?
+
+4. THƯƠNG HIỆU
+   - Logo + favicon riêng cho Hà Nội: anh/chị có file chưa? Hiện bên em đang tạm dùng
+     icon ngôi nhà trung tính (không chữ), tên site mặc định "Nhà Đất Hà Nội".
+   - Hotline, email, Fanpage, Zalo riêng cho Hà Nội — hiện site đang tạm hiện thông tin
+     của bên Nghệ An, cần đổi khi có thông tin thật.
+
+5. TÀI KHOẢN/DỊCH VỤ CẦN TẠO MỚI
+   - Google Search Console + Google Analytics (GA4): anh/chị tự tạo Property mới hay bên
+     em tạo giúp (cần quyền truy cập)?
+   - Meta Pixel ID mới cho Facebook Ads (pixel cũ báo đã ngừng hoạt động).
+   - Có dùng Cloudflare cho domain Hà Nội không? Nếu có cần tài khoản.
+   - Domain: anh/chị đã gửi "sanbdshanoi.vn" — bên em sẽ dùng domain này, nhờ anh/chị
+     trỏ DNS (bản ghi A) về địa chỉ IP bên em sẽ gửi kèm hướng dẫn riêng.
+
+6. THANH TOÁN
+Thông tin tài khoản ngân hàng nhận tiền + mã kết nối SePay cho Hà Nội — có riêng hay
+dùng chung với bên Nghệ An? (Bên em đang tạm dùng chung để test chức năng nạp tiền,
+sẽ đổi khi có thông tin riêng.)
+
+7. BẢNG ÁNH XẠ PHƯỜNG/XÃ CŨ → PHƯỜNG/XÃ MỚI
+Bên em hỏi trước đó nhưng chưa thấy hồi âm: có bảng nào cho biết 1 phường/xã cũ (trước
+sáp nhập) nay thuộc phường/xã mới nào không? Hiện tại người đăng tin chọn 2 mục này độc
+lập, hệ thống không kiểm tra 2 lựa chọn có khớp với nhau không.
+
+8. HÒM THƯ GỬI EMAIL (SMTP)
+Site cần gửi email xác thực khi người dùng đăng ký tài khoản. Anh/chị có hộp thư/dịch vụ
+gửi email nào cấp cho bên em dùng không (Gmail, SendGrid, hoặc dịch vụ khác)?
+
+Rất mong nhận được phản hồi để bên em hoàn thiện đúng theo ý anh/chị. Cảm ơn anh/chị!
