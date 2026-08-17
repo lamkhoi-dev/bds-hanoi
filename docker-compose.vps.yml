@@ -75,6 +75,11 @@ services:
         NEXT_PUBLIC_SITE_NAME: ${SITE_NAME:-Nhà Đất Hà Nội}
         NEXT_PUBLIC_PROVINCE_NAME: ${PROVINCE_NAME:-Hà Nội}
         NEXT_PUBLIC_PROVINCE_SLUG: ${PROVINCE_SLUG:-ha-noi}
+        # Tên thương hiệu tách 2 dòng cho logo header — rỗng thì layout.tsx tự lùi về
+        # suy luận "tên kết thúc bằng tên tỉnh" (chỉ đúng khi 2 chuỗi này thực sự
+        # trùng đuôi, xem site-config.ts).
+        NEXT_PUBLIC_BRAND_LINE1: ${NEXT_PUBLIC_BRAND_LINE1:-}
+        NEXT_PUBLIC_BRAND_LINE2: ${NEXT_PUBLIC_BRAND_LINE2:-}
         # staging => robots.ts chặn index toàn site. Chỉ đổi sang "production"
         # khi đã có dữ liệu Hà Nội và domain chính thức, nếu không site mới sẽ bị
         # Google coi là bản trùng nội dung của nhadatxunghe.vn.
