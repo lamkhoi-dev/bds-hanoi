@@ -25,6 +25,8 @@ import type { ListingRoute } from '@/lib/seo/route';
 import { parseListingQuery, buildListingUrl, totalPages, listingPath, LISTING_PAGE_SIZE } from '@/lib/seo/canonical';
 import { decideIndexability, applyMode, getSeoMode } from '@/lib/seo/indexability';
 import { getRouteFacts } from '@/lib/seo/facts';
+import { siteLayout } from '@/lib/site-layout';
+import WardJumpSelects, { type WardSelectGroup } from '@/components/WardJumpSelects';
 
 export const dynamic = 'force-dynamic';
 
@@ -184,7 +186,45 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
   const isGlobalCategoryPage = loaiBds !== 'tat-ca' && khuVuc === 'toan-quoc';
   const isLocationPage = loaiBds === 'tat-ca' && khuVuc !== 'toan-quoc';
 
-  
+  // 2 dropdown "Xem tin theo xã/phường mới/cũ" (mục 25.5b PHẦN II) — GATE KÉP: vừa cờ
+  // layout vừa dữ liệu (đoạn URL đang xem đúng là DISTRICT). Không được suy thuần từ
+  // dữ liệu: TP Vinh (Nghệ An) cũng là DISTRICT và cũng có WARD+OLD_WARD con (33 xã cũ
+  // đã import) — bỏ cờ thì Nghệ An tự mọc thêm dropdown, phá luật "PHẦN II chỉ Hà Nội".
+  let wardSelectGroups: WardSelectGroup[] = [];
+  if (siteLayout() === 'grouped' && route.locationSlug) {
+    const currentInfo = dict[route.locationSlug];
+    // Đang xem 1 quận/huyện thì chính nó là cha cần lọc; đang xem 1 phường/xã thì cha
+    // là `.parent` — giữ được ngữ cảnh (dropdown hiện đúng phường đang chọn) khi người
+    // dùng đã nhảy sâu vào 1 phường/xã cụ thể.
+    const districtSlug =
+      currentInfo?.type === 'DISTRICT'
+        ? route.locationSlug
+        : currentInfo?.type === 'WARD' || currentInfo?.type === 'OLD_WARD'
+          ? currentInfo.parent
+          : undefined;
+
+    if (districtSlug) {
+      const buildOptions = (type: 'WARD' | 'OLD_WARD') =>
+        Object.entries(dict)
+          .filter(([, info]) => info.parent === districtSlug && info.type === type)
+          .map(([segment, info]) => ({
+            label: info.name,
+            href: listingPath({ transaction: route.transaction, propertyTypeSlug: route.propertyTypeSlug, locationSlug: segment }),
+          }));
+
+      const currentHref = (type: 'WARD' | 'OLD_WARD') =>
+        currentInfo?.type === type
+          ? listingPath({ transaction: route.transaction, propertyTypeSlug: route.propertyTypeSlug, locationSlug: route.locationSlug! })
+          : '';
+
+      wardSelectGroups = [
+        { label: 'Xem tin theo xã/phường mới:', value: currentHref('WARD'), options: buildOptions('WARD') },
+        { label: 'Xem tin theo xã/phường cũ:', value: currentHref('OLD_WARD'), options: buildOptions('OLD_WARD') },
+      ];
+    }
+  }
+
+
   return (
     <div className="min-h-screen bg-background py-10 px-4">
       <div className="w-full max-w-[1600px] xl:px-8 mx-auto">
@@ -208,8 +248,10 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
           <ShareButtons title={`Danh sách bất động sản: ${h1Text}`} />
         </div>
 
+        <WardJumpSelects selects={wardSelectGroups} />
+
         <div className="mb-8">
-          <SearchForm 
+          <SearchForm
             initialCategory={
               loaiBds === 'dat-nen' ? 'DAT_NEN' :
               loaiBds === 'nha-rieng' ? 'NHA_RIENG' :

@@ -1,38 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '@/lib/axios';
+import type { LocationNode } from '@/lib/locations/group';
 
-export interface LocationNode {
-  id: string;
-  name: string;
-  shortName?: string;
-  type?: string;
-  slug?: string;
-  parentId?: string | null;
-  isSeoEnabled?: boolean;
-  /** Nhãn nhóm menu ngang ("Trung tâm"…). undefined/null = tỉnh không phân nhóm. */
-  group?: string | null;
-  groupOrder?: number;
-  children?: LocationNode[];
-}
-
-/**
- * Gom quận/huyện theo nhãn `group`, giữ đúng thứ tự `groupOrder` rồi tới thứ tự trả về.
- * Trả mảng RỖNG khi không khu vực nào có nhóm — nơi gọi tự lùi về danh sách phẳng.
- */
-export function groupLocations(
-  locations: LocationNode[],
-): { label: string; items: LocationNode[] }[] {
-  const byLabel = new Map<string, { order: number; items: LocationNode[] }>();
-  for (const loc of locations) {
-    if (!loc.group) continue;
-    const entry = byLabel.get(loc.group);
-    if (entry) entry.items.push(loc);
-    else byLabel.set(loc.group, { order: loc.groupOrder ?? 0, items: [loc] });
-  }
-  return [...byLabel.entries()]
-    .sort((a, b) => a[1].order - b[1].order)
-    .map(([label, v]) => ({ label, items: v.items }));
-}
+// `groupLocations`/`LocationNode` chuyển sang `lib/locations/group.ts` (module thuần,
+// dùng được cả ở server component) — re-export lại để MobileMenu.tsx/SidebarFilter.tsx
+// không phải sửa import.
+export { groupLocations } from '@/lib/locations/group';
+export type { LocationNode } from '@/lib/locations/group';
 
 /**
  * Cache theo phiên: trước đây SidebarFilter, form đăng tin và MobileMenu mỗi nơi

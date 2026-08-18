@@ -8,6 +8,8 @@ import FloatingButtons from "@/components/FloatingButtons";
 import CompareWidget from "@/components/CompareWidget";
 import MobileMenu from "@/components/MobileMenu";
 import MobileSwipeMenu from "@/components/MobileSwipeMenu";
+import DesktopNav from "@/components/DesktopNav";
+import { groupLocations } from "@/lib/locations/group";
 import HeaderAuth from "@/components/HeaderAuth";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -19,8 +21,6 @@ import { serverApiUrl } from '@/lib/server-api';
 import { siteConfig } from '@/lib/site-config';
 import JsonLd from '@/components/JsonLd';
 import { buildOrganization, buildWebSite } from '@/lib/seo/schema';
-import { listingPath } from '@/lib/seo/canonical';
-import { propertyTypesByEnum } from '@/lib/seo/taxonomy';
 
 const beVietnamPro = Be_Vietnam_Pro({ 
   subsets: ["latin", "vietnamese"], 
@@ -101,12 +101,27 @@ async function getPublicSettings() {
   }
 }
 
+/** Cho menu ngang desktop 3 dropdown (mục 26 PHẦN II). BẮT BUỘC try/catch trả `[]`:
+ *  đây là root layout, một `throw` ở đây làm MỌI TRANG của site trả 500. `[]` cũng là
+ *  giá trị đúng cho Nghệ An (0/738 quận có `group`) nên fetch lỗi tự lùi về menu phẳng
+ *  y hệt hành vi hiện tại, không phải trạng thái lỗi riêng. */
+async function getLocations() {
+  try {
+    const res = await fetch(serverApiUrl('/locations'), { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const settings = await getPublicSettings();
+  const [settings, locations] = await Promise.all([getPublicSettings(), getLocations()]);
+  const locationGroups = groupLocations(locations);
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
   return (
@@ -244,38 +259,11 @@ export default async function RootLayout({
                   </Link>
                 </div>
 
-                {/* PC Menu */}
-                <nav className="hidden xl:flex flex-1 min-w-0 overflow-x-auto scrollbar-hide gap-x-3 xl:gap-x-5 px-2 mx-auto items-center flex-nowrap whitespace-nowrap mask-edges">
-                  {[
-                    // Đường dẫn dựng qua listingPath để đổi dạng URL chỉ cần đổi một cờ,
-                    // và link nội bộ không bao giờ trỏ vào một 301.
-                    { label: 'Trang chủ', href: '/' },
-                    ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU']).map((t) => ({
-                      label: t.label,
-                      href: listingPath({ propertyTypeSlug: t.slug }),
-                    })),
-                    // Không còn là link category theo taxonomy nữa — /du-an giờ là
-                    // trang danh mục Dự án (thực thể riêng, xem model Project). URL
-                    // không đổi nên không ảnh hưởng gì tới SEO đã index.
-                    { label: 'Dự án', href: '/du-an' },
-                    // 3 mục cũ (/nghe-an, /ha-tinh, /thanh-pho-vinh) là link chết trên
-                    // site Hà Nội. Gom về một mục theo tỉnh đang cấu hình; P7 sẽ thay
-                    // bằng 3 menu xổ Trung tâm / Cận trung tâm / Ngoại thành khi khách
-                    // gửi bảng phân nhóm quận huyện.
-                    { label: `BĐS ${siteConfig.province.name}`, href: listingPath({ locationSlug: siteConfig.province.slug }) },
-                    // Trang cho thuê giờ có URL SEO riêng thay vì đẩy về /search.
-                    { label: 'Cho thuê', href: listingPath({ transaction: 'cho-thue' }) },
-                    { label: 'Tin tức', href: '/news' },
-                  ].map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className="nav-link text-[13px] xl:text-[14px] font-semibold text-gray-700 hover:text-primary transition-colors duration-200 relative group whitespace-nowrap shrink-0"
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </nav>
+                {/* PC Menu — mục khu vực rẽ nhánh theo dữ liệu (group) trong
+                    DesktopNav: Hà Nội hiện 3 dropdown Trung tâm/Cận trung tâm/Ngoại
+                    thành (mục 26 PHẦN II), Nghệ An (0 quận có group) giữ link phẳng
+                    "BĐS {tỉnh}" như trước. */}
+                <DesktopNav groups={locationGroups} />
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
