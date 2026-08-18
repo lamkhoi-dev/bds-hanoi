@@ -50,10 +50,20 @@ async function main() {
       continue;
     }
 
-    const location = await prisma.location.findFirst({
-      where: { type: 'OLD_WARD', parentId: row.districtId, name: row.oldWard! },
-      select: { id: true },
-    });
+    // Ưu tiên khớp `name` (tên đầy đủ, đúng cách LocationPicker.tsx gửi hiện nay), rồi
+    // lùi về `shortName` (tên rút gọn không tiền tố "Phường/Xã") — dữ liệu cũ hơn (trước
+    // khi có dropdown xã cũ) lưu oldWard dạng rút gọn, vd "Vinh Tân" thay vì "Phường
+    // Vinh Tân". Đo trên Nghệ An: khớp name 10/40, thêm shortName mới khớp phần lớn 18
+    // dòng còn lại (vài dòng vẫn không khớp vì là dữ liệu rác, vd "Ytgv", "qưe").
+    const location =
+      (await prisma.location.findFirst({
+        where: { type: 'OLD_WARD', parentId: row.districtId, name: row.oldWard! },
+        select: { id: true },
+      })) ??
+      (await prisma.location.findFirst({
+        where: { type: 'OLD_WARD', parentId: row.districtId, shortName: row.oldWard! },
+        select: { id: true },
+      }));
 
     if (!location) {
       skippedNoMatch++;
