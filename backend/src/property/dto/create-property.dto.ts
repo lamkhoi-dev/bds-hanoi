@@ -125,6 +125,12 @@ export class CreatePropertyDto {
   @IsString()
   wardId?: string;
 
+  // FK riêng cho phường/xã CŨ — trước đây chỉ có `oldWard` (chuỗi tên). Xem giải
+  // thích ở `Property.oldWardId` trong schema.prisma.
+  @IsOptional()
+  @IsString()
+  oldWardId?: string;
+
   @IsOptional()
   @IsBoolean()
   isNegotiable?: boolean;

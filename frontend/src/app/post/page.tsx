@@ -320,7 +320,7 @@ function PostPropertyContent() {
   };
 
   const getSanitizedPayload = () => {
-    const { provinceId, districtId, wardId } = resolveLocationIds(locations, formData);
+    const { provinceId, districtId, wardId, oldWardId } = resolveLocationIds(locations, formData);
 
     const sanitizedData = { ...formData } as any;
     const numericFields = ['bedrooms', 'bathrooms', 'floors', 'frontage', 'roadWidth', 'price', 'area'];
@@ -358,7 +358,7 @@ function PostPropertyContent() {
     delete sanitizedData.mapAccuracy;
     // We intentionally keep sanitizedData.oldWard and pass it
 
-    return { ...sanitizedData, ward: formData.ward, oldWard: formData.oldWard, provinceId, districtId, wardId, locationId: wardId || districtId || provinceId };
+    return { ...sanitizedData, ward: formData.ward, oldWard: formData.oldWard, provinceId, districtId, wardId, oldWardId, locationId: wardId || districtId || provinceId };
   };
 
   const handleSubmit = async () => {

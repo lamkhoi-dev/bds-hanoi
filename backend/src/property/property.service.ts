@@ -57,7 +57,12 @@ const HOMEPAGE_TABS_PER_BLOCK = 9;
 const LOCATION_BLOCK_DEFS = [
   { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false, key: 'districts', title: 'Bất động sản theo quận, huyện' },
   { type: 'WARD', groupField: 'wardId', requireFeatured: true, key: 'wards-new', title: 'Bất động sản theo phường, xã mới' },
-  { type: 'OLD_WARD', groupField: 'wardId', requireFeatured: true, key: 'wards-old', title: 'Bất động sản theo phường, xã cũ' },
+  // groupField 'oldWardId' (KHÔNG phải 'wardId'): Property.wardId chỉ được gán từ
+  // phường/xã MỚI (xem resolveLocationIds() trong LocationPicker.tsx). Trước khi có FK
+  // riêng (migration 20260818000000), khối này groupBy nhầm 'wardId' nên gần như luôn
+  // rỗng — kiểm chứng trên Nghệ An: wardId trỏ OLD_WARD chỉ 3/158 tin, còn 33 tin lưu
+  // xã cũ ở cột `oldWard` (chuỗi, không FK).
+  { type: 'OLD_WARD', groupField: 'oldWardId', requireFeatured: true, key: 'wards-old', title: 'Bất động sản theo phường, xã cũ' },
 ] as const;
 
 /** Nhận dạng UUID v4 để phân biệt URL tin dạng cũ với mã ngắn dạng mới. */
@@ -591,7 +596,7 @@ export class PropertyService {
    * cần lọc thêm. Không tab nào mặc định đứng số 1: tab có tin mới hơn luôn lên đầu.
    */
   private async buildDynamicLocationBlock(
-    def: { type: LocationType; groupField: 'districtId' | 'wardId'; requireFeatured: boolean },
+    def: { type: LocationType; groupField: 'districtId' | 'wardId' | 'oldWardId'; requireFeatured: boolean },
     limit: number,
     getItems: (where: any) => Promise<any>,
   ) {
@@ -636,7 +641,11 @@ export class PropertyService {
     return Promise.all(
       orderedLocations.map((loc) =>
         getItems(
-          loc.type === 'WARD' || loc.type === 'OLD_WARD' ? { wardId: loc.id } : { districtId: loc.id },
+          loc.type === 'WARD'
+            ? { wardId: loc.id }
+            : loc.type === 'OLD_WARD'
+              ? { oldWardId: loc.id }
+              : { districtId: loc.id },
         ).then((items: any) => ({
           key: loc.urlSegment,
           title: loc.name,

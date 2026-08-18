@@ -20,16 +20,21 @@ interface LocationPickerProps {
   requireWard?: boolean;
 }
 
-/** Suy `provinceId/districtId/wardId` từ tên đã chọn — dùng khi gửi payload lên backend. */
+/** Suy `provinceId/districtId/wardId/oldWardId` từ tên đã chọn — dùng khi gửi payload
+ *  lên backend. */
 export function resolveLocationIds(locations: any[], value: LocationValue) {
   const selectedDistrictObj = locations.find((d: any) => d.name === value.district);
   const currentWards = selectedDistrictObj
     ? selectedDistrictObj.children.filter((c: any) => c.type === 'WARD')
     : [];
+  const currentOldWards = selectedDistrictObj
+    ? selectedDistrictObj.children.filter((c: any) => c.type === 'OLD_WARD')
+    : [];
   return {
     provinceId: selectedDistrictObj?.parentId || null,
     districtId: selectedDistrictObj?.id || null,
     wardId: currentWards.find((w: any) => w.name === value.ward)?.id || null,
+    oldWardId: currentOldWards.find((w: any) => w.name === value.oldWard)?.id || null,
   };
 }
 

@@ -288,6 +288,7 @@ export function normalizePropertyPayload(data: Record<string, any>): Record<stri
     'provinceId',
     'districtId',
     'wardId',
+    'oldWardId',
     'isNegotiable',
     'bedrooms',
     'bathrooms',

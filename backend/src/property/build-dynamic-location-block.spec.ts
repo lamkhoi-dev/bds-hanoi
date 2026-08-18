@@ -103,4 +103,25 @@ describe('buildDynamicLocationBlock', () => {
     // Mới nhất là d4 (index 4), rồi d3 — limit cắt còn 2 tab.
     expect(result.map((block: any) => block.key)).toEqual(['quan-4', 'quan-3']);
   });
+
+  it('khối OLD_WARD gọi getItems bằng oldWardId, KHÔNG phải wardId (bug đã sửa)', async () => {
+    const { service, prisma } = makeService();
+    prisma.location.findMany.mockResolvedValue([
+      { id: 'ow1', type: 'OLD_WARD', urlSegment: 'xa-cu-1', name: 'Xã Cũ 1' },
+    ]);
+    prisma.property.groupBy.mockResolvedValue([
+      { oldWardId: 'ow1', _max: { publishedAt: new Date('2026-01-01') } },
+    ]);
+
+    await (service as any).buildDynamicLocationBlock(
+      { type: 'OLD_WARD', groupField: 'oldWardId', requireFeatured: true },
+      9,
+      getItems,
+    );
+
+    expect(prisma.property.groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({ by: ['oldWardId'] }),
+    );
+    expect(getItems).toHaveBeenCalledWith({ oldWardId: 'ow1' });
+  });
 });

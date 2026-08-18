@@ -53,7 +53,7 @@ const EDITABLE_FIELDS = Object.keys(FIELD_LABEL);
  * tình KHÔNG đưa vào FIELD_LABEL/EDITABLE_FIELDS: đây là cột kỹ thuật (uuid), hiện
  * "provinceId: uuid-xxx → uuid-yyy" trong lịch sử/thông báo cho người đăng là vô nghĩa.
  */
-const LOCATION_ID_FIELDS = ['provinceId', 'districtId', 'wardId'];
+const LOCATION_ID_FIELDS = ['provinceId', 'districtId', 'wardId', 'oldWardId'];
 
 export interface FieldChange {
   field: string;

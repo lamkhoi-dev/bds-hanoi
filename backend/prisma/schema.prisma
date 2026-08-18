@@ -136,6 +136,12 @@ model Property {
   districtLocation Location? @relation("PropertyDistrict", fields: [districtId], references: [id], onDelete: SetNull)
   wardId           String?
   wardLocation     Location? @relation("PropertyWard", fields: [wardId], references: [id], onDelete: SetNull)
+  /// FK riêng cho phường/xã CŨ — trước đây chỉ lưu ở cột `oldWard` (chuỗi tên, không
+  /// FK). Khối "phường/xã cũ" trên trang chủ xếp hạng theo tin mới nhất cần groupBy
+  /// một FK ổn định; so khớp bằng chuỗi sẽ gộp sai khi 13 nhóm tên xã trùng nhau giữa
+  /// các quận. Backfill từ cột `oldWard` bằng script (xem scripts/backfill-old-ward-id.ts).
+  oldWardId        String?
+  oldWardLocation  Location? @relation("PropertyOldWard", fields: [oldWardId], references: [id], onDelete: SetNull)
 
   price      Decimal?
   area       Float?
@@ -231,6 +237,7 @@ model Property {
   @@index([provinceId])
   @@index([districtId])
   @@index([wardId])
+  @@index([oldWardId])
 }
 
 model SavedPost {
@@ -407,6 +414,7 @@ model Location {
   provinceProperties Property[]    @relation("PropertyProvince")
   districtProperties Property[]    @relation("PropertyDistrict")
   wardProperties     Property[]    @relation("PropertyWard")
+  oldWardProperties  Property[]    @relation("PropertyOldWard")
   requirements       Requirement[]
   provinceProjects   Project[]     @relation("ProjectProvince")
   districtProjects   Project[]     @relation("ProjectDistrict")
