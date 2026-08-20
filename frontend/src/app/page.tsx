@@ -96,27 +96,35 @@ export default async function Home() {
     <div>
 
 
-      {/* ===== HERO SECTION ===== */}
-      <section className="relative w-full bg-[#0a1930] overflow-hidden flex justify-center">
+      {/* ===== HERO SECTION =====
+          banner.svg nay là bộ logo mới khách gửi (19-8): logo + chữ "Nhà đất xứ Nghệ" +
+          slogan "Đăng bán dễ dàng / tìm đất an tâm." — slogan là <text> màu TRẮNG nên chỉ
+          đọc được trên nền tối #0a1930 này. Bản cũ (ảnh minh hoạ full-width, slogan "Đăng
+          tin dễ dàng" vẽ dạng vector path nên không sửa được bằng code) vẫn còn ở
+          public/logo/logo-full.svg nếu cần lùi.
+
+          Vì file mới là LOGO ngang (tỉ lệ ~3.6:1) chứ không phải ảnh nền, nó được giới hạn
+          bề rộng và căn giữa thay vì kéo full-width — kéo hết chiều ngang 1920px sẽ làm chữ
+          to quá cỡ. Khoảng đệm dọc cũng siết lại theo yêu cầu "kéo phần đầu trang chủ lên,
+          chỗ trống thừa nhiều" (mục 14). */}
+      <section className="relative w-full bg-[#0a1930] overflow-hidden flex justify-center py-6 md:py-10">
         <h1 className="sr-only">
           Đăng bán, tìm mua và cho thuê bất động sản tại {siteConfig.province.name}
         </h1>
-        <div className="w-full max-w-[1920px] relative">
-          <Image 
-            src="/banner.svg" 
-            alt={`Banner ${siteConfig.name}`} 
-            width={1920}
-            height={400}
-            className="w-full h-auto block md:max-h-[500px] md:object-cover md:object-center"
-            priority 
+        <div className="w-full max-w-2xl px-4 relative">
+          <Image
+            src="/banner.svg"
+            alt={`${siteConfig.name} — Đăng bán dễ dàng, tìm đất an tâm`}
+            width={1033}
+            height={290}
+            className="w-full h-auto block"
+            priority
           />
         </div>
-        {/* Overlay gradient to ensure the search bar and edges blend nicely */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0a1930]/30 pointer-events-none" />
       </section>
 
       {/* ===== SEARCH SECTION ===== */}
-      <section className="relative z-10 px-4 -mt-8 md:-mt-8 mb-8">
+      <section className="relative z-10 px-4 mt-4 mb-6">
         <div className="container mx-auto max-w-4xl relative flex flex-col gap-3">
           <SearchForm />
           {/* Bộ lọc ngay dưới ô tìm kiếm, mở ra dạng popup nổi. */}
@@ -127,7 +135,7 @@ export default async function Home() {
       </section>
 
       {/* ===== MAIN CONTENT ===== */}
-      <section className="w-full max-w-[1600px] xl:px-8 mx-auto px-4 py-16 flex flex-col lg:flex-row gap-8 overflow-hidden">
+      <section className="w-full max-w-[1600px] xl:px-8 mx-auto px-4 py-8 md:py-10 flex flex-col lg:flex-row gap-8 overflow-hidden">
         
         {/* Left Content (Listings) */}
         <div className="flex-1 overflow-hidden min-w-0">

@@ -37,18 +37,21 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: [
         '/admin/',
-        '/login',
-        '/register',
         '/forgot-password',
         '/change-password',
         '/auth-success',
         '/api/',
         ...ACCOUNT_PATHS,
       ],
-      // KHÔNG chặn /search, /post, /so-sanh, /map và các trang khu vực rỗng:
-      // chúng dùng thẻ meta noindex. Bị Disallow thì Googlebot không đọc được thẻ
+      // KHÔNG chặn /search, /post, /so-sanh, /map, /login, /register và các trang khu vực
+      // rỗng: chúng dùng thẻ meta noindex. Bị Disallow thì Googlebot không đọc được thẻ
       // noindex, URL đã trót được index sẽ kẹt lại vĩnh viễn dưới dạng "URL-only".
       // (/post đã từng xuất hiện trong kết quả tìm kiếm nên phải gỡ được ra.)
+      //
+      // /login và /register vừa được gỡ khỏi danh sách này (khách phản hồi 19-8, có dẫn
+      // tài liệu noindex của Google): trước đây chúng bị chặn crawl NHƯNG không có thẻ
+      // noindex — tức vừa không đọc được thẻ, vừa không có thẻ để đọc. Nay đã thêm
+      // noindex ở app/login/layout.tsx và app/register/layout.tsx.
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };

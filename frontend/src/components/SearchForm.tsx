@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { listingPath } from '@/lib/seo/canonical';
 import { useLocations } from '@/hooks/useLocations';
 import { createPortal } from 'react-dom';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 export default function SearchForm({ 
   initialQ = '', 
@@ -172,23 +172,15 @@ export default function SearchForm({
           />
         </div>
 
-        {/* Khách yêu cầu bỏ chữ "Lọc tìm kiếm" (dòng chữ nhỏ phía trên popup) nhưng
-            nút này thì ngược lại — phải có chữ và dài bằng nút "Tìm kiếm" cạnh nó,
-            giống cách MobileFilterButton.tsx đã làm ở trang chuyên mục. */}
+        {/* Đợt trước từng có thêm một nút "Bộ lọc" NGAY TRONG khung này (hiểu lệch
+            feedback cũ). Khách đính chính 19-8: "Bỏ cái chữ bộ lọc phía trên, dưới ô nhập
+            text (nhìn nó thừa)" — vì ngay dưới khung đã có nút lọc riêng
+            (HomeFilterButton ở trang chủ, MobileFilterButton ở trang chuyên mục) và chính
+            nút ĐÓ mới là nút cần dài + có chữ đầy đủ. */}
         <button
           type="button"
           onClick={() => setPopupOpen(true)}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 rounded-lg text-gray-600 border border-gray-200 hover:bg-gray-100 font-bold"
-          aria-label="Bộ lọc"
-          title="Bộ lọc"
-        >
-          <SlidersHorizontal className="w-4 h-4" /> Bộ lọc
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setPopupOpen(true)}
-          className="flex-1 bg-accent hover:bg-accent-light text-white px-8 py-3 rounded-lg font-bold transition-all shadow-glow-accent flex justify-center items-center gap-2"
+          className="sm:w-auto bg-accent hover:bg-accent-light text-white px-8 py-3 rounded-lg font-bold transition-all shadow-glow-accent flex justify-center items-center gap-2"
         >
           <Search className="w-4 h-4 sm:hidden" /> Tìm kiếm
         </button>

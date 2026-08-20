@@ -34,13 +34,15 @@ export default function HomeFilterButton() {
 
   return (
     <>
+      {/* Khách yêu cầu (19-8, mục 15): nút này làm DÀI và ghi chữ đầy đủ giống nút ở
+          trang chuyên mục (MobileFilterButton) — bỏ chữ "và" trong câu. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="self-start flex items-center gap-2 px-4 py-2 rounded-lg bg-white/90 backdrop-blur border border-gray-200 text-sm font-semibold text-gray-700 shadow-sm hover:bg-white transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors shadow-sm"
       >
-        <SlidersHorizontal className="w-4 h-4 text-accent" />
-        Bộ lọc
+        <SlidersHorizontal className="w-5 h-5" />
+        Lọc để tìm kiếm nhanh, chính xác hơn
       </button>
 
       {mounted && open

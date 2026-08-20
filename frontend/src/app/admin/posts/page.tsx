@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ReviewModal from '@/components/admin/ReviewModal';
 import { listingDetailPath } from '@/lib/seo/canonical';
 import { PROPERTY_TYPES, propertyTypeByEnum } from '@/lib/seo/taxonomy';
-import { CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, Filter, PenLine} from 'lucide-react';
+import { CheckCircle, AlertTriangle, Eye, EyeOff, Trash2, Filter, PenLine, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { generateSlug } from '@/lib/utils';
 import api from '@/lib/axios';
@@ -175,6 +175,16 @@ export default function AdminPosts() {
                   <td data-label="Thao tác" className="px-6 py-4 text-right space-x-2">
                     <Link href={listingDetailPath(generateSlug(post.title), post.shortCode, post.id)} target="_blank" className="inline-flex p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Xem chi tiết (Tab mới)">
                       <Eye size={18} />
+                    </Link>
+                    {/* Nút sửa cho tin ở MỌI trạng thái. Khách phản hồi 19-8 "mất hết chức
+                        năng admin duyệt, sửa tin trên PC": thực chất 3 nút bên dưới chỉ hiện
+                        với tin PENDING, mà site đang có 155 tin APPROVED / 1 PENDING nên
+                        admin gần như không thấy nút nào — tức chưa bao giờ sửa được tin đã
+                        duyệt. Mở đúng form người đăng dùng (`/post?editId=`, khách gợi ý ở
+                        mục 23); `PropertyService.update()` vốn đã cho ADMIN sửa tin của
+                        người khác nên không cần API mới. */}
+                    <Link href={`/post?editId=${post.id}`} target="_blank" className="inline-flex p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Sửa tin (mở form đầy đủ)">
+                      <Pencil size={18} />
                     </Link>
                     {post.status === 'PENDING' && (
                       <>

@@ -25,17 +25,22 @@ import {
   type NormalizedFilters,
 } from './property-utils';
 import { listingPath, PROPERTY_TYPE_LABEL, PROPERTY_TYPE_SLUG } from '../seo/seo-urls';
-import { HOMEPAGE_LAYOUTS, resolveLayout, homepageCacheKey, type SectionId } from './homepage-layout';
+import { HOMEPAGE_LAYOUTS, LOCATION_BLOCK_TITLES, resolveLayout, homepageCacheKey, type SectionId } from './homepage-layout';
 
 type PropertyWhereInput = any;
 
 /**
  * Số card tin mỗi khối/chuyên mục trên trang chủ.
  *
- * Khách chốt 3 (trước đây là 5). Đặt thành hằng số vì con số này lặp ở 4 chỗ: khối
- * danh mục, tin VIP, tin UP và các tab khu vực — sửa lẻ từng chỗ là chắc chắn lệch.
+ * Đặt thành hằng số vì con số này lặp ở 4 chỗ: khối danh mục, tin VIP, tin UP và các tab
+ * khu vực — sửa lẻ từng chỗ là chắc chắn lệch.
+ *
+ * Khách chốt 3, rồi đính chính 19-8 (mục 13): trên PC lưới là 4 cột nên 3 card để thừa
+ * một ô trống — nâng lên **4** cho PC. Mobile/tablet vẫn phải là 3 như cũ, việc đó xử lý
+ * ở frontend bằng cách ẩn card thứ 4 dưới ngưỡng `xl` (PropertyBlock/PropertyTabs), chứ
+ * không cắt ở backend — cắt ở đây thì PC lại thiếu.
  */
-const HOMEPAGE_ITEMS_PER_BLOCK = 3;
+const HOMEPAGE_ITEMS_PER_BLOCK = 4;
 
 /**
  * Số TAB khu vực hiện ra mỗi khối trên trang chủ (khác `HOMEPAGE_ITEMS_PER_BLOCK` —
@@ -589,11 +594,21 @@ export class PropertyService {
   }
 
   /**
-   * Chọn ĐÚNG N khu vực (trong danh sách ứng viên của MỘT type) có tin đăng MỚI NHẤT —
-   * cùng pattern với `ProjectService.findLatestForHomepage()`: groupBy + _max(publishedAt)
-   * + sort JS + slice. Khu vực ứng viên nhưng 0 tin sẽ KHÔNG có mặt trong `groups`
-   * (Prisma groupBy chỉ trả nhóm có ≥1 dòng khớp `where`), nên tự động bị loại — không
-   * cần lọc thêm. Không tab nào mặc định đứng số 1: tab có tin mới hơn luôn lên đầu.
+   * Chọn ĐÚNG N khu vực (trong danh sách ứng viên của MỘT type) để làm tab trên trang chủ.
+   *
+   * Thứ tự xếp hạng (khách đính chính 19-8, mục 11):
+   *   1. Khu vực thuộc TỈNH CHÍNH trước — tỉnh khai đầu tiên trong `ACTIVE_PROVINCE_SLUG`.
+   *   2. Rồi tới SỐ TIN nhiều hơn.
+   *   3. Cuối cùng mới tới tin mới nhất (chỉ để phân định khi bằng điểm).
+   *
+   * Vì sao đổi: bản cũ xếp thuần theo `_max(publishedAt)` nên trên site Nghệ An, huyện
+   * Nghi Xuân (Hà Tĩnh, **1 tin**) đứng thứ 2 chỉ vì tin đó mới nhất, trong khi TX Hoàng
+   * Mai (7 tin) và Nghi Lộc (4 tin) — đều thuộc Nghệ An — bị cắt khỏi top 9. Khách yêu cầu
+   * đúng 3 việc: kéo Nghi Xuân xuống cuối, thêm Nghi Lộc, thêm TX Hoàng Mai; quy tắc trên
+   * đáp ứng cả 3 mà không cần ghim tay khu vực nào.
+   *
+   * Khu vực ứng viên nhưng 0 tin vẫn tự động bị loại: Prisma `groupBy` chỉ trả nhóm có ≥1
+   * dòng khớp `where`.
    */
   private async buildDynamicLocationBlock(
     def: { type: LocationType; groupField: 'districtId' | 'wardId' | 'oldWardId'; requireFeatured: boolean },
@@ -606,7 +621,7 @@ export class PropertyService {
         isActive: true,
         ...(def.requireFeatured ? { isFeatured: true } : {}),
       },
-      select: { id: true, type: true, urlSegment: true, name: true },
+      select: { id: true, type: true, urlSegment: true, name: true, path: true },
     });
     if (candidates.length === 0) return [];
 
@@ -620,11 +635,32 @@ export class PropertyService {
         deletedAt: null,
       } as any,
       _max: { publishedAt: true },
+      _count: { _all: true },
     });
+
+    // Tỉnh chính = tỉnh khai TRƯỚC trong ACTIVE_PROVINCE_SLUG. Site "xứ Nghệ" phục vụ cả
+    // Nghệ An lẫn Hà Tĩnh ("nghe-an,ha-tinh") nên phải phân biệt; site một tỉnh thì mọi
+    // khu vực đều thuộc tỉnh chính và điều kiện này thành vô hại.
+    const primaryProvince = (process.env.ACTIVE_PROVINCE_SLUG || 'ha-noi')
+      .split(',')[0]
+      .trim();
+    const pathById = new Map(candidates.map((c) => [c.id, c.path ?? '']));
+    const isPrimary = (id: string) => {
+      const path = pathById.get(id) ?? '';
+      return path === primaryProvince || path.startsWith(`${primaryProvince}/`);
+    };
 
     const rankedIds = groups
       .filter((g: any) => g[def.groupField])
       .sort((a: any, b: any) => {
+        const aPrimary = isPrimary(a[def.groupField]) ? 1 : 0;
+        const bPrimary = isPrimary(b[def.groupField]) ? 1 : 0;
+        if (aPrimary !== bPrimary) return bPrimary - aPrimary;
+
+        const ac = a._count?._all ?? 0;
+        const bc = b._count?._all ?? 0;
+        if (ac !== bc) return bc - ac;
+
         const at = a._max.publishedAt?.getTime() ?? 0;
         const bt = b._max.publishedAt?.getTime() ?? 0;
         return bt - at;
@@ -822,10 +858,16 @@ export class PropertyService {
     const locationBlocksByKey = new Map(LOCATION_BLOCK_DEFS.map((def, i) => [def.key, locationBlocksRaw[i]]));
     const catchAllLocationTab = { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems };
     const locationSection = (key: 'districts' | 'wards-new' | 'wards-old') => {
-      const def = LOCATION_BLOCK_DEFS.find((d) => d.key === key)!;
       const tabsRaw = locationBlocksByKey.get(key) ?? [];
       if (tabsRaw.length === 0) return null;
-      return { id: key as SectionId, kind: 'tabs' as const, title: def.title, tabs: [...tabsRaw, catchAllLocationTab] };
+      // Tiêu đề lấy theo layout (Nghệ An dùng tên địa danh cụ thể, xem
+      // LOCATION_BLOCK_TITLES) chứ không lấy `def.title` dùng chung nữa.
+      return {
+        id: key as SectionId,
+        kind: 'tabs' as const,
+        title: LOCATION_BLOCK_TITLES[layout][key],
+        tabs: [...tabsRaw, catchAllLocationTab],
+      };
     };
 
     const sectionBuilders: Record<SectionId, () => any> = {
@@ -921,7 +963,7 @@ export class PropertyService {
       // tin) bị loại nguyên khối — vì vậy Nghệ An/Hà Nội tự nhiên có số khối khác nhau
       // mà không cần dòng code nào rẽ nhánh theo tỉnh.
       locationBlocks: LOCATION_BLOCK_DEFS
-        .map((def, i) => ({ key: def.key, title: def.title, tabs: locationBlocksRaw[i] }))
+        .map((def, i) => ({ key: def.key, title: LOCATION_BLOCK_TITLES[layout][def.key], tabs: locationBlocksRaw[i] }))
         .filter((block) => block.tabs.length > 0)
         .map((block) => ({
           ...block,
@@ -1328,6 +1370,9 @@ export class PropertyService {
     }
 
     const isPreModerationEnabled = settings?.isPreModerationEnabled ?? true;
+    // Admin sửa tin của NGƯỜI KHÁC (đường /admin/posts → /post?editId=). Admin sửa tin
+    // do chính mình đăng thì vẫn đi luồng người đăng bình thường.
+    const isAdminEditor = user?.role === 'ADMIN' && property.userId !== userId;
     let status = property.status;
     let postCostInPoints = 0;
     let userBalance = 0;
@@ -1357,6 +1402,12 @@ export class PropertyService {
       // thái Chờ duyệt") — không phụ thuộc có đổi field "quan trọng" hay không, khác
       // với nhánh isPreModerationEnabled bên dưới (chỉ áp cho tin APPROVED/PENDING).
       status = 'PENDING';
+    } else if (isAdminEditor) {
+      // ADMIN tự sửa thì GIỮ NGUYÊN trạng thái — người duyệt và người sửa là một, hạ về
+      // PENDING chỉ khiến admin phải tự duyệt lại tin của chính mình, và tin biến mất
+      // khỏi site trong lúc đó. Nhánh này phải đứng TRƯỚC isPreModerationEnabled.
+      // (Đường sửa của admin là nút "Sửa tin" ở /admin/posts → /post?editId=, thêm theo
+      // phản hồi khách 19-8 mục 21-23.)
     } else if (isPreModerationEnabled) {
       const criticalFieldsChanged =
         (normalizedData.title !== undefined && normalizedData.title !== property.title) ||

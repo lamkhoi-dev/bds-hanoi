@@ -51,6 +51,31 @@ export const HOMEPAGE_LAYOUTS: Record<'classic' | 'grouped', readonly SectionId[
 export type SiteLayout = keyof typeof HOMEPAGE_LAYOUTS;
 
 /**
+ * Tiêu đề 3 khối "khu vực" — khác nhau theo site nên để cạnh `HOMEPAGE_LAYOUTS`, cùng một
+ * nơi duy nhất quyết định bố cục theo site.
+ *
+ * Khách Nghệ An yêu cầu đặt tên theo địa danh cụ thể thay vì tên chung chung (19-8, mục
+ * 11): "theo quận, huyện" → "Nghệ An", "theo phường, xã mới" → "TP Vinh". Hà Nội
+ * (`grouped`) giữ tên chung vì ở đó khối phường/xã trải khắp 30 quận/huyện, không gói
+ * trong một thành phố như TP Vinh.
+ *
+ * Tên tỉnh KHÔNG suy từ `ACTIVE_PROVINCE_SLUG`: site Nghệ An phục vụ cả Hà Tĩnh nên
+ * "Bất động sản Nghệ An" là nhãn thương hiệu khách chọn, không phải tên tập dữ liệu.
+ */
+export const LOCATION_BLOCK_TITLES: Record<SiteLayout, Record<'districts' | 'wards-new' | 'wards-old', string>> = {
+  classic: {
+    districts: 'Bất động sản Nghệ An',
+    'wards-new': 'Bất động sản TP Vinh',
+    'wards-old': 'Bất động sản theo phường, xã cũ',
+  },
+  grouped: {
+    districts: 'Bất động sản theo quận, huyện',
+    'wards-new': 'Bất động sản theo phường, xã mới',
+    'wards-old': 'Bất động sản theo phường, xã cũ',
+  },
+};
+
+/**
  * Đọc `SITE_LAYOUT` — CỐ TÌNH không tiền tố `NEXT_PUBLIC_` (biến đó bị bake cứng vào
  * bundle lúc build, sẽ biến thành 2 image khác nhau, phá mục tiêu "một image cho cả hai
  * site"). Sai chính tả / thiếu biến / mất env đều lùi về 'classic' — chiều an toàn đúng,

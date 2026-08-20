@@ -34,8 +34,12 @@ export default function PropertyBlock({
       
       {displayItems.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+          {/* Backend trả 4 tin/khối (HOMEPAGE_ITEMS_PER_BLOCK) để lưới 4 cột trên PC không
+              còn thừa ô trống — khách yêu cầu 19-8 mục 13. Nhưng khách cũng nói rõ mobile
+              GIỮ 3 tin, và ở ngưỡng lg lưới chỉ có 3 cột nên card thứ 4 sẽ lẻ hàng ⇒ chỉ
+              hiện card thứ 4 trở đi từ `xl` (lúc lưới đủ 4 cột). */}
           {displayItems.map((item, idx) => (
-            <div key={item.id} className={`h-full ${idx > 4 ? 'hidden lg:block' : (idx > 3 ? 'hidden md:block' : '')}`}>
+            <div key={item.id} className={`h-full ${idx >= 3 ? 'hidden xl:block' : ''}`}>
               <PropertyCard item={item} />
             </div>
           ))}
