@@ -1,0 +1,61 @@
+Kính gửi anh/chị,
+
+Bên em đã hoàn thành toàn bộ các mục trong file "hiệu chỉnh nhadatxunghe ngày 19-8"
+(anh/chị có thể kiểm tra lại trên nhadatxunghe.vn). Trong quá trình làm, bên em phát hiện
+thêm 2 điểm KHÔNG có trong danh sách anh/chị gửi, cần anh/chị cho ý kiến vì nó liên quan
+tới nội dung hiển thị trên trang chủ.
+
+
+1. KHỐI "BẤT ĐỘNG SẢN THEO PHƯỜNG, XÃ CŨ" TRÊN TRANG CHỦ — HIỆN ĐANG KHÔNG XUẤT HIỆN
+
+Trang chủ hiện có 2 khối khu vực:
+   - "Bất động sản Nghệ An"  (theo quận/huyện)   — đang chạy
+   - "Bất động sản TP Vinh"  (theo phường/xã mới) — đang chạy
+
+Hệ thống còn hỗ trợ khối thứ 3 là "Bất động sản theo phường, xã cũ", nhưng khối này
+đang KHÔNG hiện, vì chưa có phường/xã cũ nào được chọn để đưa lên trang chủ.
+(Cơ chế: khối chỉ hiện khi có ít nhất 1 phường/xã cũ được đánh dấu "nổi bật" và có tin.)
+
+   a. Anh/chị có muốn hiện khối này trên trang chủ không?
+   b. Nếu có: nhờ anh/chị liệt kê giúp các phường/xã CŨ muốn đưa lên (tối đa 9 mục, giống
+      2 khối kia). Bên em không tự chọn để tránh khoe sai khu vực không phải trọng điểm
+      kinh doanh của anh/chị.
+   c. Lưu ý về dữ liệu: hiện chỉ khoảng 26 tin trong hệ thống có gắn phường/xã cũ, phần
+      lớn tin cũ không có thông tin này. Nên nếu bật khối, một số phường/xã có thể chỉ
+      có 1-2 tin. Tin đăng mới từ nay sẽ có đủ thông tin nên số này sẽ tăng dần.
+
+
+2. TIN CHO THUÊ LẪN VÀO KHỐI BÁN — BÊN EM ĐÃ TỰ SỬA, BÁO ĐỂ ANH/CHỊ BIẾT
+
+Trên trang chủ, khối "Chung cư" (là khối tin BÁN, bấm vào ra trang /chung-cu) đang lẫn
+1 tin CHO THUÊ. Hệ quả: người xem bấm vào khối thì không tìm thấy tin vừa nhìn thấy, vì
+trang đích chỉ hiện tin bán.
+
+Bên em đã sửa để 4 khối "Đất nền / Nhà riêng / Chung cư / Dự án" và 2 tab "Bất động sản
+khác" chỉ hiện tin BÁN. Tin cho thuê vẫn nằm đủ ở khối "Cho thuê" phía dưới.
+Nếu anh/chị muốn các khối này hiện cả tin cho thuê như trước thì cho bên em biết để
+chỉnh lại.
+
+
+3. NHẮC LẠI 8 CÂU HỎI GỬI NGÀY 18-8 (PHẦN HÀ NỘI) — CHƯA NHẬN ĐƯỢC PHẢN HỒI
+
+Site Hà Nội đã dựng xong phần giao diện và dữ liệu địa giới (30 quận/huyện, 126 phường/xã
+mới, 579 phường/xã cũ). Hiện đang tạm dừng vì thiếu thông tin từ anh/chị. Hai mục dưới
+đây là CHẶN CỨNG, không thể mở site cho người dùng thật nếu chưa có:
+
+   - HÒM THƯ GỬI EMAIL (SMTP): site cần gửi email xác thực khi người dùng đăng ký. Chưa
+     có thì người dùng KHÔNG thể tự đăng ký tài khoản và không đăng tin được.
+   - TÊN MIỀN sanbdshanoi.vn: nhờ anh/chị trỏ bản ghi DNS (loại A) của cả
+     "sanbdshanoi.vn" và "www.sanbdshanoi.vn" về địa chỉ IP 222.255.214.136.
+
+Các mục còn lại (khối "khu vực hot", logo/favicon Hà Nội, hotline/email/Fanpage riêng,
+Google Search Console + Analytics, Meta Pixel, tài khoản ngân hàng + SePay riêng, bảng
+ánh xạ phường/xã cũ sang mới, 4 dòng trống ở bảng "phường xã mới hot", xác nhận Vạn Phúc
+và Minh Khai thuộc quận nào) — chi tiết ở file gửi ngày 18-8.
+
+Lưu ý quan trọng: hiện site Hà Nội đang TẠM dùng số hotline và tài khoản ngân hàng của
+bên Nghệ An để chạy thử chức năng. Trước khi mở cho người dùng thật, bắt buộc phải đổi
+sang thông tin riêng của Hà Nội, nếu không tiền nạp của người dùng Hà Nội sẽ vào tài
+khoản của bên Nghệ An.
+
+Rất mong nhận được phản hồi của anh/chị. Cảm ơn anh/chị!

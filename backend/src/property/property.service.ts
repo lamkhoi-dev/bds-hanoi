@@ -79,9 +79,8 @@ const RENT_TAB_TYPES = ['NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'DAT_NEN', 'BDS_KHA
 /**
  * 5 tab của khối "Bán" trong bố cục `grouped` (PHẦN II mục 25) — gộp 6 loại BĐS thành 1
  * khối tab ngang thay vì 4 khối rời + 2 tab riêng như bố cục `classic`. CHỈ lọc đúng
- * `transactionType: 'BAN'` — khác `categoryBlocks` (bố cục classic) hiện KHÔNG lọc
- * transactionType nên đang lẫn cả tin cho thuê; đây là bug có sẵn, CỐ TÌNH không sửa
- * cho classic ở đợt này vì đó là thay đổi nội dung trên site Nghệ An đã duyệt.
+ * `transactionType: 'BAN'` — 6 khối tương ứng của bố cục `classic` trước đây KHÔNG lọc
+ * nên lẫn tin cho thuê vào khối bán; đã lọc bù ở `getHomepageProperties`.
  */
 const SALE_TAB_TYPES = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'BDS_KHAC'] as const;
 
@@ -795,12 +794,18 @@ export class PropertyService {
       totalProperties, totalUsers, totalProjects
     ] = await Promise.all([
       this.getHomepageVipItems(baseWhere, includeOptions),
-      getItems({ propertyType: 'DAT_NEN' }),
-      getItems({ propertyType: 'NHA_RIENG' }),
-      getItems({ propertyType: 'CHUNG_CU' }),
-      getItems({ propertyType: 'DU_AN' }),
-      getItems({ propertyType: 'MAT_BANG' }),
-      getItems({ propertyType: 'BDS_KHAC' }),
+      // `transactionType: 'BAN'` — 6 khối này chỉ dùng ở bố cục `classic` (4 khối `cat-*`
+      // + 2 tab "Bất động sản khác") và `blockMeta()` sinh href dạng BÁN (`/chung-cu`).
+      // Trước đây KHÔNG lọc giao dịch nên khối "Chung cư" trên trang chủ Nghệ An lẫn tin
+      // CHO THUÊ vào khối bán, bấm vào khối thì trang đích lại không có tin đó (trang
+      // danh mục gửi transactionType=BAN — xem facts.ts:50). Bố cục `grouped` không đi
+      // qua đây: nó dùng `saleItems`/`rentItems` vốn đã lọc đúng từ đầu.
+      getItems({ transactionType: 'BAN', propertyType: 'DAT_NEN' }),
+      getItems({ transactionType: 'BAN', propertyType: 'NHA_RIENG' }),
+      getItems({ transactionType: 'BAN', propertyType: 'CHUNG_CU' }),
+      getItems({ transactionType: 'BAN', propertyType: 'DU_AN' }),
+      getItems({ transactionType: 'BAN', propertyType: 'MAT_BANG' }),
+      getItems({ transactionType: 'BAN', propertyType: 'BDS_KHAC' }),
       // "Cho thuê" trước đây là MỘT khối gộp mọi loại BĐS. Khách yêu cầu tách thành
       // tab ngang theo loại, nên lấy song song một truy vấn cho mỗi tab.
       Promise.all(
