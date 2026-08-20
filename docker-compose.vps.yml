@@ -104,6 +104,9 @@ services:
         # Giữ 'report' khi mới deploy: lớp quyết định SEO chỉ ghi log và áp noindex,
         # chưa trả 404/301. Đối chiếu Search Console 1 tuần rồi đổi sang 'enforce'.
         NEXT_PUBLIC_SEO_MODE: ${SEO_MODE:-report}
+        # Bật riêng nhóm phân trang: ?page=1 -> 301, page sai/vượt -> 404, trong khi
+        # dạng URL landing đang có thứ hạng vẫn đứng yên. Đặt 1 cho site đã chạy thật.
+        NEXT_PUBLIC_SEO_ENFORCE_PAGINATION: ${SEO_ENFORCE_PAGINATION:-0}
         NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
         INTERNAL_API_URL: http://backend:4000/api/v1
         NEXT_BUILD_CPUS: ${NEXT_BUILD_CPUS:-2}

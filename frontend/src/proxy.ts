@@ -28,9 +28,39 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  /**
+   * `?page=1` là URL TRÙNG HỆT bản gốc — phải 301 về URL không có tham số `page`.
+   *
+   * Vì sao làm ở tầng này chứ không trong trang: khách yêu cầu đúng mã **301**
+   * (19-8, mục 6), còn `permanentRedirect()` của Next phát **308**. Chỉ ở middleware
+   * mới đặt được mã tuỳ ý.
+   *
+   * Chỉ bắt đúng chuỗi `"1"`. Các giá trị sai định dạng (`0`, `-1`, `abc`, `01`) CỐ Ý
+   * để trang tự trả 404 qua bảng luật `indexability.ts` — chúng là trang không tồn tại,
+   * không phải URL trùng lặp, nên không được 301 về đâu cả.
+   *
+   * Áp cho mọi đường dẫn, không riêng trang danh mục: `page=1` luôn là giá trị mặc định
+   * ở mọi trang có phân trang (`/du-an/{slug}`, `/user/{slug}`), và ở trang không phân
+   * trang thì nó là tham số rác. Bỏ nó không bao giờ đổi nội dung hiển thị.
+   *
+   * Giới hạn GET/HEAD: 301 một request POST sẽ làm mất thân request.
+   */
+  if (
+    (request.method === 'GET' || request.method === 'HEAD') &&
+    request.nextUrl.searchParams.get('page') === '1'
+  ) {
+    const url = request.nextUrl.clone();
+    url.searchParams.delete('page');
+    return NextResponse.redirect(url, 301);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/user/:path*'],
+  matcher: [
+    '/user/:path*',
+    // Chỉ chạy khi URL thực sự có `?page=` — request thường không đi qua middleware.
+    { source: '/:path*', has: [{ type: 'query', key: 'page' }] },
+  ],
 };

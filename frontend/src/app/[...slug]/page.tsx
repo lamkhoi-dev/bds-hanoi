@@ -23,7 +23,7 @@ import { PROPERTY_TYPES, propertyTypeBySlug } from '@/lib/seo/taxonomy';
 import { parseListingPath } from '@/lib/seo/route';
 import type { ListingRoute } from '@/lib/seo/route';
 import { parseListingQuery, buildListingUrl, totalPages, listingPath, LISTING_PAGE_SIZE } from '@/lib/seo/canonical';
-import { decideIndexability, applyMode, getSeoMode } from '@/lib/seo/indexability';
+import { decideIndexability, applyMode, getSeoMode, isPaginationEnforced } from '@/lib/seo/indexability';
 import { getRouteFacts } from '@/lib/seo/facts';
 import { siteLayout } from '@/lib/site-layout';
 import WardJumpSelects, { type WardSelectGroup } from '@/components/WardJumpSelects';
@@ -101,9 +101,12 @@ async function resolveListingPage(
   // Bảng tĩnh trong next.config.mjs lo được /{loại} và /{loại}/{khu-vực}. Riêng dạng
   // một đoạn /{khu-vực} thì phải biết đoạn đó CÓ PHẢI khu vực không — cần tra CSDL,
   // nên xử lý ở đây.
+  // `redirectLegacyShape` VẪN theo `mode` — đây là chốt giữ dạng URL landing không dời.
+  // Riêng nhóm phân trang được thi hành thật qua cờ độc lập (xem isPaginationEnforced).
   const decision = applyMode(
     decideIndexability({ parse, query, facts, redirectLegacyShape: mode === 'enforce' }),
     mode,
+    { enforcePagination: isPaginationEnforced() },
   );
 
   return { parse, query, dict, route: parse.route, facts, data, decision };
@@ -147,6 +150,8 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
 
   // Thi hành quyết định. Ở chế độ report (mặc định), applyMode đã hạ notFound/redirect
   // xuống noindex nên hai nhánh dưới không chạy — deploy an toàn, quan sát log trước.
+  // NGOẠI LỆ: khi NEXT_PUBLIC_SEO_ENFORCE_PAGINATION=1 thì hai reason phân trang
+  // (`page-out-of-range`, `page-malformed`) đi thẳng xuống `notFound()` để trả 404 thật.
   if (decision.action === 'notFound') notFound();
   if (decision.action === 'redirect') permanentRedirect(decision.to);
   if (!route) notFound();

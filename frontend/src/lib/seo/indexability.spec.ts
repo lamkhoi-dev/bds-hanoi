@@ -42,10 +42,21 @@ describe('Bảng luật indexability', () => {
     expect(decide(['dat-nen'], { page: '1' })).toMatchObject({ action: 'redirect', to: '/dat-nen' });
   });
 
-  it('luật 5 — page sai định dạng thì 301 (hết cảnh "Trang NaN")', () => {
+  it('luật 4b — page sai định dạng thì 404, KHÔNG 301', () => {
+    // Khách yêu cầu 19-8 mục 6: page = 0 / âm / không phải số nguyên là trang không
+    // tồn tại nên phải 404. Trước đây luật 5 bắt trước nên các ca này ra 301.
     for (const bad of ['abc', '0', '-3', '1.5', '01']) {
-      expect(decide(['dat-nen'], { page: bad })).toMatchObject({ action: 'redirect' });
+      expect(decide(['dat-nen'], { page: bad })).toMatchObject({
+        action: 'notFound',
+        reason: 'page-malformed',
+      });
     }
+  });
+
+  it('luật 4b không được cướp ca ?page=1 của luật 5', () => {
+    // Hai ca dùng CÙNG cờ hasNonCanonicalQuery nhưng phải ra hai kết quả khác nhau.
+    expect(decide(['dat-nen'], { page: '1' })).toMatchObject({ action: 'redirect' });
+    expect(decide(['dat-nen'], { page: '2' })).toMatchObject({ action: 'index' });
   });
 
   it('luật 5 — tham số lạ bị loại khỏi URL chuẩn', () => {
@@ -116,5 +127,37 @@ describe('Chế độ report-only', () => {
 
   it('chế độ enforce giữ nguyên quyết định', () => {
     expect(applyMode({ action: 'notFound', reason: 'x' }, 'enforce')).toMatchObject({ action: 'notFound' });
+  });
+
+  it('cờ enforcePagination thi hành 404 phân trang ngay trong chế độ report', () => {
+    const opts = { enforcePagination: true };
+    for (const reason of ['page-out-of-range', 'page-malformed']) {
+      expect(applyMode({ action: 'notFound', reason }, 'report', opts)).toEqual({
+        action: 'notFound',
+        reason,
+      });
+    }
+  });
+
+  it('cờ enforcePagination KHÔNG mở cho reason ngoài nhóm phân trang', () => {
+    // Chốt phạm vi: `non-canonical-query` bao cả ?utm_*/?limit= và `legacy-shape` là
+    // dời URL landing — khách không yêu cầu, bật lên là dời ~4.000 URL có thứ hạng.
+    const opts = { enforcePagination: true };
+    for (const reason of ['non-canonical-query', 'legacy-shape', 'unknown-location']) {
+      expect(applyMode({ action: 'redirect', to: '/a', reason }, 'report', opts)).toMatchObject({
+        action: 'noindex',
+        reason: `report-only:${reason}`,
+      });
+    }
+    expect(applyMode({ action: 'notFound', reason: 'unknown-location' }, 'report', opts)).toMatchObject({
+      action: 'noindex',
+    });
+  });
+
+  it('không có cờ thì nhóm phân trang vẫn bị hạ cấp như cũ', () => {
+    expect(applyMode({ action: 'notFound', reason: 'page-malformed' }, 'report')).toMatchObject({
+      action: 'noindex',
+      reason: 'report-only:page-malformed',
+    });
   });
 });

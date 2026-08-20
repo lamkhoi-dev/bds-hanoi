@@ -17,6 +17,17 @@ describe('parseListingQuery', () => {
     }
   });
 
+  it('pageInvalid chỉ bật cho page sai định dạng, không bật cho ?page=1', () => {
+    // Hai cờ phải tách nhau: ?page=1 -> 301, page sai định dạng -> 404.
+    for (const bad of ['abc', '0', '-3', '1.5', '01', '']) {
+      expect(parseListingQuery({ page: bad }).pageInvalid).toBe(true);
+    }
+    expect(parseListingQuery({ page: '1' }).pageInvalid).toBe(false);
+    expect(parseListingQuery({ page: '7' }).pageInvalid).toBe(false);
+    expect(parseListingQuery({}).pageInvalid).toBe(false);
+    expect(parseListingQuery({ limit: '50' }).pageInvalid).toBe(false);
+  });
+
   it('nhận các tham số lọc trong danh sách trắng', () => {
     const parsed = parseListingQuery({ priceRangeKey: '2B_3B', direction: 'dong-nam' });
     expect(parsed.hasFilters).toBe(true);

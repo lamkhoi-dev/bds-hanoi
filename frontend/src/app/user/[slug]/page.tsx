@@ -178,7 +178,11 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <Link 
                     key={i} 
-                    href={`/${resolvedParams.slug}?page=${i + 1}`}
+                    // Thiếu tiền tố `/user/` nên mọi nút phân trang trước giờ trỏ ra
+                    // route danh mục `/{slug}` (404). Và trang 1 không mang `?page=1`
+                    // nữa vì URL đó đã bị 301 ở `proxy.ts` — link nội bộ trỏ vào 301
+                    // làm mỗi lượt thu thập tốn thêm một chặng.
+                    href={i === 0 ? `/user/${resolvedParams.slug}` : `/user/${resolvedParams.slug}?page=${i + 1}`}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-colors ${page === i + 1 ? 'bg-primary text-white shadow-md' : 'bg-white text-textSecondary hover:bg-gray-100 border border-borderLight'}`}
                   >
                     {i + 1}

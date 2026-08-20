@@ -135,7 +135,10 @@ export default async function SearchPage({
 
   const buildPageUrl = (newPage: number) => {
     const params = new URLSearchParams(flatSearchParams);
-    params.set('page', newPage.toString());
+    // Trang 1 không mang `?page=1`: URL đó đã bị 301 ở `proxy.ts` nên nút "Trang trước"
+    // từ trang 2 sẽ trỏ vào một redirect nếu vẫn ghi tham số.
+    if (newPage > 1) params.set('page', newPage.toString());
+    else params.delete('page');
     return `/search?${params.toString()}`;
   };
 

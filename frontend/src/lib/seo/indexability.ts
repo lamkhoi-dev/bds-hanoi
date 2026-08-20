@@ -82,7 +82,16 @@ export function decideIndexability(input: DecideInput): IndexDecision {
     };
   }
 
-  // 5. Query không chuẩn: page=1, page sai định dạng, khoá lạ, limit=...
+  // 4b. `page` sai định dạng ("0", "-1", "abc", "1.5", "01") -> trang KHÔNG TỒN TẠI nên
+  //     404, không phải 301 về bản gốc. Phải đứng TRƯỚC luật 5, vì các giá trị này cũng
+  //     bật `hasNonCanonicalQuery` và sẽ bị luật 5 bắt trước thành 301.
+  //     Khách yêu cầu 19-8 (mục 6): "mọi giá trị trang vượt tổng số trang, bằng 0, số âm,
+  //     không phải số nguyên hoặc không hợp lệ phải trả HTTP 404".
+  if (query.pageInvalid) {
+    return { action: 'notFound', reason: 'page-malformed' };
+  }
+
+  // 5. Query không chuẩn: page=1, khoá lạ, limit=...
   if (query.hasNonCanonicalQuery) {
     const base = input.redirectLegacyShape ? route.canonicalPath : route.currentPath;
     return {
@@ -136,13 +145,45 @@ export function getSeoMode(): SeoMode {
 }
 
 /**
+ * Các `reason` thuộc nhóm PHÂN TRANG — được thi hành thật ngay cả khi
+ * `NEXT_PUBLIC_SEO_MODE` vẫn là `report`, miễn `NEXT_PUBLIC_SEO_ENFORCE_PAGINATION=1`.
+ *
+ * Vì sao phải tách: bật `NEXT_PUBLIC_SEO_MODE=enforce` đồng thời kích hoạt bảng 301 tĩnh
+ * đổi dạng URL landing (`next.config.mjs`) và `listingPath()` thêm tiền tố `/ban` — tức
+ * dời ~4.000 URL đang có thứ hạng của nhadatxunghe.vn. Khách chỉ yêu cầu sửa PHÂN TRANG
+ * (19-8, mục 6), không yêu cầu dời URL landing.
+ *
+ * CỐ TÌNH không đưa `non-canonical-query` vào đây: reason đó bao cả `?utm_*`, `?limit=`
+ * — khách không đề cập, và 301 hàng loạt URL có UTM là vượt phạm vi. Riêng `?page=1` (cũng
+ * mang reason này) được 301 ở tầng middleware `proxy.ts`, không qua đường này.
+ */
+const PAGINATION_REASONS = ['page-out-of-range', 'page-malformed'] as const;
+
+export function isPaginationEnforced(): boolean {
+  return process.env.NEXT_PUBLIC_SEO_ENFORCE_PAGINATION === '1';
+}
+
+/**
  * Ở chế độ `report`, tính đủ quyết định nhưng CHỈ áp noindex — chưa 404, chưa 301.
  *
  * Đây là chốt giảm rủi ro của cả phase: deploy, quan sát log một tuần, đối chiếu
  * Search Console, rồi mới đặt NEXT_PUBLIC_SEO_MODE=enforce.
+ *
+ * `opts.enforcePagination` là cửa hẹp mở riêng cho nhóm phân trang (xem
+ * PAGINATION_REASONS) — cho phép thi hành 404 phân trang mà KHÔNG dời URL landing.
  */
-export function applyMode(decision: IndexDecision, mode: SeoMode): IndexDecision {
+export function applyMode(
+  decision: IndexDecision,
+  mode: SeoMode,
+  opts?: { enforcePagination?: boolean },
+): IndexDecision {
   if (mode === 'enforce') return decision;
+
+  const isPaginationDecision =
+    (decision.action === 'notFound' || decision.action === 'redirect') &&
+    (PAGINATION_REASONS as readonly string[]).includes(decision.reason);
+  if (opts?.enforcePagination && isPaginationDecision) return decision;
+
   if (decision.action === 'notFound') {
     return { action: 'noindex', reason: `report-only:${decision.reason}` };
   }

@@ -34,6 +34,14 @@ export interface ParsedListingQuery {
   hasFilters: boolean;
   /** Query cần 301 về dạng chuẩn (page=1, page sai định dạng, khoá lạ, limit=...). */
   hasNonCanonicalQuery: boolean;
+  /**
+   * `page` có mặt nhưng KHÔNG phải số nguyên dương viết chuẩn ("0", "-1", "abc", "1.5",
+   * "01", rỗng). Tách riêng khỏi `hasNonCanonicalQuery` vì hai ca cần hai kết quả khác
+   * nhau: `?page=1` là URL trùng bản gốc nên **301**, còn page sai định dạng là trang
+   * không tồn tại nên **404** (khách yêu cầu 19-8, mục 6). `page` vẫn giữ giá trị 1 để
+   * trang còn render được nếu chế độ hiện hành chưa thi hành 404.
+   */
+  pageInvalid: boolean;
 }
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
@@ -49,6 +57,7 @@ export function parseListingQuery(searchParams: RawSearchParams): ParsedListingQ
 
   const rawPage = first(searchParams.page);
   let page = 1;
+  let pageInvalid = false;
   if (rawPage !== undefined) {
     // Chỉ chấp nhận số nguyên dương viết chuẩn. "01", "1.0", "abc", "-3" đều không chuẩn.
     if (/^[1-9][0-9]*$/.test(rawPage)) {
@@ -57,6 +66,7 @@ export function parseListingQuery(searchParams: RawSearchParams): ParsedListingQ
       if (page === 1) hasNonCanonicalQuery = true;
     } else {
       hasNonCanonicalQuery = true;
+      pageInvalid = true;
     }
   }
 
@@ -78,6 +88,7 @@ export function parseListingQuery(searchParams: RawSearchParams): ParsedListingQ
     filters,
     hasFilters: Object.keys(filters).length > 0,
     hasNonCanonicalQuery,
+    pageInvalid,
   };
 }
 
