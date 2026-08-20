@@ -272,3 +272,56 @@ Env đã thêm trên cả 2 VPS (`.env` cũ backup thành `.env.bak.20260820`):
   featured cho các phường/xã cũ cần khoe; ngoài ra chỉ 26/40 tin có `oldWardId`.
 - `?utm_*` và `?limit=` vẫn 200 + noindex như cũ (reason `non-canonical-query` cố ý không
   được mở). Khách chưa đề cập.
+
+---
+
+## Bổ sung 2026-08-20 (sau khi anh chốt 3 quyết định)
+
+### 1. Sửa bug khối "Chung cư" lẫn tin cho thuê — commit `b5905aa`
+
+6 truy vấn khối theo loại BĐS của bố cục `classic` (4 khối `cat-*` + 2 tab "Bất động sản
+khác") thêm `transactionType: 'BAN'`. Kiểm chứng trên site thật sau deploy:
+
+| Khối | Trước | Sau |
+|---|---|---|
+| `cat-CHUNG_CU` | 3 BAN + **1 CHO_THUE** | **4 BAN** |
+| `cat-DAT_NEN` / `cat-NHA_RIENG` | 4 BAN | 4 BAN |
+| `other-type-tabs` | không lọc | MAT_BANG 1 BAN, BDS_KHAC 4 BAN |
+| `rent-type-tabs` | CHO_THUE | CHO_THUE (không đổi) |
+
+Test mới `homepage-category-transaction.spec.ts` khoá **bất biến** ("không truy vấn nào
+lọc `propertyType` mà bỏ `transactionType`") thay vì khoá danh sách khối — khối thêm sau
+này quên lọc cũng bị bắt. Đã xác nhận test đỏ thật khi bỏ 1 filter (3/3 fail).
+
+### 2. Bật `SEO_MODE=enforce` cho Hà Nội
+
+Làm TRƯỚC go-live vì lúc này site còn `robots.txt: Disallow: /`, đổi dạng URL không mất gì.
+`.env` Hà Nội: `SEO_MODE=report` → `enforce`, rebuild **cả frontend và backend** (frontend
+vì `NEXT_PUBLIC_SEO_MODE` là build arg; backend vì `seo-urls.ts` đọc `SEO_MODE` runtime để
+dựng sitemap — thiếu bước này thì sitemap khai dạng URL cũ mà site đã 301 đi).
+
+| URL | Kết quả |
+|---|---|
+| `/ban/dat-nen`, `/ban/dat-nen/cau-giay`, `/cho-thue/chung-cu` | 200 |
+| `/dat-nen`, `/dat-nen/cau-giay` | **301** → dạng `/ban/...` |
+| `/tat-ca` | **301** → `/ban` |
+| `/cau-giay` (khu vực 1 đoạn) | **308** → `/ban/cau-giay` |
+| `/ban/dat-nen?page=1` | **301** → `/ban/dat-nen` |
+| `/ban/dat-nen?page=0` | **404** |
+
+- Sitemap: 83/83 URL landing đã mang tiền tố `/ban` hoặc `/cho-thue`, **0** URL dạng cũ.
+- Link nội bộ trang chủ: `href="/dat-nen"` = **0**, `href="/ban/dat-nen"` = 6 ⇒ không có
+  link nội bộ nào trỏ vào 301.
+- 2 dropdown lọc xã trên `/ban/cau-giay` vẫn chạy, option sinh URL dạng mới.
+- **Nghệ An không đổi**: `/dat-nen`, `/dat-nen/vinh`, `/thanh-pho-vinh` vẫn 200.
+
+⚠️ Điểm lệch đã biết, cố ý không sửa: khu vực **1 đoạn** (`/cau-giay`) trả **308** chứ
+không 301, vì phải tra CSDL mới biết đoạn đó là khu vực nên không đặt được vào bảng tĩnh
+`next.config.mjs` lẫn middleware. Google coi 308 tương đương 301 về truyền tín hiệu, nên
+không xử lý thêm.
+
+### 3. Khối "phường, xã cũ" — đã soạn câu hỏi cho khách
+
+`plan/cau-hoi-2026-08-20.txt`: hỏi khách có cần khối này trên trang chủ Nghệ An và nếu
+cần thì liệt kê phường/xã nào; kèm thông báo việc sửa bug ở mục 1 và nhắc lại 8 câu hỏi
+ngày 18-8 (nêu rõ SMTP và DNS là 2 chặn cứng của go-live Hà Nội).
