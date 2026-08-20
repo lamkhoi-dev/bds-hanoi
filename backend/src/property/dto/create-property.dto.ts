@@ -131,6 +131,13 @@ export class CreatePropertyDto {
   @IsString()
   oldWardId?: string;
 
+  // SĐT liên hệ riêng của tin (người đăng nhập thêm nếu muốn dùng số khác số tài khoản).
+  // Form gửi field này từ lâu nhưng DTO chưa khai nên ValidationPipe({whitelist:true})
+  // loại bỏ — khách phản hồi 19-8 mục 20.
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @IsOptional()
   @IsBoolean()
   isNegotiable?: boolean;

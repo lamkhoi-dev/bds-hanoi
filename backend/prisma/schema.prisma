@@ -186,6 +186,13 @@ model Property {
   propertyCode String?        @unique
   isNegotiable Boolean        @default(false)
 
+  /// SĐT liên hệ RIÊNG của tin, người đăng nhập thêm ở form đăng tin khi muốn dùng số
+  /// khác số trong tài khoản. Trước đây form có ô nhập nhưng bảng này không có cột nào để
+  /// lưu (chỉ `Requirement` có), nên giá trị bị loại âm thầm ở `normalizePropertyPayload`
+  /// — khách phản hồi 19-8 (mục 20) vì thế không thấy số hiện trên trang chi tiết.
+  /// Để trống thì trang chi tiết chỉ hiện SĐT của tài khoản như trước.
+  phone        String?
+
   views      Int @default(0)
   likes      Int @default(0)
   callClicks Int @default(0)

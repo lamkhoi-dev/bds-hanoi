@@ -520,8 +520,27 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
     <span className="text-sm text-right text-sm  font-semibold text-textMain">{property.views || 0}</span>
   </div>
 </div>
+              {/* SĐT người đăng nhập thêm ở form đăng tin — khách yêu cầu hiện ngay dưới
+                  lượt xem và nhấn được để gọi (19-8, mục 20). Chỉ hiện khi tin có số
+                  riêng; tin không nhập thì khối này ẩn, SĐT tài khoản vẫn ở nút gọi như cũ. */}
+              {property.phone && (
+                <div className="flex items-center gap-3 py-2.5 border-b border-gray-200/60 last:border-0">
+                  <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 text-gray-500 shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                  </div>
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <span className="text-sm text-gray-500 font-medium">Liên hệ</span>
+                    <a
+                      href={`tel:${String(property.phone).replace(/\s/g, '')}`}
+                      className="text-sm text-right font-semibold text-primary hover:underline"
+                    >
+                      {property.phone}
+                    </a>
+                  </div>
+                </div>
+              )}
               </div>
-              
+
             {/* Mobile Author Info */}
             <div className="flex items-center gap-4 mb-6 lg:hidden bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
               <Link href={`/user/${generateSlug(property.user?.name || 'user')}-${property.user?.id || ''}`} className="flex items-center gap-3 w-full">

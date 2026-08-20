@@ -289,6 +289,9 @@ export function normalizePropertyPayload(data: Record<string, any>): Record<stri
     'districtId',
     'wardId',
     'oldWardId',
+    // SĐT riêng của tin. Form đăng tin gửi field này từ lâu nhưng nó chưa từng nằm trong
+    // danh sách cho phép nên bị loại âm thầm (khách phản hồi 19-8 mục 20).
+    'phone',
     'isNegotiable',
     'bedrooms',
     'bathrooms',
