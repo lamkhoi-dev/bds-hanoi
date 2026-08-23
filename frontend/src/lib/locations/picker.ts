@@ -11,7 +11,7 @@
 export interface DistrictNode {
   id: string;
   name: string;
-  parent?: { id: string; name: string } | null;
+  parent?: { id: string; name: string; shortName?: string | null } | null;
   children?: { id: string; name: string; type: string }[];
 }
 
@@ -29,10 +29,23 @@ export interface DistrictNode {
 export function provincesOf(locations: DistrictNode[]): string[] {
   const names: string[] = [];
   for (const d of locations ?? []) {
-    const name = d?.parent?.name;
+    const name = provinceLabel(d);
     if (name && !names.includes(name)) names.push(name);
   }
   return names;
+}
+
+/**
+ * Tên tỉnh dùng để HIỂN THỊ và LƯU vào cột `city`. Ưu tiên `shortName`.
+ *
+ * Hà Nội có `name` = "Thành phố Hà Nội" nhưng mọi tin đang lưu `city` = "Hà Nội" (đúng
+ * `shortName`). Lấy `name` thì tin mới lệch tin cũ. Nghệ An/Hà Tĩnh có name == shortName
+ * nên không đổi gì.
+ */
+export function provinceLabel(district: DistrictNode | undefined | null): string | null {
+  const parent = district?.parent;
+  if (!parent) return null;
+  return parent.shortName || parent.name || null;
 }
 
 /** Tỉnh CHA của khu vực đang chọn, tra theo tên. `null` khi chưa chọn hoặc không tìm thấy. */
@@ -41,7 +54,7 @@ export function provinceOfDistrict(
   districtName: string,
 ): string | null {
   if (!districtName) return null;
-  return (locations ?? []).find((d) => d.name === districtName)?.parent?.name ?? null;
+  return provinceLabel((locations ?? []).find((d) => d.name === districtName));
 }
 
 /**

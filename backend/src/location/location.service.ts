@@ -245,7 +245,12 @@ export class LocationService {
         // giữ menu phẳng, nên cùng một build phục vụ được cả hai site.
         group: district.group,
         groupOrder: district.groupOrder,
-        parent: { id: province.id, name: province.name },
+        // `shortName` để giao diện hiển thị/lưu đúng tên tỉnh mà dữ liệu đang dùng:
+        // Hà Nội có `name` = "Thành phố Hà Nội" nhưng 18 tin đang lưu `city` = "Hà Nội".
+        // Thiếu field này thì ô chọn tỉnh (dựng từ chính payload) sẽ ghi tên dài và làm
+        // lệch cột `city` giữa tin cũ và tin mới. Nghệ An/Hà Tĩnh có name == shortName nên
+        // không đổi gì.
+        parent: { id: province.id, name: province.name, shortName: province.shortName },
         children: (snap.childrenOf.get(district.id) ?? []).map((child) => ({
           id: child.id,
           name: child.name,

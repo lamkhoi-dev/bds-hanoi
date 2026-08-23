@@ -1,12 +1,12 @@
-import { provincesOf, provinceOfDistrict, districtHasWards } from './picker';
+import { provincesOf, provinceOfDistrict, districtHasWards, provinceLabel } from './picker';
 import type { DistrictNode } from './picker';
 
 /**
  * Dựng đúng hình dạng `GET /locations` trả về trên site thật ngày 23/08: mảng phẳng gồm
  * quận/huyện của CẢ HAI tỉnh, Nghệ An có phường/xã con còn Hà Tĩnh **không có dòng nào**.
  */
-const NGHE_AN = { id: 'p-na', name: 'Nghệ An' };
-const HA_TINH = { id: 'p-ht', name: 'Hà Tĩnh' };
+const NGHE_AN = { id: 'p-na', name: 'Nghệ An', shortName: 'Nghệ An' };
+const HA_TINH = { id: 'p-ht', name: 'Hà Tĩnh', shortName: 'Hà Tĩnh' };
 
 const LOCATIONS: DistrictNode[] = [
   {
@@ -50,6 +50,27 @@ describe('provincesOf', () => {
     expect(provincesOf([])).toEqual([]);
     expect(provincesOf([{ id: 'x', name: 'Lạc' } as DistrictNode])).toEqual([]);
     expect(provincesOf(undefined as any)).toEqual([]);
+  });
+});
+
+describe('provinceLabel', () => {
+  it('ưu tiên shortName — giữ cột `city` không lệch giữa tin cũ và tin mới', () => {
+    // Hà Nội: name = "Thành phố Hà Nội" nhưng 18 tin đang lưu city = "Hà Nội".
+    const hanoi = {
+      id: 'd-cg',
+      name: 'Quận Cầu Giấy',
+      parent: { id: 'p-hn', name: 'Thành phố Hà Nội', shortName: 'Hà Nội' },
+    };
+    expect(provinceLabel(hanoi)).toBe('Hà Nội');
+  });
+
+  it('không có shortName thì lùi về name', () => {
+    expect(provinceLabel({ id: 'x', name: 'X', parent: { id: 'p', name: 'Tỉnh X' } })).toBe('Tỉnh X');
+  });
+
+  it('không có parent thì null', () => {
+    expect(provinceLabel({ id: 'x', name: 'X' })).toBeNull();
+    expect(provinceLabel(undefined)).toBeNull();
   });
 });
 

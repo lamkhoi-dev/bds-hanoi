@@ -25,8 +25,8 @@ interface LocationPickerProps {
  * Re-export để mọi nơi vẫn `import { districtHasWards } from '@/components/LocationPicker'`
  * như cũ — cùng khuôn với `lib/locations/group.ts`.
  */
-export { provincesOf, provinceOfDistrict, districtHasWards } from '@/lib/locations/picker';
-import { provincesOf, provinceOfDistrict } from '@/lib/locations/picker';
+export { provincesOf, provinceOfDistrict, districtHasWards, provinceLabel } from '@/lib/locations/picker';
+import { provincesOf, provinceOfDistrict, provinceLabel } from '@/lib/locations/picker';
 
 /** Suy `provinceId/districtId/wardId/oldWardId` từ tên đã chọn — dùng khi gửi payload
  *  lên backend.
@@ -81,7 +81,7 @@ export default function LocationPicker({ locations, value, onChange, disabled, r
    * dùng thật sự đổi. `provinceId` trong payload vốn suy từ `district.parentId` nên vẫn đúng.
    */
   const effectiveCity = provinceOfDistrict(locations, value.district) ?? value.city ?? PROVINCE_NAME;
-  const districtOptions = locations.filter((d: any) => (d?.parent?.name ?? '') === effectiveCity);
+  const districtOptions = locations.filter((d: any) => provinceLabel(d) === effectiveCity);
 
   // Hà Tĩnh hiện có 13 huyện nhưng 0 phường/xã. Bắt buộc một ô rỗng = chặn cứng đường đăng tin.
   const hasWards = currentWards.length > 0;
