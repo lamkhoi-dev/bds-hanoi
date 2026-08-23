@@ -25,6 +25,9 @@ function makeService(layout: 'classic' | 'grouped') {
       count: jest.fn().mockResolvedValue(0),
     },
     location: { findMany: jest.fn().mockResolvedValue([]) },
+    // Bảng "khu vực hot" (bố cục grouped) — thiếu mock này thì nhánh Hà Nội nổ ở
+    // buildHotAreasBlock trước khi chạy tới thứ test này quan tâm.
+    hotArea: { findMany: jest.fn().mockResolvedValue([]) },
     project: { findMany: jest.fn().mockResolvedValue([]), count: jest.fn().mockResolvedValue(0) },
     user: { count: jest.fn().mockResolvedValue(0) },
   };

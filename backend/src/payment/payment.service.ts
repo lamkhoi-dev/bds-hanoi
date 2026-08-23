@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus, UnauthorizedException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CryptoService } from '../shared/crypto.service';
+import { matchesPrefix, parseDepositToken } from './deposit-prefix';
 
 @Injectable()
 export class PaymentService {
@@ -170,8 +171,19 @@ export class PaymentService {
     });
 
     // 4. Parse content to find User ID
-    const match = contentText.match(/NAP\s*([a-zA-Z0-9]+)/i);
-    if (!match) {
+    //
+    // Hai ca phải phân biệt, không gộp thành "sai cú pháp":
+    //  - Đúng cú pháp nhưng tiền tố của SITE KHÁC (2 site dùng chung tài khoản ngân hàng,
+    //    xem deposit-prefix.ts): bỏ qua IM LẶNG, không ghi FAILED — với site này nó không
+    //    phải sự cố, và ghi FAILED sẽ làm nhật ký đầy báo động giả.
+    //  - Sai cú pháp thật: vẫn ghi FAILED như cũ để còn truy được.
+    if (!matchesPrefix(contentText)) {
+      this.logger.log(`Bỏ qua giao dịch của site khác reference=${referenceId}`);
+      return { success: true, message: 'Không thuộc site này, bỏ qua' };
+    }
+
+    const parsed = parseDepositToken(contentText);
+    if (!parsed) {
       this.logger.warn(`SePay webhook missing NAP syntax reference=${referenceId}`);
       await this.saveWebhookLog({
         referenceId,
@@ -182,7 +194,7 @@ export class PaymentService {
       return { success: true, message: 'Sai cú pháp, bỏ qua' };
     }
 
-    const parsedUserId = match[1];
+    const parsedUserId = parsed.token;
     const restoredUserId = this.restoreUuidFromBankToken(parsedUserId);
 
     const targetUser = await this.prisma.user.findFirst({

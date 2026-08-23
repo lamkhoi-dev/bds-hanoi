@@ -154,6 +154,9 @@ services:
       # (không tiền tố NEXT_PUBLIC_) nên chỉ cần 1 image cho cả 2 site — xem
       # backend/src/property/homepage-layout.ts.
       SITE_LAYOUT: ${SITE_LAYOUT:-classic}
+      # Tiền tố nội dung nạp tiền khi 2 site dùng chung tài khoản ngân hàng (khách 21/08).
+      # Để TRỐNG = hành vi cũ. Đọc cảnh báo ở .env.prod.example trước khi đặt giá trị.
+      DEPOSIT_PREFIX: ${DEPOSIT_PREFIX:-}
       # Backend dựng URL sitemap phải khớp dạng URL frontend đang phục vụ.
       SEO_MODE: ${SEO_MODE:-report}
       # Mặc định TẮT — xem chú thích trong backend/start.sh. Bật đúng một lần cho

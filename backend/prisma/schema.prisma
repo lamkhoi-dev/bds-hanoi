@@ -101,7 +101,7 @@ model User {
 }
 
 model Property {
-  id              String    @id @default(uuid())
+  id String @id @default(uuid())
 
   /// Mã ngắn dùng trong URL: `/tin/{slug}-{shortCode}`, thay cho UUID 36 ký tự.
   /// Sinh từ sequence `property_short_code_seq` (base36) nên duy nhất tuyệt đối và
@@ -159,8 +159,8 @@ model Property {
   locationId String?
   location   Location? @relation("PropertyLocation", fields: [locationId], references: [id], onDelete: SetNull)
 
-  lat Float?
-  lng Float?
+  lat             Float?
+  lng             Float?
   isExactLocation Boolean @default(true)
 
   // Property details
@@ -191,7 +191,7 @@ model Property {
   /// lưu (chỉ `Requirement` có), nên giá trị bị loại âm thầm ở `normalizePropertyPayload`
   /// — khách phản hồi 19-8 (mục 20) vì thế không thấy số hiện trên trang chi tiết.
   /// Để trống thì trang chi tiết chỉ hiện SĐT của tài khoản như trước.
-  phone        String?
+  phone String?
 
   views      Int @default(0)
   likes      Int @default(0)
@@ -199,17 +199,17 @@ model Property {
   zaloClicks Int @default(0)
 
   // Timestamps
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   // updatedAt là @updatedAt nên MỌI thao tác ghi đều đẩy nó — kể cả cron gia hạn VIP.
   // contentUpdatedAt chỉ được set khi nội dung/trạng thái hiển thị thực sự đổi, và là
   // nguồn <lastmod> của sitemap. Google yêu cầu lastmod phản ánh thay đổi nội dung thật.
   contentUpdatedAt DateTime?
-  publishedAt   DateTime?
-  tierExpiresAt DateTime? // When VIP/UP expires
-  frozenTierMs          Float? // Amount of ms frozen when property is PENDING
-  deletedAt     DateTime?
-  pushedAt      DateTime?
+  publishedAt      DateTime?
+  tierExpiresAt    DateTime? // When VIP/UP expires
+  frozenTierMs     Float? // Amount of ms frozen when property is PENDING
+  deletedAt        DateTime?
+  pushedAt         DateTime?
 
   userId       String
   user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -351,8 +351,8 @@ model Project {
 
   properties Property[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
   /// Mốc cho sitemap. KHÔNG dùng `updatedAt` — nó bump theo mọi thay đổi kể cả không
   /// ảnh hưởng nội dung hiển thị, đúng lỗi `lastmod` đã sửa cho Property.
   contentUpdatedAt DateTime?
@@ -714,15 +714,45 @@ model ViewedProperty {
 }
 
 model News {
-  id        String   @id @default(uuid())
-  title     String
-  content   String   @db.Text
-  thumbnail String?
-  slug      String   @unique
+  id            String   @id @default(uuid())
+  title         String
+  content       String   @db.Text
+  thumbnail     String?
+  slug          String   @unique
   // Slug cũ sau khi đổi tiêu đề, giữ lại để 301 URL đã được Google index.
   previousSlugs String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+/// "Khu vực hot" của trang chủ Hà Nội (Bảng 4 tài liệu khách, 31 tên).
+///
+/// KHÔNG phải đơn vị hành chính và KHÔNG phải `Project` — khách trả lời rõ ngày 21/08:
+/// "các khu vực này nó không thuộc quận huyện hay phường xã nào cả mà tin đăng trong khu
+/// vực hot này được lấy đúng tin có từ khóa như tên khu vực... bắt buộc đúng 100%".
+///
+/// Vì vậy nó là một bảng RIÊNG chứ không nhét vào `Location`: nhét vào thì cây địa giới có
+/// những dòng không có cha, và trang `/khu-vuc` (liệt kê theo quận) sẽ hiện lẫn "Royal
+/// City" giữa danh sách phường xã.
+model HotArea {
+  id String @id @default(uuid())
+
+  /// Đúng cụm từ đem đi so khớp trong tiêu đề/mô tả tin. Giữ nguyên chữ hoa/thường và dấu
+  /// như khách gửi — so khớp không phân biệt hoa thường nên không cần chuẩn hoá.
+  name String @unique
+
+  /// Đường dẫn tab trỏ tới trang tìm kiếm theo từ khoá này.
+  slug String @unique
+
+  /// Thứ tự khách liệt kê trong Bảng 4. Trang chủ chỉ lấy N mục đầu.
+  sortOrder Int @default(0)
+
+  isActive Boolean @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([createdAt])
+  @@index([isActive, sortOrder])
 }

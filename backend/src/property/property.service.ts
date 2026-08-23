@@ -736,6 +736,70 @@ export class PropertyService {
   }
 
   /**
+   * Khối "Khu vực hot" (Bảng 4 tài liệu khách, chỉ bố cục `grouped`).
+   *
+   * Khớp TỪ KHOÁ, không phải địa giới. Khách chốt 21/08: "tin đăng trong khu vực hot này
+   * được lấy đúng tin có từ khóa như tên khu vực (lấy đúng nghĩa là trong tin có chứa cụm
+   * từ giống hệt với tên khu vực hot, KHÔNG lấy mở rộng, không lấy tin chỉ trùng 1 hoặc
+   * nhiều từ khóa mà bắt buộc đúng 100%)".
+   *
+   * Vì vậy dùng `contains` trên chuỗi thô — CỐ Ý không dùng Meilisearch: nó tách từ và khớp
+   * mờ, nên "Vinhomes Ocean Park" sẽ lọt vào tab "Vinhomes Smart City", đúng thứ khách cấm.
+   * `mode: 'insensitive'` chỉ bỏ phân biệt hoa/thường, không nới nghĩa. Sai chính tả thì bỏ
+   * qua — khách cho phép ("nếu khó thì sai chính tả nhỏ cũng không lấy vào").
+   *
+   * Tab rỗng bị loại giống các khối khu vực: khoe một tab bấm vào không có gì thì tệ hơn là
+   * không có tab.
+   */
+  private async buildHotAreasBlock(limit: number) {
+    const areas = await this.prisma.hotArea.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      take: limit,
+      select: { name: true, slug: true },
+    });
+    if (areas.length === 0) return null;
+
+    const baseWhere = { status: { in: [...this.publicStatuses] }, deletedAt: null };
+    const includeOptions = {
+      user: { select: { id: true, slug: true, name: true, avatar: true } },
+      imageObjects: true,
+    };
+
+    const tabs = await Promise.all(
+      areas.map(async (area) => ({
+        key: area.slug,
+        title: area.name,
+        // Trang đích phải lọc CÙNG một kiểu với tab, nếu không bấm vào lại ra tập khác.
+        // `/search?q=` là chỗ duy nhất hiện có nhận từ khoá tự do.
+        href: `/search?q=${encodeURIComponent(area.name)}`,
+        items: await this.prisma.property.findMany({
+          where: {
+            ...baseWhere,
+            tier: 'NORMAL',
+            OR: [
+              { title: { contains: area.name, mode: 'insensitive' } },
+              { description: { contains: area.name, mode: 'insensitive' } },
+            ],
+          },
+          orderBy: [
+            { status: 'asc' },
+            { publishedAt: { sort: 'desc', nulls: 'last' } },
+            { pushedAt: { sort: 'desc', nulls: 'last' } },
+          ],
+          take: HOMEPAGE_ITEMS_PER_BLOCK,
+          include: includeOptions,
+        } as any),
+      })),
+    );
+
+    const withItems = tabs.filter((t) => t.items.length > 0);
+    if (withItems.length === 0) return null;
+
+    return { id: 'hot-areas' as SectionId, kind: 'tabs' as const, title: 'Khu vực hot', tabs: withItems };
+  }
+
+  /**
    * Danh sách projectId xếp hạng theo tin mới nhất — CÙNG thuật toán với
    * `ProjectService.findLatestForHomepage()`, viết lại tại đây thay vì gọi chéo sang
    * `ProjectModule` để tránh vòng phụ thuộc (`ProjectModule` đã `imports:
@@ -890,12 +954,15 @@ export class PropertyService {
     // Nghệ An (`classic`) không phải trả thêm 5 truy vấn `sale-type-tabs`/`project-tabs`
     // vô ích mỗi lần rebuild cache. `project-grid` ngược lại chỉ `classic` mới dùng.
     const isGrouped = layout === 'grouped';
-    const [projectGridRows, projectTabsRaw, saleItems] = await Promise.all([
+    const [projectGridRows, projectTabsRaw, saleItems, hotAreasBlock] = await Promise.all([
       isGrouped ? Promise.resolve([]) : this.buildProjectGrid(4),
       isGrouped ? this.buildProjectTabsBlock(5, getItems) : Promise.resolve([]),
       isGrouped
         ? Promise.all(SALE_TAB_TYPES.map((type) => getItems({ transactionType: 'BAN', propertyType: type })))
         : Promise.resolve([] as any[]),
+      // Chỉ `grouped` có khối này trong HOMEPAGE_LAYOUTS; chạy bên `classic` là tốn N truy
+      // vấn `contains` cho một khối không bao giờ được lắp vào.
+      isGrouped ? this.buildHotAreasBlock(HOMEPAGE_TABS_PER_BLOCK) : Promise.resolve(null),
     ]);
 
     // ---- Lắp ráp `sections[]` theo đúng thứ tự của layout đang chạy ----
@@ -924,10 +991,9 @@ export class PropertyService {
       districts: () => locationSection('districts'),
       'wards-new': () => locationSection('wards-new'),
       'wards-old': () => locationSection('wards-old'),
-      // Chờ khách trả lời câu A4 (khối "khu vực hot" là Dự án hay thực thể riêng) — xem
-      // plan/cau-hoi-gui-khach-2026-08-18.txt. Đã đăng ký ĐÚNG vị trí thứ 5 trong
-      // HOMEPAGE_LAYOUTS.grouped, khi có câu trả lời chỉ cần viết lại builder này.
-      'hot-areas': () => null,
+      // Khách đã trả lời (21/08): KHÔNG phải Dự án, không thuộc quận/huyện nào — khớp theo
+      // từ khoá trong nội dung tin. Xem buildHotAreasBlock.
+      'hot-areas': () => hotAreasBlock,
       'cat-DAT_NEN': () => ({ id: 'cat-DAT_NEN', kind: 'block', ...blockMeta('DAT_NEN'), items: datNen }),
       'cat-NHA_RIENG': () => ({ id: 'cat-NHA_RIENG', kind: 'block', ...blockMeta('NHA_RIENG'), items: nhaRieng }),
       'cat-CHUNG_CU': () => ({ id: 'cat-CHUNG_CU', kind: 'block', ...blockMeta('CHUNG_CU'), items: chungCu }),

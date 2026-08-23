@@ -83,7 +83,7 @@
           "name": "Trung Hòa",
           "shortName": "Trung Hòa",
           "slug": "trung-hoa",
-          "urlSegment": "trung-hoa",
+          "urlSegment": "trung-hoa-cau-giay",
           "externalRef": "O78"
         },
         {
@@ -305,7 +305,7 @@
           "name": "Nguyễn Trãi",
           "shortName": "Nguyễn Trãi",
           "slug": "nguyen-trai",
-          "urlSegment": "nguyen-trai",
+          "urlSegment": "nguyen-trai-ha-dong",
           "externalRef": "O121"
         },
         {
@@ -340,7 +340,7 @@
           "name": "Quang Trung",
           "shortName": "Quang Trung",
           "slug": "quang-trung",
-          "urlSegment": "quang-trung-cu",
+          "urlSegment": "quang-trung-ha-dong",
           "externalRef": "O126"
         },
         {
@@ -354,7 +354,7 @@
           "name": "Vạn Phúc",
           "shortName": "Vạn Phúc",
           "slug": "van-phuc",
-          "urlSegment": "van-phuc",
+          "urlSegment": "van-phuc-ha-dong",
           "externalRef": "O128"
         },
         {
@@ -576,7 +576,7 @@
           "name": "Hoàng Văn Thụ",
           "shortName": "Hoàng Văn Thụ",
           "slug": "hoang-van-thu",
-          "urlSegment": "hoang-van-thu",
+          "urlSegment": "hoang-van-thu-hoang-mai",
           "externalRef": "O157"
         },
         {
@@ -618,7 +618,7 @@
           "name": "Trần Phú",
           "shortName": "Trần Phú",
           "slug": "tran-phu",
-          "urlSegment": "tran-phu-cu",
+          "urlSegment": "tran-phu-hoang-mai",
           "externalRef": "O163"
         },
         {
@@ -639,7 +639,7 @@
           "name": "Yên Sở",
           "shortName": "Yên Sở",
           "slug": "yen-so",
-          "urlSegment": "yen-so-cu",
+          "urlSegment": "yen-so-hoang-mai",
           "externalRef": "O166"
         }
       ]
@@ -868,7 +868,7 @@
           "name": "Quang Trung",
           "shortName": "Quang Trung",
           "slug": "quang-trung",
-          "urlSegment": "quang-trung",
+          "urlSegment": "quang-trung-dong-da",
           "externalRef": "O45"
         },
         {
@@ -910,7 +910,7 @@
           "name": "Trung Tự",
           "shortName": "Trung Tự",
           "slug": "trung-tu",
-          "urlSegment": "trung-tu",
+          "urlSegment": "trung-tu-dong-da",
           "externalRef": "O51"
         },
         {
@@ -1014,7 +1014,7 @@
           "name": "Minh Khai",
           "shortName": "Minh Khai",
           "slug": "minh-khai",
-          "urlSegment": "minh-khai",
+          "urlSegment": "minh-khai-hai-ba-trung",
           "externalRef": "O61"
         },
         {
@@ -1070,7 +1070,7 @@
           "name": "Đồng Tâm",
           "shortName": "Đồng Tâm",
           "slug": "dong-tam",
-          "urlSegment": "dong-tam",
+          "urlSegment": "dong-tam-hai-ba-trung",
           "externalRef": "O69"
         },
         {
@@ -1250,7 +1250,7 @@
           "name": "Chương Dương",
           "shortName": "Chương Dương",
           "slug": "chuong-duong",
-          "urlSegment": "chuong-duong-cu",
+          "urlSegment": "chuong-duong-hoan-kiem",
           "externalRef": "O1"
         },
         {
@@ -1271,7 +1271,7 @@
           "name": "Đồng Xuân",
           "shortName": "Đồng Xuân",
           "slug": "dong-xuan",
-          "urlSegment": "dong-xuan",
+          "urlSegment": "dong-xuan-hoan-kiem",
           "externalRef": "O4"
         },
         {
@@ -1431,7 +1431,7 @@
           "name": "Đức Giang",
           "shortName": "Đức Giang",
           "slug": "duc-giang",
-          "urlSegment": "duc-giang",
+          "urlSegment": "duc-giang-long-bien",
           "externalRef": "O133"
         },
         {
@@ -1508,7 +1508,7 @@
           "name": "Việt Hưng",
           "shortName": "Việt Hưng",
           "slug": "viet-hung",
-          "urlSegment": "viet-hung-cu",
+          "urlSegment": "viet-hung-long-bien",
           "externalRef": "O144"
         }
       ]
@@ -1591,14 +1591,14 @@
           "name": "Liên Mạc",
           "shortName": "Liên Mạc",
           "slug": "lien-mac",
-          "urlSegment": "lien-mac",
+          "urlSegment": "lien-mac-bac-tu-liem",
           "externalRef": "O105"
         },
         {
           "name": "Minh Khai",
           "shortName": "Minh Khai",
           "slug": "minh-khai",
-          "urlSegment": "minh-khai-cu",
+          "urlSegment": "minh-khai-bac-tu-liem",
           "externalRef": "O106"
         },
         {
@@ -1640,7 +1640,7 @@
           "name": "Xuân Đỉnh",
           "shortName": "Xuân Đỉnh",
           "slug": "xuan-dinh",
-          "urlSegment": "xuan-dinh-cu",
+          "urlSegment": "xuan-dinh-bac-tu-liem",
           "externalRef": "O112"
         },
         {
@@ -1786,7 +1786,7 @@
           "name": "Xã Kim Sơn",
           "shortName": "Kim Sơn",
           "slug": "kim-son",
-          "urlSegment": "kim-son",
+          "urlSegment": "kim-son-gia-lam",
           "externalRef": "O235"
         },
         {
@@ -1807,14 +1807,14 @@
           "name": "Xã Phù Đổng",
           "shortName": "Phù Đổng",
           "slug": "phu-dong",
-          "urlSegment": "phu-dong-gia-lam-cu",
+          "urlSegment": "phu-dong-gia-lam",
           "externalRef": "O238"
         },
         {
           "name": "Xã Phú Sơn",
           "shortName": "Phú Sơn",
           "slug": "phu-son",
-          "urlSegment": "phu-son-cu",
+          "urlSegment": "phu-son-gia-lam",
           "externalRef": "O239"
         },
         {
@@ -1946,7 +1946,7 @@
           "name": "Xã Kim Chung",
           "shortName": "Kim Chung",
           "slug": "kim-chung",
-          "urlSegment": "kim-chung",
+          "urlSegment": "kim-chung-dong-anh",
           "externalRef": "O205"
         },
         {
@@ -1960,7 +1960,7 @@
           "name": "Xã Liên Hà",
           "shortName": "Liên Hà",
           "slug": "lien-ha",
-          "urlSegment": "lien-ha",
+          "urlSegment": "lien-ha-dong-anh",
           "externalRef": "O207"
         },
         {
@@ -2016,7 +2016,7 @@
           "name": "Xã Vân Hà",
           "shortName": "Vân Hà",
           "slug": "van-ha",
-          "urlSegment": "van-ha",
+          "urlSegment": "van-ha-dong-anh",
           "externalRef": "O215"
         },
         {
@@ -2030,7 +2030,7 @@
           "name": "Xã Việt Hùng",
           "shortName": "Việt Hùng",
           "slug": "viet-hung",
-          "urlSegment": "viet-hung-dong-anh-cu",
+          "urlSegment": "viet-hung-dong-anh",
           "externalRef": "O217"
         },
         {
@@ -2155,7 +2155,7 @@
           "name": "Xã Đức Giang",
           "shortName": "Đức Giang",
           "slug": "duc-giang",
-          "urlSegment": "duc-giang-cu",
+          "urlSegment": "duc-giang-hoai-duc",
           "externalRef": "O328"
         },
         {
@@ -2176,7 +2176,7 @@
           "name": "Xã Kim Chung",
           "shortName": "Kim Chung",
           "slug": "kim-chung",
-          "urlSegment": "kim-chung-cu",
+          "urlSegment": "kim-chung-hoai-duc",
           "externalRef": "O331"
         },
         {
@@ -2197,21 +2197,21 @@
           "name": "Xã Minh Khai",
           "shortName": "Minh Khai",
           "slug": "minh-khai",
-          "urlSegment": "minh-khai-hoai-duc-cu",
+          "urlSegment": "minh-khai-hoai-duc",
           "externalRef": "O334"
         },
         {
           "name": "Xã Song Phương",
           "shortName": "Song Phương",
           "slug": "song-phuong",
-          "urlSegment": "song-phuong",
+          "urlSegment": "song-phuong-hoai-duc",
           "externalRef": "O335"
         },
         {
           "name": "Xã Sơn Đồng",
           "shortName": "Sơn Đồng",
           "slug": "son-dong",
-          "urlSegment": "son-dong-cu",
+          "urlSegment": "son-dong-hoai-duc",
           "externalRef": "O336"
         },
         {
@@ -2239,7 +2239,7 @@
           "name": "Xã Yên Sở",
           "shortName": "Yên Sở",
           "slug": "yen-so",
-          "urlSegment": "yen-so-hoai-duc-cu",
+          "urlSegment": "yen-so-hoai-duc",
           "externalRef": "O340"
         }
       ]
@@ -2357,7 +2357,7 @@
           "name": "Xã Tam Hiệp",
           "shortName": "Tam Hiệp",
           "slug": "tam-hiep",
-          "urlSegment": "tam-hiep",
+          "urlSegment": "tam-hiep-thanh-tri",
           "externalRef": "O253"
         },
         {
@@ -2385,7 +2385,7 @@
           "name": "Xã Vạn Phúc",
           "shortName": "Vạn Phúc",
           "slug": "van-phuc",
-          "urlSegment": "van-phuc-cu",
+          "urlSegment": "van-phuc-thanh-tri",
           "externalRef": "O257"
         },
         {
@@ -2475,7 +2475,7 @@
           "name": "Xã Liên Hà",
           "shortName": "Liên Hà",
           "slug": "lien-ha",
-          "urlSegment": "lien-ha-cu",
+          "urlSegment": "lien-ha-dan-phuong",
           "externalRef": "O346"
         },
         {
@@ -2503,7 +2503,7 @@
           "name": "Xã Song Phượng",
           "shortName": "Song Phượng",
           "slug": "song-phuong",
-          "urlSegment": "song-phuong-cu",
+          "urlSegment": "song-phuong-dan-phuong",
           "externalRef": "O350"
         },
         {
@@ -2635,7 +2635,7 @@
           "name": "Xã Liên Mạc",
           "shortName": "Liên Mạc",
           "slug": "lien-mac",
-          "urlSegment": "lien-mac-cu",
+          "urlSegment": "lien-mac-me-linh",
           "externalRef": "O363"
         },
         {
@@ -2670,7 +2670,7 @@
           "name": "Xã Tiền Phong",
           "shortName": "Tiền Phong",
           "slug": "tien-phong",
-          "urlSegment": "tien-phong-me-linh-cu",
+          "urlSegment": "tien-phong-me-linh",
           "externalRef": "O368"
         },
         {
@@ -2955,7 +2955,7 @@
           "name": "Xã Chương Dương",
           "shortName": "Chương Dương",
           "slug": "chuong-duong",
-          "urlSegment": "chuong-duong-thuong-tin-cu",
+          "urlSegment": "chuong-duong-thuong-tin",
           "externalRef": "O261"
         },
         {
@@ -3011,7 +3011,7 @@
           "name": "Xã Lê Lợi",
           "shortName": "Lê Lợi",
           "slug": "le-loi",
-          "urlSegment": "le-loi",
+          "urlSegment": "le-loi-thuong-tin",
           "externalRef": "O269"
         },
         {
@@ -3039,7 +3039,7 @@
           "name": "Xã Nguyễn Trãi",
           "shortName": "Nguyễn Trãi",
           "slug": "nguyen-trai",
-          "urlSegment": "nguyen-trai-cu",
+          "urlSegment": "nguyen-trai-thuong-tin",
           "externalRef": "O273"
         },
         {
@@ -3067,7 +3067,7 @@
           "name": "Xã Tân Minh",
           "shortName": "Tân Minh",
           "slug": "tan-minh",
-          "urlSegment": "tan-minh-cu",
+          "urlSegment": "tan-minh-thuong-tin",
           "externalRef": "O277"
         },
         {
@@ -3095,7 +3095,7 @@
           "name": "Xã Tiền Phong",
           "shortName": "Tiền Phong",
           "slug": "tien-phong",
-          "urlSegment": "tien-phong-cu",
+          "urlSegment": "tien-phong-thuong-tin",
           "externalRef": "O281"
         },
         {
@@ -3137,7 +3137,7 @@
           "name": "Xã Văn Tự",
           "shortName": "Văn Tự",
           "slug": "van-tu",
-          "urlSegment": "van-tu",
+          "urlSegment": "van-tu-thuong-tin",
           "externalRef": "O287"
         },
         {
@@ -3220,7 +3220,7 @@
           "name": "Xã Đông Xuân",
           "shortName": "Đông Xuân",
           "slug": "dong-xuan",
-          "urlSegment": "dong-xuan-cu",
+          "urlSegment": "dong-xuan-soc-son",
           "externalRef": "O519"
         },
         {
@@ -3283,7 +3283,7 @@
           "name": "Xã Phú Cường",
           "shortName": "Phú Cường",
           "slug": "phu-cuong",
-          "urlSegment": "phu-cuong-cu",
+          "urlSegment": "phu-cuong-soc-son",
           "externalRef": "O528"
         },
         {
@@ -3304,7 +3304,7 @@
           "name": "Xã Phú Minh",
           "shortName": "Phú Minh",
           "slug": "phu-minh",
-          "urlSegment": "phu-minh",
+          "urlSegment": "phu-minh-soc-son",
           "externalRef": "O531"
         },
         {
@@ -3318,7 +3318,7 @@
           "name": "Xã Tân Dân",
           "shortName": "Tân Dân",
           "slug": "tan-dan",
-          "urlSegment": "tan-dan",
+          "urlSegment": "tan-dan-soc-son",
           "externalRef": "O533"
         },
         {
@@ -3332,7 +3332,7 @@
           "name": "Xã Tân Minh",
           "shortName": "Tân Minh",
           "slug": "tan-minh",
-          "urlSegment": "tan-minh",
+          "urlSegment": "tan-minh-soc-son",
           "externalRef": "O535"
         },
         {
@@ -3541,7 +3541,7 @@
           "name": "Xã Phùng Xá",
           "shortName": "Phùng Xá",
           "slug": "phung-xa",
-          "urlSegment": "phung-xa-cu",
+          "urlSegment": "phung-xa-thach-that",
           "externalRef": "O558"
         },
         {
@@ -3659,7 +3659,7 @@
           "name": "Xã Đông Xuân",
           "shortName": "Đông Xuân",
           "slug": "dong-xuan",
-          "urlSegment": "dong-xuan-quoc-oai-cu",
+          "urlSegment": "dong-xuan-quoc-oai",
           "externalRef": "O478"
         },
         {
@@ -3673,7 +3673,7 @@
           "name": "Xã Đồng Quang",
           "shortName": "Đồng Quang",
           "slug": "dong-quang",
-          "urlSegment": "dong-quang-cu",
+          "urlSegment": "dong-quang-quoc-oai",
           "externalRef": "O480"
         },
         {
@@ -3896,7 +3896,7 @@
           "name": "Xã Hoàng Văn Thụ",
           "shortName": "Hoàng Văn Thụ",
           "slug": "hoang-van-thu",
-          "urlSegment": "hoang-van-thu-cu",
+          "urlSegment": "hoang-van-thu-chuong-my",
           "externalRef": "O298"
         },
         {
@@ -4029,14 +4029,14 @@
           "name": "Xã Trần Phú",
           "shortName": "Trần Phú",
           "slug": "tran-phu",
-          "urlSegment": "tran-phu-chuong-my-cu",
+          "urlSegment": "tran-phu-chuong-my",
           "externalRef": "O317"
         },
         {
           "name": "Xã Trung Hòa",
           "shortName": "Trung Hòa",
           "slug": "trung-hoa",
-          "urlSegment": "trung-hoa-cu",
+          "urlSegment": "trung-hoa-chuong-my",
           "externalRef": "O318"
         },
         {
@@ -4091,7 +4091,7 @@
           "name": "Lê Lợi",
           "shortName": "Lê Lợi",
           "slug": "le-loi",
-          "urlSegment": "le-loi-cu",
+          "urlSegment": "le-loi-son-tay",
           "externalRef": "O565"
         },
         {
@@ -4112,7 +4112,7 @@
           "name": "Quang Trung",
           "shortName": "Quang Trung",
           "slug": "quang-trung",
-          "urlSegment": "quang-trung-son-tay-cu",
+          "urlSegment": "quang-trung-son-tay",
           "externalRef": "O568"
         },
         {
@@ -4168,14 +4168,14 @@
           "name": "Kim Sơn",
           "shortName": "Kim Sơn",
           "slug": "kim-son",
-          "urlSegment": "kim-son-cu",
+          "urlSegment": "kim-son-son-tay",
           "externalRef": "O576"
         },
         {
           "name": "Sơn Đông",
           "shortName": "Sơn Đông",
           "slug": "son-dong",
-          "urlSegment": "son-dong-son-tay-cu",
+          "urlSegment": "son-dong-son-tay",
           "externalRef": "O577"
         },
         {
@@ -4293,7 +4293,7 @@
           "name": "Xã Tam Hiệp",
           "shortName": "Tam Hiệp",
           "slug": "tam-hiep",
-          "urlSegment": "tam-hiep-cu",
+          "urlSegment": "tam-hiep-phuc-tho",
           "externalRef": "O504"
         },
         {
@@ -4342,7 +4342,7 @@
           "name": "Xã Vân Hà",
           "shortName": "Vân Hà",
           "slug": "van-ha",
-          "urlSegment": "van-ha-cu",
+          "urlSegment": "van-ha-phuc-tho",
           "externalRef": "O511"
         },
         {
@@ -4356,7 +4356,7 @@
           "name": "Xã Vân Phúc",
           "shortName": "Vân Phúc",
           "slug": "van-phuc",
-          "urlSegment": "van-phuc-phuc-tho-cu",
+          "urlSegment": "van-phuc-phuc-tho",
           "externalRef": "O513"
         },
         {
@@ -4370,7 +4370,7 @@
           "name": "Xã Xuân Đình",
           "shortName": "Xuân Đình",
           "slug": "xuan-dinh",
-          "urlSegment": "xuan-dinh-phuc-tho-cu",
+          "urlSegment": "xuan-dinh-phuc-tho",
           "externalRef": "O515"
         }
       ]
@@ -4502,7 +4502,7 @@
           "name": "Xã Đông Quang",
           "shortName": "Đông Quang",
           "slug": "dong-quang",
-          "urlSegment": "dong-quang",
+          "urlSegment": "dong-quang-ba-vi",
           "externalRef": "O175"
         },
         {
@@ -4551,14 +4551,14 @@
           "name": "Xã Phú Cường",
           "shortName": "Phú Cường",
           "slug": "phu-cuong",
-          "urlSegment": "phu-cuong",
+          "urlSegment": "phu-cuong-ba-vi",
           "externalRef": "O182"
         },
         {
           "name": "Xã Phú Đông",
           "shortName": "Phú Đông",
           "slug": "phu-dong",
-          "urlSegment": "phu-dong-cu",
+          "urlSegment": "phu-dong-ba-vi",
           "externalRef": "O183"
         },
         {
@@ -4572,7 +4572,7 @@
           "name": "Xã Phú Sơn",
           "shortName": "Phú Sơn",
           "slug": "phu-son",
-          "urlSegment": "phu-son",
+          "urlSegment": "phu-son-ba-vi",
           "externalRef": "O185"
         },
         {
@@ -4621,7 +4621,7 @@
           "name": "Xã Tiên Phong",
           "shortName": "Tiên Phong",
           "slug": "tien-phong",
-          "urlSegment": "tien-phong",
+          "urlSegment": "tien-phong-ba-vi",
           "externalRef": "O192"
         },
         {
@@ -4704,7 +4704,7 @@
           "name": "Thị trấn Phú Minh",
           "shortName": "Phú Minh",
           "slug": "phu-minh",
-          "urlSegment": "phu-minh-cu",
+          "urlSegment": "phu-minh-phu-xuyen",
           "externalRef": "O375"
         },
         {
@@ -4837,7 +4837,7 @@
           "name": "Xã Quang Trung",
           "shortName": "Quang Trung",
           "slug": "quang-trung",
-          "urlSegment": "quang-trung-phu-xuyen-cu",
+          "urlSegment": "quang-trung-phu-xuyen",
           "externalRef": "O394"
         },
         {
@@ -4851,7 +4851,7 @@
           "name": "Xã Tân Dân",
           "shortName": "Tân Dân",
           "slug": "tan-dan",
-          "urlSegment": "tan-dan-cu",
+          "urlSegment": "tan-dan-phu-xuyen",
           "externalRef": "O396"
         },
         {
@@ -4886,7 +4886,7 @@
           "name": "Xã Vân Từ",
           "shortName": "Vân Từ",
           "slug": "van-tu",
-          "urlSegment": "van-tu-cu",
+          "urlSegment": "van-tu-phu-xuyen",
           "externalRef": "O401"
         }
       ]
@@ -4955,7 +4955,7 @@
           "name": "Xã Đại Hùng",
           "shortName": "Đại Hùng",
           "slug": "dai-hung",
-          "urlSegment": "dai-hung",
+          "urlSegment": "dai-hung-ung-hoa",
           "externalRef": "O405"
         },
         {
@@ -5102,7 +5102,7 @@
           "name": "Xã Trung Tú",
           "shortName": "Trung Tú",
           "slug": "trung-tu",
-          "urlSegment": "trung-tu-cu",
+          "urlSegment": "trung-tu-ung-hoa",
           "externalRef": "O426"
         },
         {
@@ -5213,7 +5213,7 @@
           "name": "Xã Đại Hưng",
           "shortName": "Đại Hưng",
           "slug": "dai-hung",
-          "urlSegment": "dai-hung-cu",
+          "urlSegment": "dai-hung-my-duc",
           "externalRef": "O436"
         },
         {
@@ -5227,7 +5227,7 @@
           "name": "Xã Đồng Tâm",
           "shortName": "Đồng Tâm",
           "slug": "dong-tam",
-          "urlSegment": "dong-tam-cu",
+          "urlSegment": "dong-tam-my-duc",
           "externalRef": "O438"
         },
         {
@@ -5297,7 +5297,7 @@
           "name": "Xã Phùng Xá",
           "shortName": "Phùng Xá",
           "slug": "phung-xa",
-          "urlSegment": "phung-xa",
+          "urlSegment": "phung-xa-my-duc",
           "externalRef": "O448"
         },
         {

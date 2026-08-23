@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CryptoService } from '../shared/crypto.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PaymentService } from './payment.service';
+import { buildDepositContent, parseDepositToken } from './deposit-prefix';
 
 @Controller('payment')
 export class PaymentController {
@@ -29,7 +30,9 @@ export class PaymentController {
       throw new HttpException('Hệ thống thanh toán chưa được cấu hình', HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    const content = `NAP ${req.user.id}`.replace(/-/g, '').substring(0, 50); // SePay usually supports alphanumeric without dashes nicely
+    // Tiền tố để 2 site dùng chung 1 tài khoản ngân hàng vẫn phân biệt được (khách 21/08).
+    // MẶC ĐỊNH RỖNG => nội dung y hệt trước. Xem deposit-prefix.ts trước khi bật.
+    const content = buildDepositContent(req.user.id);
 
     // VietQR Format: https://img.vietqr.io/image/{bank_bin}-{bank_account}-compact.jpg?amount={amount}&addInfo={content}&accountName={account_name}
     const qrUrl = `https://img.vietqr.io/image/${settings.bankBin}-${settings.bankAccount}-compact.jpg?amount=${amount}&addInfo=${encodeURIComponent(content)}&accountName=${encodeURIComponent(settings.accountName || '')}`;
@@ -69,10 +72,14 @@ export class PaymentController {
     const referenceId = String(payload.id || Date.now());
     const numericAmount = Number(payload.transferAmount);
     
-    const match = contentText.match(/NAP\s*([a-zA-Z0-9]+)/i);
-    if (!match) return { success: false, message: 'Sai cú pháp' };
+    const parsed = parseDepositToken(contentText);
+    if (!parsed) {
+      // Không phân biệt "sai cú pháp" với "tiền tố của site khác" ở luồng mock — nó chỉ
+      // dùng để thử tay, luồng thật nằm ở PaymentService.
+      return { success: false, message: 'Sai cú pháp hoặc không thuộc site này' };
+    }
 
-    const parsedUserId = match[1];
+    const parsedUserId = parsed.token;
     const restoredUserId = this.paymentService.restoreUuidFromBankToken(parsedUserId);
 
     const targetUser = await this.prisma.user.findFirst({
