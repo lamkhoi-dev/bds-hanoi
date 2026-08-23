@@ -25,7 +25,16 @@ import {
   type NormalizedFilters,
 } from './property-utils';
 import { listingPath, PROPERTY_TYPE_LABEL, PROPERTY_TYPE_SLUG } from '../seo/seo-urls';
-import { HOMEPAGE_LAYOUTS, LOCATION_BLOCK_TITLES, resolveLayout, homepageCacheKey, type SectionId } from './homepage-layout';
+import {
+  HOMEPAGE_LAYOUTS,
+  LOCATION_BLOCK_TITLES,
+  PINNED_LOCATION_TABS,
+  dedupeTabLabels,
+  resolveLayout,
+  homepageCacheKey,
+  type SectionId,
+  type SiteLayout,
+} from './homepage-layout';
 
 type PropertyWhereInput = any;
 
@@ -610,9 +619,17 @@ export class PropertyService {
    * dòng khớp `where`.
    */
   private async buildDynamicLocationBlock(
-    def: { type: LocationType; groupField: 'districtId' | 'wardId' | 'oldWardId'; requireFeatured: boolean },
+    def: {
+      type: LocationType;
+      groupField: 'districtId' | 'wardId' | 'oldWardId';
+      requireFeatured: boolean;
+      // `key` để tra bảng ghim theo đúng khối (chỉ khối 'districts' của Nghệ An có ghim).
+      key?: 'districts' | 'wards-new' | 'wards-old';
+    },
     limit: number,
     getItems: (where: any) => Promise<any>,
+    // Mặc định đọc env để các chỗ gọi cũ (và test cũ) không phải đổi.
+    layout: SiteLayout = resolveLayout(),
   ) {
     const candidates = await this.prisma.location.findMany({
       where: {
@@ -620,7 +637,7 @@ export class PropertyService {
         isActive: true,
         ...(def.requireFeatured ? { isFeatured: true } : {}),
       },
-      select: { id: true, type: true, urlSegment: true, name: true, path: true },
+      select: { id: true, type: true, urlSegment: true, name: true, shortName: true, path: true },
     });
     if (candidates.length === 0) return [];
 
@@ -671,10 +688,35 @@ export class PropertyService {
 
     const byId = new Map(candidates.map((c) => [c.id, c]));
     // Giữ ĐÚNG thứ tự đã xếp hạng, không theo thứ tự findMany trả về.
-    const orderedLocations = rankedIds.map((id) => byId.get(id)).filter(Boolean) as typeof candidates;
+    let orderedLocations = rankedIds.map((id) => byId.get(id)).filter(Boolean) as typeof candidates;
+
+    /*
+     * Ghim: chèn SAU khi xếp hạng nên không phá luật xếp hạng của các mục còn lại.
+     *
+     * Chỉ ghim khu vực CÓ TIN (`idsWithItems`) — ghim một tab rỗng thì bấm vào ra trang
+     * trắng, tệ hơn là không có tab. Nếu nó vốn đã nằm trong danh sách thì gỡ ra rồi chèn
+     * lại đúng chỗ, tránh xuất hiện hai lần.
+     */
+    const pinned = (def.key ? PINNED_LOCATION_TABS[layout]?.[def.key] : undefined) as
+      | readonly { urlSegment: string; position: number }[]
+      | undefined;
+    if (pinned?.length) {
+      const idsWithItems = new Set(groups.filter((g: any) => g[def.groupField]).map((g: any) => g[def.groupField] as string));
+      for (const { urlSegment, position } of pinned) {
+        const loc = candidates.find((c) => c.urlSegment === urlSegment);
+        if (!loc || !idsWithItems.has(loc.id)) continue;
+        orderedLocations = orderedLocations.filter((l) => l.id !== loc.id);
+        const at = Math.max(0, Math.min(position - 1, orderedLocations.length));
+        orderedLocations.splice(at, 0, loc);
+      }
+      orderedLocations = orderedLocations.slice(0, limit);
+    }
+
+    // Nhãn gọn, và chỉ mục nào bị trùng nhãn mới lùi về tên đầy đủ (xem dedupeTabLabels).
+    const titles = dedupeTabLabels(orderedLocations);
 
     return Promise.all(
-      orderedLocations.map((loc) =>
+      orderedLocations.map((loc, i) =>
         getItems(
           loc.type === 'WARD'
             ? { wardId: loc.id }
@@ -683,7 +725,7 @@ export class PropertyService {
               : { districtId: loc.id },
         ).then((items: any) => ({
           key: loc.urlSegment,
-          title: loc.name,
+          title: titles[i],
           // Qua listingPath để chế độ enforce có tiền tố /ban, chế độ report giữ dạng
           // phẳng đang chạy — cùng một build phục vụ cả hai site.
           href: listingPath({ locationSlug: loc.urlSegment }),
@@ -783,7 +825,7 @@ export class PropertyService {
     // dữ liệu cho 2 khối (OLD_WARD chưa có ứng viên/tin), Hà Nội đủ cả 3 — không có
     // dòng code nào rẽ nhánh theo tỉnh, khối 0 dữ liệu tự ẩn ở bước lọc bên dưới.
     const locationBlocksRaw = await Promise.all(
-      LOCATION_BLOCK_DEFS.map((def) => this.buildDynamicLocationBlock(def, HOMEPAGE_TABS_PER_BLOCK, getItems)),
+      LOCATION_BLOCK_DEFS.map((def) => this.buildDynamicLocationBlock(def, HOMEPAGE_TABS_PER_BLOCK, getItems, layout)),
     );
 
     const [

@@ -178,3 +178,67 @@ describe('buildDynamicLocationBlock', () => {
     expect(getItems).toHaveBeenCalledWith({ oldWardId: 'ow1' });
   });
 });
+
+describe('ghim tab + nhãn gọn (khách 21/08)', () => {
+  /** 4 khu vực Nghệ An nhiều tin + TP Hà Tĩnh chỉ 2 tin — đúng hình dạng dữ liệu thật. */
+  function setup(haTinhCount: number) {
+    const { service, prisma } = makeService();
+    prisma.location.findMany.mockResolvedValue([
+      { id: 'vinh', type: 'DISTRICT', urlSegment: 'thanh-pho-vinh', name: 'Thành phố Vinh', shortName: 'Vinh', path: 'nghe-an/thanh-pho-vinh' },
+      { id: 'nam-dan', type: 'DISTRICT', urlSegment: 'nam-dan', name: 'Huyện Nam Đàn', shortName: 'Nam Đàn', path: 'nghe-an/nam-dan' },
+      { id: 'dien-chau', type: 'DISTRICT', urlSegment: 'dien-chau', name: 'Huyện Diễn Châu', shortName: 'Diễn Châu', path: 'nghe-an/dien-chau' },
+      { id: 'do-luong', type: 'DISTRICT', urlSegment: 'do-luong', name: 'Huyện Đô Lương', shortName: 'Đô Lương', path: 'nghe-an/do-luong' },
+      { id: 'tp-ht', type: 'DISTRICT', urlSegment: 'thanh-pho-ha-tinh', name: 'Thành phố Hà Tĩnh', shortName: 'Hà Tĩnh', path: 'ha-tinh/thanh-pho-ha-tinh' },
+    ]);
+    const groups: any[] = [
+      { districtId: 'vinh', _count: { _all: 93 }, _max: { publishedAt: new Date('2026-07-20') } },
+      { districtId: 'nam-dan', _count: { _all: 9 }, _max: { publishedAt: new Date('2026-07-19') } },
+      { districtId: 'dien-chau', _count: { _all: 8 }, _max: { publishedAt: new Date('2026-07-18') } },
+      { districtId: 'do-luong', _count: { _all: 7 }, _max: { publishedAt: new Date('2026-07-17') } },
+    ];
+    // haTinhCount = 0 nghĩa là groupBy KHÔNG trả nhóm đó (Prisma bỏ nhóm rỗng).
+    if (haTinhCount > 0) {
+      groups.push({ districtId: 'tp-ht', _count: { _all: haTinhCount }, _max: { publishedAt: new Date('2026-07-11') } });
+    }
+    prisma.property.groupBy.mockResolvedValue(groups);
+    return service;
+  }
+
+  const DEF = { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false, key: 'districts' } as const;
+
+  it('classic: TP Hà Tĩnh được ghim đúng vị trí 3 dù chỉ 2 tin', async () => {
+    const service = setup(2);
+    const result = await (service as any).buildDynamicLocationBlock(DEF, 9, getItems, 'classic');
+
+    expect(result.map((t: any) => t.title)).toEqual([
+      'TP Vinh', 'Nam Đàn', 'TP Hà Tĩnh', 'Diễn Châu', 'Đô Lương',
+    ]);
+    // Không được xuất hiện hai lần dù nó vốn cũng nằm trong danh sách xếp hạng.
+    expect(result.filter((t: any) => t.key === 'thanh-pho-ha-tinh')).toHaveLength(1);
+  });
+
+  it('KHÔNG ghim khi khu vực đó 0 tin — tab rỗng bấm vào ra trang trắng', async () => {
+    const service = setup(0);
+    const result = await (service as any).buildDynamicLocationBlock(DEF, 9, getItems, 'classic');
+
+    expect(result.map((t: any) => t.key)).not.toContain('thanh-pho-ha-tinh');
+    expect(result.map((t: any) => t.title)).toEqual(['TP Vinh', 'Nam Đàn', 'Diễn Châu', 'Đô Lương']);
+  });
+
+  it('grouped (Hà Nội) không ghim gì — bảng ghim rỗng', async () => {
+    const service = setup(2);
+    const result = await (service as any).buildDynamicLocationBlock(DEF, 9, getItems, 'grouped');
+
+    // Vẫn có TP Hà Tĩnh vì nó có tin, nhưng ở CUỐI theo xếp hạng, không phải vị trí 3.
+    expect(result.map((t: any) => t.title)).toEqual([
+      'TP Vinh', 'Nam Đàn', 'Diễn Châu', 'Đô Lương', 'TP Hà Tĩnh',
+    ]);
+  });
+
+  it('ghim không làm vượt quá limit', async () => {
+    const service = setup(2);
+    const result = await (service as any).buildDynamicLocationBlock(DEF, 3, getItems, 'classic');
+    expect(result).toHaveLength(3);
+    expect(result.map((t: any) => t.title)).toEqual(['TP Vinh', 'Nam Đàn', 'TP Hà Tĩnh']);
+  });
+});

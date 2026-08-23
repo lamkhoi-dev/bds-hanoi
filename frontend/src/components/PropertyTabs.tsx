@@ -73,7 +73,7 @@ export default function PropertyTabs({
           <div
             ref={stripRef}
             onScroll={syncArrows}
-            className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide"
+            className="flex gap-1.5 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide"
           >
             {tabs.map(tab => {
               // Tab cuối kiểu "xem tất cả" (khu vực khác / xem toàn bộ dự án) là LINK điều
@@ -85,7 +85,7 @@ export default function PropertyTabs({
                   <Link
                     key={tab.id}
                     href={tab.href || '/khu-vuc'}
-                    className="whitespace-nowrap px-4 py-2 text-sm font-semibold rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200 block"
+                    className="whitespace-nowrap px-3 py-2 text-sm font-semibold rounded-full transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200 block"
                   >
                     {tab.label}
                   </Link>
@@ -95,7 +95,7 @@ export default function PropertyTabs({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTabId(tab.id)}
-                  className={`whitespace-nowrap px-4 py-2 text-sm font-semibold rounded-full transition-colors ${
+                  className={`whitespace-nowrap px-3 py-2 text-sm font-semibold rounded-full transition-colors ${
                     activeTabId === tab.id
                       ? 'bg-primary text-white shadow-md'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
