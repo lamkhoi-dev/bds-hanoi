@@ -11,7 +11,7 @@ const MapPin = dynamic(() => import('@/components/MapPin'), { ssr: false, loadin
 import toast from 'react-hot-toast';
 import { PRICE_RANGES_SELL, PRICE_RANGES_RENT, AREA_RANGES, getPriceLabel, getAreaLabel } from '@/constants/ranges';
 import { siteConfig } from '@/lib/site-config';
-import LocationPicker, { resolveLocationIds } from '@/components/LocationPicker';
+import LocationPicker, { resolveLocationIds, districtHasWards } from '@/components/LocationPicker';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -368,7 +368,12 @@ function PostPropertyContent() {
       setTimeout(() => router.push(`/login?returnUrl=${currentUrl}`), 1500);
       return;
     }
-    if (!formData.district || (!isRequirement && !formData.ward)) {
+    // Chỉ đòi phường/xã khi khu vực đó THẬT SỰ có dữ liệu phường/xã. Hà Tĩnh có 13 huyện
+    // nhưng 0 dòng phường/xã, nên điều kiện cũ `!formData.ward` chặn cứng mọi tin ở đó —
+    // ô bắt buộc mà không có gì để chọn (khách báo 21/08). Dùng chung một hàm với
+    // LocationPicker để nhãn `*` và luật chặn không bao giờ lệch nhau.
+    const wardRequired = !isRequirement && districtHasWards(locations, formData.district);
+    if (!formData.district || (wardRequired && !formData.ward)) {
       toast.error("Vui lòng chọn Quận/Huyện và Phường/Xã");
       return;
     }
