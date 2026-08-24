@@ -1,0 +1,128 @@
+﻿Kính gửi anh/chị,
+
+Bên em đã hoàn thành và đưa lên chạy toàn bộ các mục anh/chị phản hồi ngày 21/08 (rút gọn
+tên tab khu vực, ghim tab TP Hà Tĩnh, khối "khu vực hot" cho web Hà Nội, tách link các
+phường/xã trùng tên). Anh/chị có thể kiểm tra trên nhadatxunghe.vn.
+
+Trong quá trình làm, bên em rà lại toàn bộ dữ liệu địa giới của hệ thống và phát hiện một
+số chỗ còn THIẾU DỮ LIỆU. Những chỗ này bên em không tự bổ sung được vì phải đúng theo danh
+mục hành chính, nên kính nhờ anh/chị xem giúp và cho hướng xử lý.
+
+
+========================================================================
+1. HÀ TĨNH: ĐANG CÓ HUYỆN NHƯNG CHƯA CÓ PHƯỜNG/XÃ NÀO
+========================================================================
+
+Hiện trạng trong hệ thống:
+
+   - 13 huyện/thành/thị của Hà Tĩnh: ĐÃ CÓ
+     (TP Hà Tĩnh, TX Hồng Lĩnh, TX Kỳ Anh, các huyện Can Lộc, Cẩm Xuyên, Hương Khê,
+      Hương Sơn, Kỳ Anh, Lộc Hà, Nghi Xuân, Thạch Hà, Vũ Quang, Đức Thọ)
+
+   - Phường/xã của Hà Tĩnh:  0  (không có mục nào, cả xã mới lẫn xã cũ)
+
+Đây chính là nguyên nhân lỗi anh/chị báo tuần trước ("chọn huyện Hà Tĩnh thì ô Phường/Xã
+bắt buộc phải chọn mà lại không có gì để chọn, nên không đăng được tin").
+
+BÊN EM ĐÃ XỬ LÝ TẠM và đã đưa lên web: khi chọn một huyện chưa có dữ liệu phường/xã thì ô
+"Phường/Xã" tự chuyển thành KHÔNG BẮT BUỘC. Anh/chị đăng tin ở Hà Tĩnh được bình thường
+ngay từ bây giờ.
+
+Tuy nhiên đây chỉ là vá tạm. Chừng nào chưa có dữ liệu phường/xã Hà Tĩnh thì:
+   - Tin ở Hà Tĩnh không gắn được phường/xã, người mua không lọc theo phường/xã được.
+   - Tin Hà Tĩnh không lên được các khối "theo phường/xã" trên trang chủ.
+
+   CÂU HỎI:
+   1a. Anh/chị có cần lọc/hiển thị tới cấp phường, xã cho Hà Tĩnh không, hay chỉ cần tới
+       cấp huyện là đủ cho nhu cầu kinh doanh?
+   1b. Nếu cần: nhờ anh/chị gửi giúp danh sách phường/xã của Hà Tĩnh (dạng file Excel hoặc
+       Word đều được, chỉ cần có 2 cột: tên huyện + tên phường/xã).
+   1c. Cần cả phường/xã MỚI (sau sáp nhập) và phường/xã CŨ (trước sáp nhập), hay chỉ cần
+       phường/xã mới thôi?
+
+
+========================================================================
+2. PHƯỜNG/XÃ CŨ CỦA NGHỆ AN: MỚI CÓ 6 TRÊN 20 HUYỆN
+========================================================================
+
+Về phường/xã MỚI thì Nghệ An đã đủ (123 mục, phủ cả 20 huyện). Nhưng phường/xã CŨ thì mới
+chỉ có ở 6 huyện:
+
+   ĐÃ CÓ (113 mục):
+      Thành phố Vinh ........ 39 xã cũ
+      Huyện Thanh Chương .... 29 xã cũ
+      Huyện Nam Đàn ......... 17 xã cũ
+      Huyện Diễn Châu ....... 13 xã cũ
+      Huyện Quỳnh Lưu ....... 11 xã cũ
+      Huyện Yên Thành .......  4 xã cũ
+
+   CHƯA CÓ (0 xã cũ) — 14 huyện:
+      Anh Sơn, Con Cuông, Hưng Nguyên, Kỳ Sơn, Nghi Lộc, Nghĩa Đàn, Quế Phong,
+      Quỳ Châu, Quỳ Hợp, Tân Kỳ, Tương Dương, Đô Lương,
+      Thị xã Hoàng Mai, Thị xã Thái Hoà
+
+Hệ quả: khối "Bất động sản theo phường, xã cũ" trên trang chủ hiện chỉ chọn được các xã
+nằm trong 6 huyện ở trên. Người đăng tin ở 14 huyện còn lại cũng không chọn được xã cũ.
+
+   CÂU HỎI:
+   2a. Anh/chị có gửi được danh sách phường/xã CŨ của 14 huyện còn lại không?
+   2b. Nếu khó gom đủ 14 huyện: anh/chị cho biết vài huyện TRỌNG ĐIỂM cần làm trước, bên em
+       làm dần theo thứ tự đó (ví dụ Nghi Lộc, Đô Lương, Hoàng Mai...).
+
+
+========================================================================
+3. BA PHƯỜNG/XÃ TRONG DANH SÁCH NGÀY 21/08 KHÔNG CÓ TRONG DỮ LIỆU
+========================================================================
+
+Anh/chị gửi 10 phường/xã cũ để đưa lên trang chủ. Bên em tìm thấy 7, còn 3 mục không có:
+
+      - Quán Hành    (thuộc huyện Nghi Lộc)
+      - Hòa Hiếu     (thuộc thị xã Thái Hoà)
+      - Quỳnh Thiện  (thuộc thị xã Hoàng Mai)
+
+Xin nói rõ để anh/chị yên tâm: đây KHÔNG phải do nhập sót lẻ tẻ. Cả 3 mục này đều thuộc
+nhóm 14 huyện chưa có dữ liệu xã cũ ở mục 2 bên trên. Tức là khi mục 2 được bổ sung thì 3
+mục này sẽ tự có, không cần xử lý riêng.
+
+   CÂU HỎI:
+   3a. Nhờ anh/chị xác nhận giúp: 3 tên trên là tên phường/xã CŨ (trước sáp nhập) đúng
+       không ạ? Bên em hỏi vì nếu là tên MỚI thì cách xử lý sẽ khác.
+
+
+========================================================================
+4. GIẢI THÍCH: VÌ SAO KHỐI "PHƯỜNG, XÃ CŨ" HIỆN CHỈ CÓ 3 TAB
+========================================================================
+
+Mục này chỉ để anh/chị nắm, KHÔNG cần trả lời.
+
+Bên em đã bật đủ 7 phường/xã tìm được. Nhưng khối trên trang chủ chỉ hiện những mục ĐANG CÓ
+TIN, nên thực tế hiện 3 tab:
+
+      Phường Vinh Tân ....... 8 tin   -> có hiện
+      Phường Nghi Phú ....... 1 tin   -> có hiện
+      Xã Nghi Phong ......... 1 tin   -> có hiện
+      Phường Hưng Dũng ...... 0 tin   -> tạm ẩn
+      Xã Hưng Hòa ........... 0 tin   -> tạm ẩn
+      Xã Diễn Thành ......... 0 tin   -> tạm ẩn
+      Xã Diễn Ngọc .......... 0 tin   -> tạm ẩn
+
+Đây là cố ý: tab không có tin nào mà vẫn hiện thì khách bấm vào sẽ ra trang trống, gây cảm
+giác web lỗi. Khi có tin đăng vào các xã đó, tab sẽ TỰ ĐỘNG hiện ra, bên em không phải làm
+gì thêm.
+
+
+========================================================================
+5. NHỜ XÁC NHẬN SỐ LIỆU
+========================================================================
+
+   5a. Phường/xã MỚI của Nghệ An: hệ thống đang có 123 mục thuộc 20 huyện. Nhờ anh/chị xác
+       nhận giúp con số này đã đủ chưa, hay còn thiếu mục nào.
+
+   5b. Riêng dữ liệu Hà Nội bên em đã rà và ĐỦ (30 quận/huyện, 126 phường/xã mới, 579
+       phường/xã cũ, không huyện nào bị thiếu) — anh/chị không cần làm gì thêm cho phần này.
+
+
+Rất mong nhận được phản hồi của anh/chị. Phần nào có trước bên em làm trước, không cần chờ
+đủ cả 3 mục.
+
+Trân trọng cảm ơn.
