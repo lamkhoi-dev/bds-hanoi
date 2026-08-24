@@ -139,6 +139,16 @@
       "district": "Tây Hồ",
       "shortName": "Phú Thượng",
       "label": "Phú Thượng"
+    },
+    {
+      "district": "Hoàng Mai",
+      "shortName": "Hoàng Liệt",
+      "label": "Hoàng Liệt"
+    },
+    {
+      "district": "Nam Từ Liêm",
+      "shortName": "Từ Liêm",
+      "label": "Từ Liêm"
     }
   ],
   "oldWards": [
