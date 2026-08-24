@@ -1,11 +1,8 @@
 # Các bước deploy sau khi push được `32ff6dd` + `6103ce9`
 
-Push đang **kẹt** vì credential GitHub trên máy đã mất (`git push` đòi nhập username; máy
-không có SSH key cho GitHub). Chạy giúp:
-
-```
-git push origin main-hanoi:main
-```
+> **Cập nhật 25/08: ĐÃ PUSH XONG.** `origin/main` giờ ở `edb3007`. Credential GitHub đã hoạt
+> động trở lại sau khi dọn tiến trình `git-credential-manager` treo. Không còn chờ gì ở bước
+> này nữa.
 
 Sau đó làm đúng thứ tự dưới đây. Hai nhịp tách nhau vì nhịp 2 có **migration**.
 
