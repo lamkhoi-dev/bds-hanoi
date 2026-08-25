@@ -126,3 +126,56 @@ chủ (mục TP Hà Tĩnh đã ghim), và `/khu-vuc`.
 3. **B3, B4, B5** — cần điều tra, có thể cùng một gốc (đăng nhập/CORS).
 4. **C1–C5** — giao diện, làm sau khi dữ liệu xong.
 5. **B2, B6, B7**.
+
+---
+
+# TIẾN ĐỘ — 26/08/2026
+
+Tất cả đã commit, **chưa deploy** (push GitHub đang kẹt credential — 6 commit chờ).
+Test: **132 backend** (+13), **108 frontend** (+6).
+
+## ĐÃ XONG (7/17)
+
+| Mục | Việc | Kiểm chứng |
+|---|---|---|
+| B1 | Lọc giá + diện tích | 8 test; soi thẳng mệnh đề gửi xuống Prisma/Meili |
+| B4 | Bộ đếm view | 5 test; `RETURNING` + vá cache |
+| B6 | Popup lọc không tự đóng | hook `useCloseOnNavigate`, áp cho cả 2 lớp bọc |
+| B7 | Form lọc chưa tách tỉnh | dùng lại helper đã vá cho form đăng tin |
+| C1 | Link tiêu đề 2 khối khu vực | `LOCATION_BLOCK_HREFS` |
+| C3 | `/khu-vuc` xếp theo tỉnh | 6 test |
+| C4 | `/search?focus=1` | + chặn `focus` rò sang phân trang và API |
+| A1–A4 | Dữ liệu 2 tỉnh + importer | file JSON + script chỉ-thêm; **chờ deploy để chạy** |
+
+### Vài chỗ đáng ghi lại
+
+**B4 — giả thuyết đầu SAI.** Tưởng bộ đếm không chạy; đo ra CSDL vẫn tăng đều (toàn site
+39.641 lượt). Cái hỏng là `findOne` cache 60 giây còn `incrementView` ghi thẳng SQL, nên
+màn hình đứng yên. Sửa bằng vá đúng con số vào cache, KHÔNG xoá cache — xoá là bỏ luôn thứ
+giữ trang chi tiết nhẹ.
+
+**B1 — cả hai nhánh truy vấn đều sai**, không riêng Meili. Sửa một chỗ là vẫn lọt.
+
+**A3 — 69 xã mới Hà Tĩnh khớp đúng** số đơn vị hành chính sau sáp nhập, nên tin được.
+Xã cũ: 10/13 huyện khớp chính xác số khách ghi; còn dư 3 mục ở Can Lộc, Cẩm Xuyên, Đức Thọ.
+
+## CÒN LẠI (4/17)
+
+- **B2** Link khu vực "Không tải được danh sách tin" — cần xem log lúc lỗi xảy ra.
+- **B3** Không bình luận / lưu tin được — cần tài khoản thật để tái hiện (GET bình luận
+  trả 200 bình thường, nên lỗi nằm ở nhánh cần đăng nhập).
+- **B5** "Tin mới xem" không cập nhật — cùng nhóm cần đăng nhập với B3.
+- **C2** Kéo bộ lọc lên trên ở các trang search.
+- **C5** Menu 3 gạch "BĐS Hà Tĩnh" đủ 13 huyện — **phụ thuộc A3/A4 đã nạp dữ liệu**.
+
+## CÂU HỎI CHO KHÁCH
+
+1. **TX Kỳ Anh và Huyện Kỳ Anh trùng 3 xã** (Kỳ Châu, Kỳ Hải, Kỳ Tân) — chuyển hẳn sang
+   thị xã hay để cả hai nơi? Trùng tên giữa 2 huyện đụng đúng chuyện slug khách từng nêu.
+2. **Phường hay xã?** Khách ghi "Xã mới" cho TX Kỳ Anh (Vũng Áng, Sông Trí, Hoành Sơn…)
+   nhưng đây là thị xã. Bên em suy phường/xã bằng cách đối chiếu danh sách cũ, ra 4 phường
+   (Trần Phú, Hà Huy Tập, Bắc Hồng Lĩnh, Nam Hồng Lĩnh) + Thành Sen. Nhờ xác nhận.
+3. Yêu cầu `?focus=1` có chỗ tự mâu thuẫn: "vào /search chuyển sang /search?focus=1" nhưng
+   "vào search bình thường thì không autofocus". Bên em làm theo cách tự nhất quán: hỗ trợ
+   tham số, không tự chuyển hướng. Nếu khách muốn link nào đó mang sẵn `?focus=1` thì cho
+   biết link nào.
