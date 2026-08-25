@@ -13,13 +13,21 @@ export default function SearchForm({
   initialCategory = '', 
   initialProvince = '', 
   initialDistrict = '', 
-  initialArea = '' 
+  initialArea = '',
+  autoOpen = false,
 }: { 
   initialQ?: string; 
   initialCategory?: string;
   initialProvince?: string;
   initialDistrict?: string;
   initialArea?: string;
+  /**
+   * Mở sẵn popup tìm kiếm ngay khi vào trang, con trỏ đặt vào ô từ khoá (điện thoại bật
+   * bàn phím luôn). Chỉ trang `/search` bật cờ này, và chỉ khi URL có `?focus=1` — khách
+   * yêu cầu 25/08 nói rõ: vào `/search` bình thường thì KHÔNG tự lấy tiêu điểm, và các
+   * trang khác dù dùng chung component này cũng không.
+   */
+  autoOpen?: boolean;
 }) {
   const { locations: districts } = useLocations();
   // Khách yêu cầu: bấm vào ô tìm kiếm là POPUP hiện lên luôn, kèm bàn phím để gõ.
@@ -30,6 +38,15 @@ export default function SearchForm({
   const router = useRouter();
 
   useEffect(() => setMounted(true), []);
+
+  // Mở popup một lần khi vào trang có `?focus=1`. Hiệu ứng lấy tiêu điểm + bật bàn phím do
+  // effect `isPopupOpen` bên dưới lo sẵn, nên ở đây chỉ cần mở.
+  // Mảng phụ thuộc RỖNG có chủ ý: nếu để `autoOpen` trong đó thì người dùng đóng popup rồi
+  // một lần render lại bất kỳ sẽ mở bật lên lại — không thoát ra được.
+  useEffect(() => {
+    if (autoOpen) setPopupOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Tự lấy tiêu điểm để bàn phím điện thoại bật lên ngay, không phải chạm lần hai.
   useEffect(() => {

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import { PRICE_RANGES_SELL, PRICE_RANGES_RENT, AREA_RANGES } from '@/constants/ranges';
 import { useLocations } from '@/hooks/useLocations';
 import { generateSlug } from '@/lib/utils';
+import { provincesOf, provinceLabel } from '@/lib/locations/picker';
 import { siteConfig } from '@/lib/site-config';
 import { listingPath } from '@/lib/seo/canonical';
 import { parseListingPath } from '@/lib/seo/route';
@@ -185,7 +186,16 @@ export default function SidebarFilter() {
 
   // Site chỉ phục vụ một tỉnh nên không còn nhánh riêng cho tỉnh thứ hai, và cũng
   // không còn chuyện nối hai danh sách gây lặp quận/huyện.
-  const activeLocations = locations;
+  // Site Nghệ An phục vụ 2 tỉnh (`PROVINCE_SLUG=nghe-an,ha-tinh`) nên `/locations` trả về
+  // quận/huyện của CẢ HAI trong một mảng phẳng. Trước đây ô "Tỉnh/Thành phố" chỉ có một
+  // option cứng và ô "Quận/Huyện" đổ hết 33 mục ra — khách báo 25/08: "form đăng tin thì
+  // chia ra Nghệ An, Hà Tĩnh, còn form lọc tin thì chưa nên danh sách huyện đang dài".
+  // Dùng lại đúng helper đã vá cho form ĐĂNG tin, để hai form không lệch luật nhau.
+  const provinceOptions = provincesOf(locations as any);
+  // Khác form đăng tin: ở đây "Tất cả" (city rỗng) là lựa chọn hợp lệ, khi đó hiện mọi huyện.
+  const activeLocations = filters.city
+    ? (locations as any[]).filter((d) => provinceLabel(d) === filters.city)
+    : locations;
 
   const activeChips = Object.entries(filters).filter(([k, v]) => v !== '').map(([key, value]) => {
     let label = value;
@@ -261,10 +271,11 @@ export default function SidebarFilter() {
             className="font-sans w-full px-3 py-2.5 border border-borderLight bg-gray-50/50 rounded-xl text-sm outline-none focus:border-primary focus:bg-white transition-colors cursor-pointer"
           >
             <option className="font-sans" value="">Tất cả</option>
-            {/* Site phục vụ một tỉnh; danh sách cứng Nghệ An/Hà Tĩnh đã bỏ. */}
-            <option className="font-sans" value={siteConfig.province.name}>
-              {siteConfig.province.name}
-            </option>
+            {/* Dựng từ chính dữ liệu trả về, không hardcode: site 1 tỉnh (Hà Nội) tự ra
+                đúng 1 option nên không đổi hành vi bên đó. */}
+            {(provinceOptions.length ? provinceOptions : [siteConfig.province.name]).map((p) => (
+              <option className="font-sans" key={p} value={p}>{p}</option>
+            ))}
           </select>
         </div>
         <div>

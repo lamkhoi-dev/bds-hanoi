@@ -35,8 +35,10 @@ function toFlatParams(searchParams: SearchParams) {
 
 async function getSearchResults(searchParams: SearchParams) {
   try {
-    const query = new URLSearchParams(toFlatParams(searchParams)).toString();
-    const res = await fetch(serverApiUrl(`/properties/search?${query}`), { cache: 'no-store' });
+    const params = new URLSearchParams(toFlatParams(searchParams));
+    // `focus` là lệnh giao diện (mở popup), không phải điều kiện lọc — không gửi lên API.
+    params.delete('focus');
+    const res = await fetch(serverApiUrl(`/properties/search?${params.toString()}`), { cache: 'no-store' });
     if (!res.ok) return { vips: [], ups: [], normals: [], total: 0 };
     return res.json();
   } catch {
@@ -126,15 +128,23 @@ export default async function SearchPage({
 
   // Filter Chips
   const activeFilters: Array<{label: string, key: string}> = [];
-  const buildUrlWithout = (keyToRemove: string) => {
+  // `focus` chỉ là lệnh mở popup lúc vào trang, không phải điều kiện lọc. Phải bỏ khỏi mọi
+  // URL dựng tiếp, nếu không bấm sang trang 2 hay gỡ một chip là popup lại bật lên.
+  const linkParams = () => {
     const params = new URLSearchParams(flatSearchParams);
+    params.delete('focus');
+    return params;
+  };
+
+  const buildUrlWithout = (keyToRemove: string) => {
+    const params = linkParams();
     params.delete(keyToRemove);
     params.delete('page');
     return `/search?${params.toString()}`;
   };
 
   const buildPageUrl = (newPage: number) => {
-    const params = new URLSearchParams(flatSearchParams);
+    const params = linkParams();
     // Trang 1 không mang `?page=1`: URL đó đã bị 301 ở `proxy.ts` nên nút "Trang trước"
     // từ trang 2 sẽ trỏ vào một redirect nếu vẫn ghi tham số.
     if (newPage > 1) params.set('page', newPage.toString());
@@ -181,6 +191,7 @@ export default async function SearchPage({
             initialProvince={flatSearchParams.province} 
             initialDistrict={flatSearchParams.district} 
             initialArea={flatSearchParams.areaRangeKey}
+            autoOpen={flatSearchParams.focus === '1'}
           />
         </div>
       </div>
