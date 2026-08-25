@@ -19,7 +19,8 @@ function makeService() {
   };
   const locationService: any = {
     getSeoLocations: jest.fn().mockResolvedValue([]),
-    // null => locationSegmentMap trả map rỗng, đủ cho phạm vi test này.
+    // Map rỗng mặc định; test nào cần tra đoạn URL thì tự nạp.
+    getSegmentById: jest.fn().mockResolvedValue(new Map<string, string>()),
     getTree: jest.fn().mockResolvedValue(null),
   };
   // Cache luôn miss để mỗi lần gọi đều chạm truy vấn thật. set/del phải trả Promise vì
@@ -29,7 +30,7 @@ function makeService() {
     set: jest.fn().mockResolvedValue(undefined),
     del: jest.fn().mockResolvedValue(undefined),
   };
-  return { service: new SeoService(prisma, locationService, cache), groupBy, findMany, prisma };
+  return { service: new SeoService(prisma, locationService, cache), groupBy, findMany, prisma, locationService };
 }
 
 describe('phạm vi trạng thái của sitemap', () => {
@@ -80,5 +81,112 @@ describe('sitemap trang Dự án', () => {
     const { service, prisma } = makeService();
     await service.getProjectUrls();
     expect(prisma.property.groupBy.mock.calls[0][0].where.status.in).toEqual(['APPROVED', 'SOLD']);
+  });
+});
+
+/**
+ * Ba lỗi sitemap khách nêu trong "Sitemap 21-8-2026". Cả ba đều đã kiểm chứng trên
+ * nhadatxunghe.vn trước khi sửa, nên test dưới đây khoá đúng hành vi đã đo được.
+ */
+describe('sitemap trang danh mục — 3 điểm khách nêu 21/08', () => {
+  const groupsOf = (rows: any[]) => rows;
+
+  it('KHÔNG sinh /du-an/{khu-vuc}: 5 URL kiểu này đều đang 308 về /du-an', async () => {
+    const { service, groupBy, locationService } = makeService();
+    locationService.getSegmentById.mockResolvedValue(
+      new Map([
+        ['w1', 'phuong-vinh-phu'],
+        ['d1', 'thanh-pho-vinh'],
+        ['p1', 'nghe-an'],
+      ]),
+    );
+    groupBy.mockResolvedValue(
+      groupsOf([
+        {
+          transactionType: 'BAN',
+          propertyType: 'DU_AN',
+          wardId: 'w1',
+          districtId: 'd1',
+          provinceId: 'p1',
+          _count: { id: 3 },
+          _max: { publishedAt: new Date() },
+        },
+      ]),
+    );
+
+    const urls = (await service.getLandingUrls()).map((u) => u.loc);
+
+    // Không một URL nào bắt đầu bằng /du-an — kể cả /du-an trần.
+    expect(urls.filter((u) => u.includes('/du-an'))).toEqual([]);
+    // Nhưng tin loại "Dự án" vẫn phải đóng góp cho trang khu vực của nó.
+    expect(urls.some((u) => u.endsWith('/nghe-an'))).toBe(true);
+    expect(urls.some((u) => u.endsWith('/thanh-pho-vinh'))).toBe(true);
+  });
+
+  it('KHÔNG lặp /ban và /cho-thue với static.xml', async () => {
+    const { service, groupBy, locationService } = makeService();
+    locationService.getSegmentById.mockResolvedValue(new Map([['p1', 'nghe-an']]));
+    groupBy.mockResolvedValue(
+      groupsOf([
+        {
+          transactionType: 'BAN',
+          propertyType: 'DAT_NEN',
+          wardId: null,
+          districtId: null,
+          provinceId: 'p1',
+          _count: { id: 5 },
+          _max: { publishedAt: new Date() },
+        },
+        {
+          transactionType: 'CHO_THUE',
+          propertyType: 'NHA_RIENG',
+          wardId: null,
+          districtId: null,
+          provinceId: 'p1',
+          _count: { id: 2 },
+          _max: { publishedAt: new Date() },
+        },
+      ]),
+    );
+
+    const paths = (await service.getLandingUrls()).map((u) => new URL(u.loc).pathname);
+
+    expect(paths).not.toContain('/ban');
+    expect(paths).not.toContain('/cho-thue');
+    // Tổ hợp có khu vực thì vẫn phải còn — cổng chặn không được ăn lan.
+    expect(paths).toContain('/dat-nen/nghe-an');
+    expect(paths).toContain('/cho-thue/nha-rieng/nghe-an');
+  });
+
+  it('KHÔNG bỏ sót tỉnh phụ: khu vực Hà Tĩnh phải vào được sitemap', async () => {
+    const { service, groupBy, locationService } = makeService();
+    // Đây là điểm mấu chốt: bản đồ nay đến từ getSegmentById (mọi tỉnh) chứ không phải
+    // getTree (chỉ tỉnh chính). getTree vẫn trả null để chắc chắn không ai dùng lại nó.
+    locationService.getSegmentById.mockResolvedValue(
+      new Map([
+        ['ht-d', 'thanh-pho-ha-tinh'],
+        ['ht-p', 'ha-tinh'],
+      ]),
+    );
+    groupBy.mockResolvedValue(
+      groupsOf([
+        {
+          transactionType: 'BAN',
+          propertyType: 'DAT_NEN',
+          wardId: null,
+          districtId: 'ht-d',
+          provinceId: 'ht-p',
+          _count: { id: 4 },
+          _max: { publishedAt: new Date() },
+        },
+      ]),
+    );
+
+    const paths = (await service.getLandingUrls()).map((u) => new URL(u.loc).pathname);
+
+    expect(paths).toContain('/dat-nen/thanh-pho-ha-tinh');
+    expect(paths).toContain('/thanh-pho-ha-tinh');
+    expect(paths).toContain('/ha-tinh');
+    expect(locationService.getTree).not.toHaveBeenCalled();
   });
 });

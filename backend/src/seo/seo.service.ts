@@ -29,6 +29,24 @@ const PUBLIC_STATUSES = ['APPROVED', 'SOLD'] as const;
  * `PropertyService`.
  */
 const INDEXABLE_STATUSES = ['APPROVED'] as const;
+
+/**
+ * Slug loại BĐS đụng độ với một mục có route riêng của site.
+ *
+ * `DU_AN` vừa là một giá trị của `Property.propertyType` (3 tin đang dùng) vừa là tên mục
+ * Dự án. Bộ dựng URL danh mục không biết điều đó nên sinh `/du-an/{khu-vuc}` y hệt cách
+ * nó sinh `/dat-nen/{khu-vuc}`. Nhưng router lại hiểu đoạn sau `/du-an/` là SLUG DỰ ÁN,
+ * không khớp thì 308 về `/du-an` — nên 5 URL kiểu này trong sitemap đều là URL chuyển
+ * hướng, thứ không được phép nằm trong sitemap (khách nêu 21/08, đã kiểm: cả 5 trả 308).
+ *
+ * Cấu trúc đúng chỉ có `/du-an` (danh sách, nằm ở static.xml) và `/du-an/{slug-dự-án}`
+ * (chi tiết, nằm ở projects.xml). Không có tầng `/du-an/{khu-vuc}`.
+ *
+ * Chặn theo slug chứ không theo enum: nếu sau này có loại BĐS khác trùng tên một mục thì
+ * chỉ cần thêm slug vào đây.
+ */
+const SECTION_ROUTE_SLUGS = new Set(['du-an']);
+
 const URLS_PER_FILE = 10000;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
@@ -100,6 +118,17 @@ export class SeoService {
       ) => {
         const txSlug = TRANSACTION_SLUG[transaction];
         if (!txSlug) return;
+        // Hai cổng chặn dưới đây đặt Ở ĐÂY chứ không ở vòng lặp gọi, vì `add` được gọi từ
+        // nhiều nhánh (có/không kèm loại BĐS) — chặn ở một chỗ thì không nhánh nào lách.
+
+        // 1. Slug đụng route của một mục riêng -> URL chuyển hướng, xem SECTION_ROUTE_SLUGS.
+        if (typeSlug && SECTION_ROUTE_SLUGS.has(typeSlug)) return;
+
+        // 2. Không loại BĐS + không khu vực = gốc mục `/ban` và `/cho-thue`. Chúng đã nằm
+        //    trong static.xml; để cả hai nơi thì cùng một URL xuất hiện 2 lần trong sitemap
+        //    (khách nêu 21/08). Giữ ở static.xml vì đó là trang cố định của site, còn
+        //    landing-0.xml chỉ nên chứa tổ hợp sinh ra từ dữ liệu.
+        if (!typeSlug && !locationSlug) return;
         const key = `${txSlug}|${typeSlug ?? ''}|${locationSlug ?? ''}`;
         const url = listingPath({ transaction: txSlug, propertyTypeSlug: typeSlug, locationSlug });
         const current = acc.get(key);
@@ -147,18 +176,13 @@ export class SeoService {
     });
   }
 
+  /**
+   * Phải phủ MỌI tỉnh site đang phục vụ, không chỉ tỉnh chính — xem giải thích ở
+   * `LocationService#getSegmentById`. Khu vực nào không tra được đoạn URL sẽ bị bỏ im
+   * lặng khỏi sitemap, nên lỗi ở đây không bao giờ báo động, chỉ làm hụt URL.
+   */
   private async locationSegmentMap(): Promise<Map<string, string>> {
-    const tree = await this.locationService.getTree();
-    const map = new Map<string, string>();
-    if (!tree) return map;
-    map.set(tree.id, tree.urlSegment);
-    for (const district of tree.districts) {
-      map.set(district.id, district.urlSegment);
-      for (const ward of [...district.wards, ...district.oldWards]) {
-        map.set(ward.id, ward.urlSegment);
-      }
-    }
-    return map;
+    return this.locationService.getSegmentById();
   }
 
   async getListingUrls(): Promise<SitemapUrl[]> {

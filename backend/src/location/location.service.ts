@@ -211,6 +211,23 @@ export class LocationService {
   }
 
   /**
+   * Bản đồ `id -> urlSegment` của MỌI tỉnh đang phục vụ.
+   *
+   * Sitemap trước đây dựng bản đồ này từ `getTree()`, mà `getTree()` theo thiết kế chỉ mô
+   * tả MỘT cây — tỉnh khai đầu tiên trong `ACTIVE_PROVINCE_SLUG`. Với site Nghệ An đang
+   * chạy `nghe-an,ha-tinh`, hệ quả là mọi khu vực Hà Tĩnh không tra được đoạn URL nên bị
+   * bỏ im lặng khỏi sitemap trang danh mục, dù trang của chúng vẫn mở 200 và vẫn có tin
+   * (khách phát hiện 21/08: "Hà Tĩnh đang bị bỏ sót khỏi landing-0.xml").
+   *
+   * Không dùng `getSeoLocations()` cho việc này: cờ `isSeoEnabled` hiện `false` ở cả
+   * 271/271 dòng nên nó trả về rỗng — lấy nó làm nguồn sẽ xoá sạch sitemap danh mục.
+   */
+  async getSegmentById(): Promise<Map<string, string>> {
+    const snap = await this.getSnapshot();
+    return new Map(snap.all.map((n) => [n.id, n.urlSegment]));
+  }
+
+  /**
    * Giữ nguyên hình dạng cũ (mảng phẳng DISTRICT kèm children) cho các màn hình chưa
    * chuyển sang /locations/tree.
    *
