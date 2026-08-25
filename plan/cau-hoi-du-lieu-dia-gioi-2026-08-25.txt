@@ -8,6 +8,12 @@ Trong quá trình làm, bên em rà lại toàn bộ dữ liệu địa giới c
 số chỗ còn THIẾU DỮ LIỆU. Những chỗ này bên em không tự bổ sung được vì phải đúng theo danh
 mục hành chính, nên kính nhờ anh/chị xem giúp và cho hướng xử lý.
 
+*** TIN TỐT: ANH/CHỊ KHÔNG PHẢI GOM DANH SÁCH ***
+Sau khi rà kỹ, bên em tìm thấy các danh sách phường/xã còn thiếu ĐÃ CÓ SẴN trong hệ thống
+(nằm trong bộ dữ liệu toàn quốc mà bên em tắt trước đây). Bên em đã trích ra thành file
+riêng kèm theo: "danh-sach-xa-de-xuat-2026-08-25". Anh/chị chỉ cần xem và xác nhận đúng/sai
+ở mức từng huyện, không phải soạn danh sách mới.
+
 
 ========================================================================
 1. HÀ TĨNH: ĐANG CÓ HUYỆN NHƯNG CHƯA CÓ PHƯỜNG/XÃ NÀO
@@ -88,6 +94,17 @@ Anh/chị gửi 10 phường/xã cũ để đưa lên trang chủ. Bên em tìm 
 Xin nói rõ để anh/chị yên tâm: đây KHÔNG phải do nhập sót lẻ tẻ. Cả 3 mục này đều thuộc
 nhóm 14 huyện chưa có dữ liệu xã cũ ở mục 2 bên trên. Tức là khi mục 2 được bổ sung thì 3
 mục này sẽ tự có, không cần xử lý riêng.
+
+CẬP NHẬT: bên em đã tìm thấy CẢ BA trong kho dữ liệu, và cả ba đều nằm trong file danh sách
+gửi kèm (phần B):
+
+      - Thị trấn Quán Hành    (Huyện Nghi Lộc)
+      - Phường Hoà Hiếu       (Thị xã Thái Hoà)
+      - Phường Quỳnh Thiện    (Thị xã Hoàng Mai)
+
+Riêng "Hoà Hiếu": lần rà trước bên em báo là không tìm thấy, thực ra là do dấu tiếng Việt
+đặt khác nhau ("Hoà" và "Hòa") nên máy không khớp được. Mục này CÓ trong dữ liệu. Bên em
+xin đính chính.
 
    CÂU HỎI:
    3a. Nhờ anh/chị xác nhận giúp: 3 tên trên là tên phường/xã CŨ (trước sáp nhập) đúng

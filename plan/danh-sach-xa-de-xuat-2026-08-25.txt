@@ -1,0 +1,321 @@
+﻿DANH SÁCH PHƯỜNG/XÃ ĐỀ XUẤT — NHỜ ANH/CHỊ XÁC NHẬN
+(kèm theo file "cau-hoi-du-lieu-dia-gioi-2026-08-25")
+
+Kính gửi anh/chị,
+
+Ở file câu hỏi bên em có nhờ anh/chị gửi danh sách phường/xã còn thiếu. Sau khi rà lại,
+bên em phát hiện HỆ THỐNG ĐÃ CÓ SẴN các danh sách này — chúng nằm trong bộ dữ liệu địa
+giới toàn quốc mà bên em đã tắt trước đây (vì nó làm bộ lọc hiện nhầm xã của tỉnh khác).
+
+Vậy nên anh/chị KHÔNG cần ngồi gom danh sách nữa. Chỉ cần xem qua và cho biết đúng/sai,
+bên em bật lên là xong.
+
+CÁCH XEM: anh/chị chỉ cần trả lời ở mức từng HUYỆN, không cần soi từng xã. Ví dụ
+"Nghi Lộc đúng rồi", hoặc "Đô Lương thiếu xã X, thừa xã Y".
+
+
+========================================================================
+PHẦN A — PHƯỜNG/XÃ HÀ TĨNH   (13 huyện, 254 mục)
+========================================================================
+
+Hiện hệ thống có 13 huyện Hà Tĩnh nhưng KHÔNG có phường/xã nào. Đây là danh sách tìm được.
+
+LƯU Ý QUAN TRỌNG — nhờ anh/chị để ý giúp: danh sách này có thể LẪN CẢ TÊN CŨ VÀ TÊN MỚI.
+Ví dụ ở Can Lộc vừa có "Thị trấn Nghèn" (tên cũ) vừa có "Xã Can Lộc" (tên sau sáp nhập).
+Bên em không tự phân loại được vì không có căn cứ chắc chắn.
+
+   Nhờ anh/chị cho biết: nên lấy danh sách này làm phường/xã CŨ, phường/xã MỚI, hay tách
+   làm hai? Nếu anh/chị có sẵn danh sách phường/xã MỚI của Hà Tĩnh sau sáp nhập (khoảng
+   vài chục mục) thì tốt nhất — bên em sẽ đối chiếu và tự tách được phần còn lại thành
+   tên cũ.
+
+Huyện Can Lộc   (19 mục)
+------------------------------------------------------------------------
+   Thị trấn Nghèn           Thị trấn Đồng Lộc        Xã Can Lộc
+   Xã Gia Hanh              Xã Khánh Vĩnh Yên        Xã Kim Song Trường
+   Xã Mỹ Lộc                Xã Phú Lộc               Xã Quang Lộc
+   Xã Sơn Lộc               Xã Thanh Lộc             Xã Thiên Lộc
+   Xã Thuần Thiện           Xã Thường Nga            Xã Thượng Lộc
+   Xã Trung Lộc             Xã Tùng Lộc              Xã Vượng Lộc
+   Xã Xuân Lộc
+
+Huyện Cẩm Xuyên   (23 mục)
+------------------------------------------------------------------------
+   Thị trấn Cẩm Xuyên       Thị trấn Thiên Cầm       Xã Cẩm Bình
+   Xã Cẩm Duệ               Xã Cẩm Dương             Xã Cẩm Hà
+   Xã Cẩm Hưng              Xã Cẩm Lĩnh              Xã Cẩm Lạc
+   Xã Cẩm Lộc               Xã Cẩm Minh              Xã Cẩm Mỹ
+   Xã Cẩm Nhượng            Xã Cẩm Quan              Xã Cẩm Quang
+   Xã Cẩm Sơn               Xã Cẩm Thành             Xã Cẩm Thạch
+   Xã Cẩm Thịnh             Xã Cẩm Trung             Xã Cẩm Vĩnh
+   Xã Nam Phúc Thăng        Xã Yên Hòa
+
+Huyện Hương Khê   (23 mục)
+------------------------------------------------------------------------
+   Thị trấn Hương Khê       Xã Gia Phố               Xã Hà Linh
+   Xã Hòa Hải               Xã Hương Bình            Xã Hương Giang
+   Xã Hương Khê             Xã Hương Liên            Xã Hương Long
+   Xã Hương Lâm             Xã Hương Phố             Xã Hương Thủy
+   Xã Hương Trà             Xã Hương Trạch           Xã Hương Vĩnh
+   Xã Hương Xuân            Xã Hương Đô              Xã Lộc Yên
+   Xã Phú Gia               Xã Phú Phong             Xã Phúc Trạch
+   Xã Phúc Đồng             Xã Điền Mỹ
+
+Huyện Hương Sơn   (28 mục)
+------------------------------------------------------------------------
+   Thị trấn  Tây Sơn        Thị trấn Phố Châu        Xã An Hòa Thịnh
+   Xã Châu Bình             Xã Hàm Trường            Xã Kim Hoa
+   Xã Long Trà              Xã Quang Diệm            Xã Sơn Bình
+   Xã Sơn Bằng              Xã Sơn Châu              Xã Sơn Giang
+   Xã Sơn Hàm               Xã Sơn Hồng              Xã Sơn Kim 1
+   Xã Sơn Kim 2             Xã Sơn Long              Xã Sơn Lâm
+   Xã Sơn Lĩnh              Xã Sơn Lễ                Xã Sơn Ninh
+   Xã Sơn Phú               Xã Sơn Tiến              Xã Sơn Trung
+   Xã Sơn Trà               Xã Sơn Trường            Xã Sơn Tây
+   Xã Tân Mỹ Hà
+
+Huyện Kỳ Anh   (21 mục)
+------------------------------------------------------------------------
+   Xã Kỳ Anh                Xã Kỳ Bắc                Xã Kỳ Châu
+   Xã Kỳ Giang              Xã Kỳ Hải                Xã Kỳ Khang
+   Xã Kỳ Lạc                Xã Kỳ Phong              Xã Kỳ Phú
+   Xã Kỳ Sơn                Xã Kỳ Thư                Xã Kỳ Thượng
+   Xã Kỳ Thọ                Xã Kỳ Tiến               Xã Kỳ Trung
+   Xã Kỳ Tân                Xã Kỳ Tây                Xã Kỳ Văn
+   Xã Kỳ Xuân               Xã Kỳ Đồng               Xã Lâm Hợp
+
+Huyện Lộc Hà   (12 mục)
+------------------------------------------------------------------------
+   Thị trấn Lộc Hà          Xã Bình An               Xã Hồng Lộc
+   Xã Hộ Độ                 Xã Mai Phụ               Xã Phù Lưu
+   Xã Thạch Châu            Xã Thạch Kim             Xã Thạch Mỹ
+   Xã Thịnh Lộc             Xã Tân Lộc               Xã Ích Hậu
+
+Huyện Nghi Xuân   (17 mục)
+------------------------------------------------------------------------
+   Thị trấn Tiên Điền       Thị trấn Xuân An         Xã Cương Gián
+   Xã Cỗ Đạm                Xã Xuân Giang            Xã Xuân Hải
+   Xã Xuân Hồng             Xã Xuân Hội              Xã Xuân Lam
+   Xã Xuân Liên             Xã Xuân Lĩnh             Xã Xuân Mỹ
+   Xã Xuân Phổ              Xã Xuân Thành            Xã Xuân Viên
+   Xã Xuân Yên              Xã Đan Trường
+
+Huyện Thạch Hà   (33 mục)
+------------------------------------------------------------------------
+   Thị trấn Lộc Hà          Thị trấn Thạch Hà        Xã Bình An
+   Xã Hồng Lộc              Xã Lưu Vĩnh Sơn          Xã Mai Phụ
+   Xã Nam Điền              Xã Ngọc Sơn              Xã Phù Lưu
+   Xã Thạch Châu            Xã Thạch Hải             Xã Thạch Hội
+   Xã Thạch Khê             Xã Thạch Kim             Xã Thạch Kênh
+   Xã Thạch Liên            Xã Thạch Long            Xã Thạch Lạc
+   Xã Thạch Mỹ              Xã Thạch Ngọc            Xã Thạch Sơn
+   Xã Thạch Thắng           Xã Thạch Trị             Xã Thạch Văn
+   Xã Thạch Xuân            Xã Thạch Đài             Xã Thịnh Lộc
+   Xã Tân Lâm Hương         Xã Tân Lộc               Xã Tượng Sơn
+   Xã Việt Tiến             Xã Ích Hậu               Xã Đỉnh Bàn
+
+Huyện Vũ Quang   (10 mục)
+------------------------------------------------------------------------
+   Thị trấn Vũ Quang        Xã Hương Minh            Xã Quang Thọ
+   Xã Thọ Điền              Xã Ân Phú                Xã Đức Bồng
+   Xã Đức Giang             Xã Đức Hương             Xã Đức Liên
+   Xã Đức Lĩnh
+
+Huyện Đức Thọ   (18 mục)
+------------------------------------------------------------------------
+   Thị trấn Đức Thọ         Xã An Dũng               Xã Bùi La Nhân
+   Xã Hòa Lạc               Xã Liên Minh             Xã Lâm Trung Thủy
+   Xã Quang Vĩnh            Xã Thanh Bình Thịnh      Xã Trường Sơn
+   Xã Tân Dân               Xã Tân Hương             Xã Tùng Châu
+   Xã Tùng Ảnh              Xã Yên Hồ                Xã Đức Lạng
+   Xã Đức Quang             Xã Đức Thọ               Xã Đức Đồng
+
+Thành phố Hà Tĩnh   (33 mục)
+------------------------------------------------------------------------
+   Phường Bắc Hà            Phường Hà Huy Tập        Phường Nam Hà
+   Phường Nguyễn Du         Phường Thạch Hưng        Phường Thạch Hạ
+   Phường Thạch Linh        Phường Thạch Quý         Phường Thạch Trung
+   Phường Trần Phú          Phường Tân Giang         Phường Văn Yên
+   Phường Đại Nài           Phường Đồng Môn          Xã Cẩm Bình
+   Xã Cẩm Vịnh              Xã Hộ Độ                 Xã Thạch Bình
+   Xã Thạch Hưng            Xã Thạch Hạ              Xã Thạch Hải
+   Xã Thạch Hội             Xã Thạch Khê             Xã Thạch Lạc
+   Xã Thạch Thắng           Xã Thạch Trung           Xã Thạch Trị
+   Xã Thạch Văn             Xã Thạch Đài             Xã Tân Lâm Hương
+   Xã Tượng Sơn             Xã Đỉnh Bàn              Xã Đồng Môn
+
+Thị xã Hồng Lĩnh   (6 mục)
+------------------------------------------------------------------------
+   Phường Bắc Hồng          Phường Nam Hồng          Phường Trung Lương
+   Phường Đậu Liêu          Phường Đức Thuận         Xã Thuận Lộc
+
+Thị xã Kỳ Anh   (11 mục)
+------------------------------------------------------------------------
+   Phường Hưng Trí          Phường Kỳ Liên           Phường Kỳ Long
+   Phường Kỳ Phương         Phường Kỳ Thịnh          Phường Kỳ Trinh
+   Xã Kỳ Hoa                Xã Kỳ Hà                 Xã Kỳ Lợi
+   Xã Kỳ Nam                Xã Kỳ Ninh
+
+
+========================================================================
+PHẦN B — PHƯỜNG/XÃ CŨ CỦA 14 HUYỆN NGHỆ AN CÒN THIẾU   (14 huyện, 262 mục)
+========================================================================
+
+Phần này bên em TỰ TIN HƠN hẳn phần A, vì đã đối chiếu được:
+
+   - Kho dữ liệu có 460 xã Nghệ An — khớp với số xã của tỉnh TRƯỚC sáp nhập.
+   - Trong 113 xã cũ hệ thống đang dùng, có 92 mục tìm thấy đúng trong kho này.
+   - Và KHÔNG có mục nào bị lẫn sang danh sách xã mới (0 trường hợp).
+
+Tức là kho này gần như chắc chắn là danh sách xã TRƯỚC sáp nhập. 21 mục còn lại không khớp
+là do dữ liệu cũ nhập thiếu tiền tố (ghi "Lê Mao" thay vì "Phường Lê Mao") — lỗi bên em,
+bên em tự sửa, anh/chị không phải bận tâm.
+
+Huyện Anh Sơn   (21 mục)
+------------------------------------------------------------------------
+   Thị trấn Anh Sơn         Xã Bình Sơn              Xã Cao Sơn
+   Xã Cẩm Sơn               Xã Hoa Sơn               Xã Hùng Sơn
+   Xã Hội Sơn               Xã Khai Sơn              Xã Long Sơn
+   Xã Lĩnh Sơn              Xã Lạng Sơn              Xã Phúc Sơn
+   Xã Tam Sơn               Xã Thành Sơn             Xã Thạch Sơn
+   Xã Thọ Sơn               Xã Tào Sơn               Xã Tường Sơn
+   Xã Vĩnh Sơn              Xã Đỉnh Sơn              Xã Đức Sơn
+
+Huyện Con Cuông   (13 mục)
+------------------------------------------------------------------------
+   Thị trấn Con Cuông       Xã Bình Chuẩn            Xã Bồng Khê
+   Xã Cam Lâm               Xã Chi Khê               Xã Châu Khê
+   Xã Lạng Khê              Xã Lục Dạ                Xã Môn Sơn
+   Xã Mậu Đức               Xã Thạch Ngàn            Xã Yên Khê
+   Xã Đôn Phục
+
+Huyện Hưng Nguyên   (18 mục)
+------------------------------------------------------------------------
+   Thị trấn Hưng Nguyên     Xã Châu Nhân             Xã Hưng Lĩnh
+   Xã Hưng Lợi              Xã Hưng Mỹ               Xã Hưng Nghĩa
+   Xã Hưng Phúc             Xã Hưng Thành            Xã Hưng Thông
+   Xã Hưng Thịnh            Xã Hưng Trung            Xã Hưng Tân
+   Xã Hưng Tây              Xã Hưng Yên              Xã Hưng Yên Bắc
+   Xã Hưng Đạo              Xã Long Xá               Xã Xuân Lam
+
+Huyện Kỳ Sơn   (21 mục)
+------------------------------------------------------------------------
+   Thị trấn Mường Xén       Xã Bảo Nam               Xã Bảo Thắng
+   Xã Bắc Lý                Xã Chiêu Lưu             Xã Huồi Tụ
+   Xã Hữu Kiệm              Xã Hữu Lập               Xã Keng Đu
+   Xã Mường Lống            Xã Mường Típ             Xã Mường Ải
+   Xã Mỹ Lý                 Xã Na Loi                Xã Na Ngoi
+   Xã Nậm Càn               Xã Nậm Cắn               Xã Phà Đánh
+   Xã Tà Cạ                 Xã Tây Sơn               Xã Đoọc Mạy
+
+Huyện Nghi Lộc   (29 mục)
+------------------------------------------------------------------------
+   Thị trấn Quán Hành       Xã Khánh Hợp             Xã Nghi Công Bắc
+   Xã Nghi Công Nam         Xã Nghi Diên             Xã Nghi Hoa
+   Xã Nghi Hưng             Xã Nghi Kiều             Xã Nghi Long
+   Xã Nghi Lâm              Xã Nghi Mỹ               Xã Nghi Phong
+   Xã Nghi Phương           Xã Nghi Quang            Xã Nghi Thiết
+   Xã Nghi Thuận            Xã Nghi Thái             Xã Nghi Thạch
+   Xã Nghi Thịnh            Xã Nghi Tiến             Xã Nghi Trung
+   Xã Nghi Trường           Xã Nghi Văn              Xã Nghi Vạn
+   Xã Nghi Xuân             Xã Nghi Xá               Xã Nghi Yên
+   Xã Nghi Đồng             Xã Phúc Thọ
+
+Huyện Nghĩa Đàn   (23 mục)
+------------------------------------------------------------------------
+   Thị trấn Nghĩa Đàn       Xã Nghĩa An              Xã Nghĩa Bình
+   Xã Nghĩa Hiếu            Xã Nghĩa Hưng            Xã Nghĩa Hồng
+   Xã Nghĩa Hội             Xã Nghĩa Khánh           Xã Nghĩa Long
+   Xã Nghĩa Lâm             Xã Nghĩa Lạc             Xã Nghĩa Lộc
+   Xã Nghĩa Lợi             Xã Nghĩa Mai             Xã Nghĩa Minh
+   Xã Nghĩa Phú             Xã Nghĩa Sơn             Xã Nghĩa Thành
+   Xã Nghĩa Thịnh           Xã Nghĩa Thọ             Xã Nghĩa Trung
+   Xã Nghĩa Yên             Xã Nghĩa Đức
+
+Huyện Quế Phong   (13 mục)
+------------------------------------------------------------------------
+   Thị trấn Kim Sơn         Xã Châu Kim              Xã Châu Thôn
+   Xã Căm Muộn              Xã Hạnh Dịch             Xã Mường Nọc
+   Xã Nậm Giải              Xã Nậm Nhoóng            Xã Quang Phong
+   Xã Thông Thụ             Xã Tiền Phong            Xã Tri Lễ
+   Xã Đồng Văn
+
+Huyện Quỳ Châu   (12 mục)
+------------------------------------------------------------------------
+   Thị trấn Tân Lạc         Xã Châu Bình             Xã Châu Bính
+   Xã Châu Hoàn             Xã Châu Hạnh             Xã Châu Hội
+   Xã Châu Nga              Xã Châu Phong            Xã Châu Thuận
+   Xã Châu Thắng            Xã Châu Tiến             Xã Diên Lãm
+
+Huyện Quỳ Hợp   (21 mục)
+------------------------------------------------------------------------
+   Thị trấn Quỳ Hợp         Xã Bắc Sơn               Xã Châu Cường
+   Xã Châu Hồng             Xã Châu Lý               Xã Châu Lộc
+   Xã Châu Quang            Xã Châu Thành            Xã Châu Thái
+   Xã Châu Tiến             Xã Châu Đình             Xã Hạ Sơn
+   Xã Liên Hợp              Xã Minh Hợp              Xã Nam Sơn
+   Xã Nghĩa Xuân            Xã Tam Hợp               Xã Thọ Hợp
+   Xã Văn Lợi               Xã Yên Hợp               Xã Đồng Hợp
+
+Huyện Tân Kỳ   (22 mục)
+------------------------------------------------------------------------
+   Thị trấn Tân Kỳ          Xã Giai Xuân             Xã Hương Sơn
+   Xã Kỳ Sơn                Xã Kỳ Tân                Xã Nghĩa Bình
+   Xã Nghĩa Dũng            Xã Nghĩa Hoàn            Xã Nghĩa Hành
+   Xã Nghĩa Hợp             Xã Nghĩa Phúc            Xã Nghĩa Thái
+   Xã Nghĩa Đồng            Xã Phú Sơn               Xã Tiên Kỳ
+   Xã Tân An                Xã Tân Hương             Xã Tân Hợp
+   Xã Tân Long              Xã Tân Phú               Xã Tân Xuân
+   Xã Đồng Văn
+
+Huyện Tương Dương   (17 mục)
+------------------------------------------------------------------------
+   Thị trấn Thạch Giám      Xã Hữu Khuông            Xã Lưu Kiền
+   Xã Lưỡng Minh            Xã Mai Sơn               Xã Nga My
+   Xã Nhôn Mai              Xã Tam Hợp               Xã Tam Quang
+   Xã Tam Thái              Xã Tam Đình              Xã Xiêng My
+   Xã Xá Lượng              Xã Yên Hòa               Xã Yên Na
+   Xã Yên Thắng             Xã Yên Tĩnh
+
+Huyện Đô Lương   (33 mục)
+------------------------------------------------------------------------
+   Thị trấn Đô Lương        Xã Bài Sơn               Xã Bắc Sơn
+   Xã Bồi Sơn               Xã Giang Sơn Tây         Xã Giang Sơn Đông
+   Xã Hiến Sơn              Xã Hòa Sơn               Xã Hồng Sơn
+   Xã Lam Sơn               Xã Lưu Sơn               Xã Lạc Sơn
+   Xã Minh Sơn              Xã Mỹ Sơn                Xã Nam Sơn
+   Xã Ngọc Sơn              Xã Nhân Sơn              Xã Quang Sơn
+   Xã Thuận Sơn             Xã Thái Sơn              Xã Thượng Sơn
+   Xã Thịnh Sơn             Xã Trung Sơn             Xã Tràng Sơn
+   Xã Trù Sơn               Xã Tân Sơn               Xã Văn Sơn
+   Xã Xuân Sơn              Xã Yên Sơn               Xã Đà Sơn
+   Xã Đông Sơn              Xã Đại Sơn               Xã Đặng Sơn
+
+Thị xã Hoàng Mai   (10 mục)
+------------------------------------------------------------------------
+   Phường Mai Hùng          Phường Quỳnh Dị          Phường Quỳnh Phương
+   Phường Quỳnh Thiện       Phường Quỳnh Xuân        Xã Quỳnh Liên
+   Xã Quỳnh Lập             Xã Quỳnh Lộc             Xã Quỳnh Trang
+   Xã Quỳnh Vinh
+
+Thị xã Thái Hoà   (9 mục)
+------------------------------------------------------------------------
+   Phường Hoà Hiếu          Phường Long Sơn          Phường Quang Phong
+   Phường Quang Tiến        Xã Nghĩa Mỹ              Xã Nghĩa Thuận
+   Xã Nghĩa Tiến            Xã Tây Hiếu              Xã Đông Hiếu
+
+
+========================================================================
+CÂU HỎI GỌN LẠI
+========================================================================
+
+   1. Phần A (Hà Tĩnh): danh sách này nên coi là xã CŨ hay xã MỚI? Anh/chị có danh sách
+      phường/xã mới của Hà Tĩnh sau sáp nhập không?
+
+   2. Phần B (14 huyện Nghệ An): có huyện nào sai/thiếu không? Nếu nhìn qua thấy ổn thì
+      anh/chị chỉ cần trả lời "phần B ổn", bên em bật lên luôn.
+
+   3. Ba mục Quán Hành, Hòa Hiếu, Quỳnh Thiện anh/chị nêu hôm 21/8 nằm trong phần B (Nghi
+      Lộc, Thái Hoà, Hoàng Mai). Xác nhận phần B là ba mục đó cũng có luôn.
+
+Trân trọng cảm ơn anh/chị.
