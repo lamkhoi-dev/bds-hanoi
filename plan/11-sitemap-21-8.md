@@ -85,3 +85,30 @@ Tĩnh) ≈ **220**, và:
 - có URL `thanh-pho-ha-tinh`, `huyen-nghi-xuan`, `thi-xa-ky-anh`
 
 Lưu ý: sitemap có cache 15 phút (Redis). Restart backend **không** xoá cache đó.
+
+
+---
+
+# KẾT QUẢ SAU DEPLOY — 25/08/2026
+
+Đã deploy backend cả hai site (Nghệ An `ac6a7fb`, Hà Nội cùng commit). Số đo thật:
+
+```
+landing-0.xml  218 -> 220 URL       (bỏ 8, thêm 10 — đúng dự đoán)
+static.xml     16 URL               (không đổi)
+listings-0.xml 165 URL              (không đổi ngoài 1 tin mới)
+projects.xml   1 | news.xml 2       (không đổi)
+```
+
+- Mục 1: `grep '^/du-an' landing-0.xml` ⇒ **rỗng** ✓
+- Mục 3: `comm -12` static vs landing ⇒ **rỗng** ✓
+- Mục 2: **10 URL Hà Tĩnh** đã vào sitemap, và **cả 10 đều trả 200** ✓
+
+```
+/ha-tinh                     /dat-nen/ha-tinh            /nha-rieng/ha-tinh
+/thanh-pho-ha-tinh           /dat-nen/thanh-pho-ha-tinh  /nha-rieng/thanh-pho-ha-tinh
+/huyen-nghi-xuan             /dat-nen/huyen-nghi-xuan
+/thi-xa-ky-anh               /dat-nen/thi-xa-ky-anh
+```
+
+XML parse hợp lệ (220 thẻ `<url>`). Hà Nội cũng sạch: không còn `/du-an`, không trùng lặp.
