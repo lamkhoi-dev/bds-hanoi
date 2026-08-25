@@ -32,6 +32,11 @@ Tuy nhiên đây chỉ là vá tạm. Chừng nào chưa có dữ liệu phườ
    - Tin ở Hà Tĩnh không gắn được phường/xã, người mua không lọc theo phường/xã được.
    - Tin Hà Tĩnh không lên được các khối "theo phường/xã" trên trang chủ.
 
+LIÊN QUAN TỚI FILE "SITEMAP 21-8" ANH/CHỊ GỬI: mục 2 trong file đó (Hà Tĩnh bị bỏ sót khỏi
+landing-0.xml) bên em đã tìm ra nguyên nhân và SỬA XONG. Sau khi lên bản mới, các trang khu
+vực Hà Tĩnh sẽ vào sitemap bình thường — nhưng chỉ tới CẤP HUYỆN, vì chưa có dữ liệu
+phường/xã. Có dữ liệu phường/xã thì Google mới index được tới cấp phường/xã.
+
    CÂU HỎI:
    1a. Anh/chị có cần lọc/hiển thị tới cấp phường, xã cho Hà Tĩnh không, hay chỉ cần tới
        cấp huyện là đủ cho nhu cầu kinh doanh?
