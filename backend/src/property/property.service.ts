@@ -28,6 +28,7 @@ import { listingPath, PROPERTY_TYPE_LABEL, PROPERTY_TYPE_SLUG } from '../seo/seo
 import {
   HOMEPAGE_LAYOUTS,
   LOCATION_BLOCK_TITLES,
+  LOCATION_BLOCK_HREFS,
   PINNED_LOCATION_TABS,
   dedupeTabLabels,
   resolveLayout,
@@ -1076,13 +1077,27 @@ export class PropertyService {
       // tin) bị loại nguyên khối — vì vậy Nghệ An/Hà Nội tự nhiên có số khối khác nhau
       // mà không cần dòng code nào rẽ nhánh theo tỉnh.
       locationBlocks: LOCATION_BLOCK_DEFS
-        .map((def, i) => ({ key: def.key, title: LOCATION_BLOCK_TITLES[layout][def.key], tabs: locationBlocksRaw[i] }))
+        .map((def, i) => ({
+          key: def.key,
+          title: LOCATION_BLOCK_TITLES[layout][def.key],
+          // Link của tiêu đề khối. Frontend trước đây lấy link của TAB ĐANG CHỌN nên
+          // "Bất động sản Nghệ An" trỏ về TP Vinh — xem LOCATION_BLOCK_HREFS.
+          href: LOCATION_BLOCK_HREFS[layout][def.key],
+          tabs: locationBlocksRaw[i],
+        }))
         .filter((block) => block.tabs.length > 0)
         .map((block) => ({
           ...block,
           tabs: [
             ...block.tabs,
-            { key: 'khu-vuc-khac', title: 'Tất cả các khu vực', href: '/khu-vuc', items: otherLocationItems },
+            {
+              key: 'khu-vuc-khac',
+              title: 'Tất cả các khu vực',
+              // Khối có phạm vi riêng thì nút này về đúng phạm vi đó, không về /khu-vuc:
+              // khách yêu cầu nút "Tất cả khu vực" của khối TP Vinh trỏ về bán BĐS TP Vinh.
+              href: block.href ?? '/khu-vuc',
+              items: otherLocationItems,
+            },
           ],
         })),
       // "projects" trước đây hard-code 15 — site trắng (0 dự án thật) vẫn khoe "15+ dự

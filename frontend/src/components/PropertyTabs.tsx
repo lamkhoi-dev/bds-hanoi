@@ -8,9 +8,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 export default function PropertyTabs({
   title,
   tabs,
+  titleHref,
 }: {
   title: string,
   tabs: { id: string, label: string, items: any[], href: string, asLink?: boolean }[],
+  /**
+   * Link của TIÊU ĐỀ khối, do backend gắn (`LOCATION_BLOCK_HREFS`).
+   *
+   * Không có thì lùi về link của tab đang chọn — hành vi cũ, vẫn đúng cho các khối theo
+   * loại BĐS ("Cho thuê", "Bất động sản khác") vì ở đó tiêu đề và tab nói cùng một thứ.
+   * Nhưng với khối khu vực thì sai: "Bất động sản Nghệ An" trỏ về TP Vinh (tab đầu) và
+   * "Bất động sản TP Vinh" trỏ về phường Thành Vinh — khách yêu cầu sửa 25/08.
+   */
+  titleHref?: string,
 }) {
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id);
 
@@ -50,8 +60,8 @@ export default function PropertyTabs({
     <div className="mb-10">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 gap-4">
         <h2 className="text-xl md:text-2xl font-extrabold text-textMain">
-          {activeTab?.href ? (
-            <Link href={activeTab.href} className="hover:text-primary transition-colors">
+          {(titleHref ?? activeTab?.href) ? (
+            <Link href={titleHref ?? activeTab!.href} className="hover:text-primary transition-colors">
               {title}
             </Link>
           ) : (

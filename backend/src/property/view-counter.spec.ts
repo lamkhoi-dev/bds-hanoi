@@ -19,7 +19,7 @@ function makeService(rows: any) {
   const update = jest.fn();
   const prisma: any = { $queryRaw: queryRaw, property: { update }, $executeRaw: jest.fn() };
   const noop: any = {};
-  const service = new PropertyInteractionService(prisma, noop, noop);
+  const service = new PropertyInteractionService(prisma, noop);
   return { service, prisma, queryRaw, update };
 }
 

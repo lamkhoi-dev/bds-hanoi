@@ -76,6 +76,32 @@ export const LOCATION_BLOCK_TITLES: Record<SiteLayout, Record<'districts' | 'war
 };
 
 /**
+ * Link của TIÊU ĐỀ khối khu vực, và của tab "Tất cả các khu vực" trong khối đó.
+ *
+ * Đặt ngay cạnh `LOCATION_BLOCK_TITLES` có chủ ý: tiêu đề và link của nó phải đổi cùng nhau,
+ * để cạnh nhau thì không ai sửa một cái mà quên cái kia.
+ *
+ * Trước đây frontend lấy link tiêu đề từ TAB ĐANG CHỌN, nên "Bất động sản Nghệ An" trỏ về
+ * TP Vinh (tab đầu) còn "Bất động sản TP Vinh" trỏ về phường Thành Vinh. Khách yêu cầu sửa
+ * 25/08: tiêu đề khối phải trỏ về chính phạm vi mà nó nói tới.
+ *
+ * Khối nào không khai ở đây thì frontend giữ hành vi cũ (theo tab đang chọn).
+ */
+export const LOCATION_BLOCK_HREFS: Record<
+  SiteLayout,
+  Partial<Record<'districts' | 'wards-new' | 'wards-old', string>>
+> = {
+  classic: {
+    // "Bất động sản Nghệ An" nói về toàn tỉnh ⇒ trang liệt kê khu vực.
+    districts: '/khu-vuc',
+    // "Bất động sản TP Vinh" nói về TP Vinh ⇒ trang bán BĐS TP Vinh.
+    'wards-new': '/thanh-pho-vinh',
+  },
+  // Hà Nội dùng tiêu đề chung chung ("theo quận, huyện") nên không có phạm vi riêng để trỏ.
+  grouped: {},
+};
+
+/**
  * Đọc `SITE_LAYOUT` — CỐ TÌNH không tiền tố `NEXT_PUBLIC_` (biến đó bị bake cứng vào
  * bundle lúc build, sẽ biến thành 2 image khác nhau, phá mục tiêu "một image cho cả hai
  * site"). Sai chính tả / thiếu biến / mất env đều lùi về 'classic' — chiều an toàn đúng,

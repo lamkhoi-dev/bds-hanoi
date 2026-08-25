@@ -21,6 +21,7 @@ export default function HomepageSection({ section }: { section: any }) {
       return (
         <PropertyTabs
           title={section.title}
+          titleHref={section.href}
           tabs={section.tabs.map((t: any) => ({
             id: t.key,
             label: t.title,
