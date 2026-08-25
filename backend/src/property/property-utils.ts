@@ -572,30 +572,56 @@ export function buildPrismaWhere(filters: NormalizedFilters): PropertyWhereInput
     and.push({ isNegotiable: false } as any);
   }
 
-  if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-    const priceConditions: any[] = [];
-    if (filters.minPrice !== undefined) priceConditions.push({ priceMax: { gte: filters.minPrice } });
-    if (filters.maxPrice !== undefined) priceConditions.push({ priceMin: { lte: filters.maxPrice } });
-    
-    and.push({
+  /**
+   * Lọc theo khoảng giá / khoảng diện tích.
+   *
+   * ## Cái bẫy: `priceMin/priceMax` KHÔNG phải khoảng giá của tin
+   *
+   * Chúng là **biên của bucket** mà tin rơi vào — tin giá 11 tỷ có `priceMin=10 tỷ,
+   * priceMax=20 tỷ`; tin 95 m² có `areaMin=80, areaMax=100`. Bản cũ coi chúng như một
+   * khoảng thật rồi ghép OR với giá chính xác, nên MỌI tin có bucket giao với khoảng người
+   * dùng hỏi đều lọt, kể cả khi giá thật nằm ngoài. Đo được trên site: lọc 1–2 tỷ ra 40/75
+   * tin sai, lọc 50–100 m² ra 37/100 tin sai (khách báo 25/08).
+   *
+   * ## Vì sao không xoá hẳn vế bucket
+   *
+   * Có tin CHỈ có bucket mà không có giá chính xác — người đăng chọn "khoảng giá" thay vì
+   * nhập số (đo được 11 tin, 9 trong đó là "thoả thuận"). Xoá vế bucket là mất hẳn nhóm này
+   * khỏi mọi bộ lọc.
+   *
+   * Nên vế bucket chỉ được dùng khi tin KHÔNG có giá trị chính xác. Hai nhánh loại trừ nhau,
+   * không nhánh nào cứu được tin mà nhánh kia đã loại đúng.
+   */
+  function rangeWhere(
+    exact: 'price' | 'area',
+    lowField: 'priceMin' | 'areaMin',
+    highField: 'priceMax' | 'areaMax',
+    min?: number,
+    max?: number,
+  ): any {
+    const exactRange: any = {};
+    if (min !== undefined) exactRange.gte = min;
+    if (max !== undefined) exactRange.lte = max;
+
+    // Bucket giao với khoảng hỏi: bucket.high >= min VÀ bucket.low <= max.
+    const bucket: any[] = [{ [exact]: null }];
+    if (min !== undefined) bucket.push({ [highField]: { gte: min } });
+    if (max !== undefined) bucket.push({ [lowField]: { lte: max } });
+
+    return {
       OR: [
-        { price: { gte: filters.minPrice ?? 0, lte: filters.maxPrice ?? Number.MAX_SAFE_INTEGER } },
-        { AND: priceConditions }
-      ]
-    });
+        { [exact]: exactRange },
+        { AND: bucket },
+      ],
+    };
+  }
+
+  if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+    and.push(rangeWhere('price', 'priceMin', 'priceMax', filters.minPrice, filters.maxPrice));
   }
 
   if (filters.minArea !== undefined || filters.maxArea !== undefined) {
-    const areaConditions: any[] = [];
-    if (filters.minArea !== undefined) areaConditions.push({ areaMax: { gte: filters.minArea } });
-    if (filters.maxArea !== undefined) areaConditions.push({ areaMin: { lte: filters.maxArea } });
-    
-    and.push({
-      OR: [
-        { area: { gte: filters.minArea ?? 0, lte: filters.maxArea ?? Number.MAX_SAFE_INTEGER } },
-        { AND: areaConditions }
-      ]
-    });
+    and.push(rangeWhere('area', 'areaMin', 'areaMax', filters.minArea, filters.maxArea));
   }
 
   const text = filters.q || filters.location;
@@ -628,6 +654,39 @@ function meiliStringFilter(attribute: string, values: string[]) {
   return values.map((value) => `${attribute} = "${escapeMeili(value)}"`).join(' OR ');
 }
 
+/**
+ * Bản Meilisearch của `rangeWhere` — xem giải thích đầy đủ ở đó.
+ *
+ * Bản cũ tách min và max thành HAI mệnh đề nối AND:
+ *     (price >= min OR priceMax >= min)  AND  (price <= max OR priceMin <= max)
+ * Cách viết này cho một tin thoả vế trái bằng `price` rồi thoả vế phải bằng `priceMin` —
+ * hai vế nói về hai thứ khác nhau. Tin 2,5 tỷ (bucket 2–3 tỷ) vì thế lọt khoảng hỏi 1–2 tỷ.
+ *
+ * Bản mới gộp thành MỘT mệnh đề hai nhánh loại trừ nhau: tin có giá chính xác thì xét giá,
+ * tin không có giá mới xét bucket.
+ *
+ * `IS NULL` cần Meilisearch >= 1.2; bản đang chạy là 1.7.6.
+ */
+function meiliRangeClause(
+  exact: string,
+  lowField: string,
+  highField: string,
+  min?: number,
+  max?: number,
+): string | undefined {
+  if (min === undefined && max === undefined) return undefined;
+
+  const exactParts: string[] = [];
+  if (min !== undefined) exactParts.push(`${exact} >= ${min}`);
+  if (max !== undefined) exactParts.push(`${exact} <= ${max}`);
+
+  const bucketParts: string[] = [`${exact} IS NULL`];
+  if (min !== undefined) bucketParts.push(`${highField} >= ${min}`);
+  if (max !== undefined) bucketParts.push(`${lowField} <= ${max}`);
+
+  return `((${exactParts.join(' AND ')}) OR (${bucketParts.join(' AND ')}))`;
+}
+
 export function buildMeiliFilters(filters: NormalizedFilters) {
   const clauses: string[] = ['(status = "APPROVED" OR status = "SOLD")', 'deletedAt IS NULL'];
   const txFilter = meiliStringFilter('transactionType', transactionTypeVariants(filters.transactionType));
@@ -649,10 +708,10 @@ export function buildMeiliFilters(filters: NormalizedFilters) {
     clauses.push(`isNegotiable = false`);
   }
 
-  if (filters.minPrice !== undefined) clauses.push(`(price >= ${filters.minPrice} OR priceMax >= ${filters.minPrice})`);
-  if (filters.maxPrice !== undefined) clauses.push(`(price <= ${filters.maxPrice} OR priceMin <= ${filters.maxPrice})`);
-  if (filters.minArea !== undefined) clauses.push(`(area >= ${filters.minArea} OR areaMax >= ${filters.minArea})`);
-  if (filters.maxArea !== undefined) clauses.push(`(area <= ${filters.maxArea} OR areaMin <= ${filters.maxArea})`);
+  const priceClause = meiliRangeClause('price', 'priceMin', 'priceMax', filters.minPrice, filters.maxPrice);
+  if (priceClause) clauses.push(priceClause);
+  const areaClause = meiliRangeClause('area', 'areaMin', 'areaMax', filters.minArea, filters.maxArea);
+  if (areaClause) clauses.push(areaClause);
   return clauses.length ? [clauses.join(' AND ')] : undefined;
 }
 

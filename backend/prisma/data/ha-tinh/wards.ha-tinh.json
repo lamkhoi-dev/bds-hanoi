@@ -1,0 +1,1115 @@
+{
+  "note": "Phuong/xa Ha Tinh — theo file khach gui \"Ra soat danh sach xa cu moi Nghe An Ha Tinh\" (25/08/2026). 69 xa moi khop dung so don vi hanh chinh Ha Tinh sau sap nhap. Xa cu theo ban khach da sua; 10/13 huyen khop chinh xac so khach ghi.",
+  "provinceSlug": "ha-tinh",
+  "districts": [
+    {
+      "displayName": "Huyện Can Lộc",
+      "matchNames": [
+        "can lộc",
+        "huyện can lộc"
+      ],
+      "wards": [
+        {
+          "name": "Xã Can Lộc",
+          "short": "Can Lộc"
+        },
+        {
+          "name": "Xã Tùng Lộc",
+          "short": "Tùng Lộc"
+        },
+        {
+          "name": "Xã Gia Hanh",
+          "short": "Gia Hanh"
+        },
+        {
+          "name": "Xã Trường Lưu",
+          "short": "Trường Lưu"
+        },
+        {
+          "name": "Xã Xuân Lộc",
+          "short": "Xuân Lộc"
+        },
+        {
+          "name": "Xã Đồng Lộc",
+          "short": "Đồng Lộc"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Nghèn"
+        },
+        {
+          "name": "Thị trấn Đồng Lộc"
+        },
+        {
+          "name": "Xã Gia Hanh"
+        },
+        {
+          "name": "Xã Khánh Vĩnh Yên"
+        },
+        {
+          "name": "Xã Kim Song Trường"
+        },
+        {
+          "name": "Xã Mỹ Lộc"
+        },
+        {
+          "name": "Xã Phú Lộc"
+        },
+        {
+          "name": "Xã Quang Lộc"
+        },
+        {
+          "name": "Xã Sơn Lộc"
+        },
+        {
+          "name": "Xã Thanh Lộc"
+        },
+        {
+          "name": "Xã Thiên Lộc"
+        },
+        {
+          "name": "Xã Thuần Thiện"
+        },
+        {
+          "name": "Xã Thường Nga"
+        },
+        {
+          "name": "Xã Thượng Lộc"
+        },
+        {
+          "name": "Xã Trung Lộc"
+        },
+        {
+          "name": "Xã Tùng Lộc"
+        },
+        {
+          "name": "Xã Vượng Lộc"
+        },
+        {
+          "name": "Xã Xuân Lộc"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Cẩm Xuyên",
+      "matchNames": [
+        "cẩm xuyên",
+        "huyện cẩm xuyên"
+      ],
+      "wards": [
+        {
+          "name": "Xã Cẩm Xuyên",
+          "short": "Cẩm Xuyên"
+        },
+        {
+          "name": "Xã Thiên Cầm",
+          "short": "Thiên Cầm"
+        },
+        {
+          "name": "Xã Cẩm Duệ",
+          "short": "Cẩm Duệ"
+        },
+        {
+          "name": "Xã Cẩm Hưng",
+          "short": "Cẩm Hưng"
+        },
+        {
+          "name": "Xã Cẩm Lạc",
+          "short": "Cẩm Lạc"
+        },
+        {
+          "name": "Xã Cẩm Trung",
+          "short": "Cẩm Trung"
+        },
+        {
+          "name": "Xã Yên Hòa",
+          "short": "Yên Hòa"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Cẩm Xuyên"
+        },
+        {
+          "name": "Thị trấn Thiên Cầm"
+        },
+        {
+          "name": "Xã Cẩm Duệ"
+        },
+        {
+          "name": "Xã Cẩm Dương"
+        },
+        {
+          "name": "Xã Cẩm Hà"
+        },
+        {
+          "name": "Xã Cẩm Hưng"
+        },
+        {
+          "name": "Xã Cẩm Lĩnh"
+        },
+        {
+          "name": "Xã Cẩm Lạc"
+        },
+        {
+          "name": "Xã Cẩm Lộc"
+        },
+        {
+          "name": "Xã Cẩm Minh"
+        },
+        {
+          "name": "Xã Cẩm Mỹ"
+        },
+        {
+          "name": "Xã Cẩm Nhượng"
+        },
+        {
+          "name": "Xã Cẩm Quan"
+        },
+        {
+          "name": "Xã Cẩm Quang"
+        },
+        {
+          "name": "Xã Cẩm Sơn"
+        },
+        {
+          "name": "Xã Cẩm Thành"
+        },
+        {
+          "name": "Xã Cẩm Thạch"
+        },
+        {
+          "name": "Xã Cẩm Thịnh"
+        },
+        {
+          "name": "Xã Cẩm Trung"
+        },
+        {
+          "name": "Xã Cẩm Vĩnh"
+        },
+        {
+          "name": "Xã Nam Phúc Thăng"
+        },
+        {
+          "name": "Xã Yên Hòa"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Hương Khê",
+      "matchNames": [
+        "huyện hương khê",
+        "hương khê"
+      ],
+      "wards": [
+        {
+          "name": "Xã Hương Khê",
+          "short": "Hương Khê"
+        },
+        {
+          "name": "Xã Hương Phố",
+          "short": "Hương Phố"
+        },
+        {
+          "name": "Xã Hương Đô",
+          "short": "Hương Đô"
+        },
+        {
+          "name": "Xã Hà Linh",
+          "short": "Hà Linh"
+        },
+        {
+          "name": "Xã Hương Bình",
+          "short": "Hương Bình"
+        },
+        {
+          "name": "Xã Phúc Trạch",
+          "short": "Phúc Trạch"
+        },
+        {
+          "name": "Xã Hương Xuân",
+          "short": "Hương Xuân"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Hương Khê"
+        },
+        {
+          "name": "Xã Điền Mỹ"
+        },
+        {
+          "name": "Xã Gia Phố"
+        },
+        {
+          "name": "Xã Hà Linh"
+        },
+        {
+          "name": "Xã Hòa Hải"
+        },
+        {
+          "name": "Xã Hương Bình"
+        },
+        {
+          "name": "Xã Hương Đô"
+        },
+        {
+          "name": "Xã Hương Giang"
+        },
+        {
+          "name": "Xã Hương Lâm"
+        },
+        {
+          "name": "Xã Hương Liên"
+        },
+        {
+          "name": "Xã Hương Long"
+        },
+        {
+          "name": "Xã Hương Thủy"
+        },
+        {
+          "name": "Xã Hương Trà"
+        },
+        {
+          "name": "Xã Hương Trạch"
+        },
+        {
+          "name": "Xã Hương Vĩnh"
+        },
+        {
+          "name": "Xã Hương Xuân"
+        },
+        {
+          "name": "Xã Lộc Yên"
+        },
+        {
+          "name": "Xã Phú Gia"
+        },
+        {
+          "name": "Xã Phúc Đồng"
+        },
+        {
+          "name": "Xã Phúc Trạch"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Hương Sơn",
+      "matchNames": [
+        "huyện hương sơn",
+        "hương sơn"
+      ],
+      "wards": [
+        {
+          "name": "Xã Hương Sơn",
+          "short": "Hương Sơn"
+        },
+        {
+          "name": "Xã Sơn Tây",
+          "short": "Sơn Tây"
+        },
+        {
+          "name": "Xã Tứ Mỹ",
+          "short": "Tứ Mỹ"
+        },
+        {
+          "name": "Xã Sơn Giang",
+          "short": "Sơn Giang"
+        },
+        {
+          "name": "Xã Sơn Tiến",
+          "short": "Sơn Tiến"
+        },
+        {
+          "name": "Xã Sơn Hồng",
+          "short": "Sơn Hồng"
+        },
+        {
+          "name": "Xã Kim Hoa",
+          "short": "Kim Hoa"
+        },
+        {
+          "name": "Xã Sơn Kim 1",
+          "short": "Sơn Kim 1"
+        },
+        {
+          "name": "Xã Sơn Kim 2",
+          "short": "Sơn Kim 2"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Phố Châu"
+        },
+        {
+          "name": "Thị trấn Tây Sơn"
+        },
+        {
+          "name": "Xã An Hòa Thịnh"
+        },
+        {
+          "name": "Xã Châu Bình"
+        },
+        {
+          "name": "Xã Hàm Trường"
+        },
+        {
+          "name": "Xã Kim Hoa"
+        },
+        {
+          "name": "Xã Mỹ Long"
+        },
+        {
+          "name": "Xã Quang Diệm"
+        },
+        {
+          "name": "Xã Sơn Bằng"
+        },
+        {
+          "name": "Xã Sơn Giang"
+        },
+        {
+          "name": "Xã Sơn Hồng"
+        },
+        {
+          "name": "Xã Sơn Kim 1"
+        },
+        {
+          "name": "Xã Sơn Kim 2"
+        },
+        {
+          "name": "Xã Sơn Lâm"
+        },
+        {
+          "name": "Xã Sơn Lễ"
+        },
+        {
+          "name": "Xã Sơn Lĩnh"
+        },
+        {
+          "name": "Xã Sơn Ninh"
+        },
+        {
+          "name": "Xã Sơn Phú"
+        },
+        {
+          "name": "Xã Sơn Tây"
+        },
+        {
+          "name": "Xã Sơn Tiến"
+        },
+        {
+          "name": "Xã Sơn Trung"
+        },
+        {
+          "name": "Xã Tân Mỹ Hà"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Kỳ Anh",
+      "matchNames": [
+        "huyện kỳ anh",
+        "kỳ anh"
+      ],
+      "wards": [
+        {
+          "name": "Xã Kỳ Anh",
+          "short": "Kỳ Anh"
+        },
+        {
+          "name": "Xã Kỳ Xuân",
+          "short": "Kỳ Xuân"
+        },
+        {
+          "name": "Xã Kỳ Văn",
+          "short": "Kỳ Văn"
+        },
+        {
+          "name": "Xã Kỳ Khang",
+          "short": "Kỳ Khang"
+        },
+        {
+          "name": "Xã Kỳ Lạc",
+          "short": "Kỳ Lạc"
+        },
+        {
+          "name": "Xã Kỳ Thượng",
+          "short": "Kỳ Thượng"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Xã Kỳ Bắc"
+        },
+        {
+          "name": "Xã Kỳ Châu"
+        },
+        {
+          "name": "Xã Kỳ Giang"
+        },
+        {
+          "name": "Xã Kỳ Hải"
+        },
+        {
+          "name": "Xã Kỳ Khang"
+        },
+        {
+          "name": "Xã Kỳ Lạc"
+        },
+        {
+          "name": "Xã Kỳ Phong"
+        },
+        {
+          "name": "Xã Kỳ Phú"
+        },
+        {
+          "name": "Xã Kỳ Sơn"
+        },
+        {
+          "name": "Xã Kỳ Thư"
+        },
+        {
+          "name": "Xã Kỳ Thượng"
+        },
+        {
+          "name": "Xã Kỳ Thọ"
+        },
+        {
+          "name": "Xã Kỳ Tiến"
+        },
+        {
+          "name": "Xã Kỳ Trung"
+        },
+        {
+          "name": "Xã Kỳ Tân"
+        },
+        {
+          "name": "Xã Kỳ Tây"
+        },
+        {
+          "name": "Xã Kỳ Văn"
+        },
+        {
+          "name": "Xã Kỳ Xuân"
+        },
+        {
+          "name": "Thị trấn Kỳ Đồng"
+        },
+        {
+          "name": "Xã Lâm Hợp"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Lộc Hà",
+      "matchNames": [
+        "huyện lộc hà",
+        "lộc hà"
+      ],
+      "wards": [
+        {
+          "name": "Xã Lộc Hà",
+          "short": "Lộc Hà"
+        },
+        {
+          "name": "Xã Hồng Lộc",
+          "short": "Hồng Lộc"
+        },
+        {
+          "name": "Xã Mai Phụ",
+          "short": "Mai Phụ"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Lộc Hà"
+        },
+        {
+          "name": "Xã Bình An"
+        },
+        {
+          "name": "Xã Hồng Lộc"
+        },
+        {
+          "name": "Xã Hộ Độ"
+        },
+        {
+          "name": "Xã Mai Phụ"
+        },
+        {
+          "name": "Xã Phù Lưu"
+        },
+        {
+          "name": "Xã Thạch Châu"
+        },
+        {
+          "name": "Xã Thạch Kim"
+        },
+        {
+          "name": "Xã Thạch Mỹ"
+        },
+        {
+          "name": "Xã Thịnh Lộc"
+        },
+        {
+          "name": "Xã Tân Lộc"
+        },
+        {
+          "name": "Xã Ích Hậu"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Nghi Xuân",
+      "matchNames": [
+        "huyện nghi xuân",
+        "nghi xuân"
+      ],
+      "wards": [
+        {
+          "name": "Xã Tiên Điền",
+          "short": "Tiên Điền"
+        },
+        {
+          "name": "Xã Nghi Xuân",
+          "short": "Nghi Xuân"
+        },
+        {
+          "name": "Xã Cổ Đạm",
+          "short": "Cổ Đạm"
+        },
+        {
+          "name": "Xã Đan Hải",
+          "short": "Đan Hải"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Tiên Điền"
+        },
+        {
+          "name": "Thị trấn Xuân An"
+        },
+        {
+          "name": "Xã Cương Gián"
+        },
+        {
+          "name": "Xã Cỗ Đạm"
+        },
+        {
+          "name": "Xã Xuân Giang"
+        },
+        {
+          "name": "Xã Xuân Hải"
+        },
+        {
+          "name": "Xã Xuân Hồng"
+        },
+        {
+          "name": "Xã Xuân Hội"
+        },
+        {
+          "name": "Xã Xuân Liên"
+        },
+        {
+          "name": "Xã Xuân Lĩnh"
+        },
+        {
+          "name": "Xã Xuân Mỹ"
+        },
+        {
+          "name": "Xã Xuân Phổ"
+        },
+        {
+          "name": "Xã Xuân Thành"
+        },
+        {
+          "name": "Xã Xuân Viên"
+        },
+        {
+          "name": "Xã Xuân Yên"
+        },
+        {
+          "name": "Xã Đan Trường"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Thạch Hà",
+      "matchNames": [
+        "huyện thạch hà",
+        "thạch hà"
+      ],
+      "wards": [
+        {
+          "name": "Xã Thạch Hà",
+          "short": "Thạch Hà"
+        },
+        {
+          "name": "Xã Toàn Lưu",
+          "short": "Toàn Lưu"
+        },
+        {
+          "name": "Xã Việt Xuyên",
+          "short": "Việt Xuyên"
+        },
+        {
+          "name": "Xã Đông Kinh",
+          "short": "Đông Kinh"
+        },
+        {
+          "name": "Xã Thạch Xuân",
+          "short": "Thạch Xuân"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Thạch Hà"
+        },
+        {
+          "name": "Thị trấn Lộc Hà"
+        },
+        {
+          "name": "Xã Bình An"
+        },
+        {
+          "name": "Xã Hồng Lộc"
+        },
+        {
+          "name": "Xã Ích Hậu"
+        },
+        {
+          "name": "Xã Lưu Vĩnh Sơn"
+        },
+        {
+          "name": "Xã Mai Phụ"
+        },
+        {
+          "name": "Xã Nam Điền"
+        },
+        {
+          "name": "Xã Ngọc Sơn"
+        },
+        {
+          "name": "Xã Phù Lưu"
+        },
+        {
+          "name": "Xã Tân Lộc"
+        },
+        {
+          "name": "Xã Thạch Châu"
+        },
+        {
+          "name": "Xã Thạch Kênh"
+        },
+        {
+          "name": "Xã Thạch Kim"
+        },
+        {
+          "name": "Xã Thạch Liên"
+        },
+        {
+          "name": "Xã Thạch Long"
+        },
+        {
+          "name": "Xã Thạch Mỹ"
+        },
+        {
+          "name": "Xã Thạch Ngọc"
+        },
+        {
+          "name": "Xã Thạch Sơn"
+        },
+        {
+          "name": "Xã Thạch Xuân"
+        },
+        {
+          "name": "Xã Thịnh Lộc"
+        },
+        {
+          "name": "Xã Việt Tiến"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Vũ Quang",
+      "matchNames": [
+        "huyện vũ quang",
+        "vũ quang"
+      ],
+      "wards": [
+        {
+          "name": "Xã Vũ Quang",
+          "short": "Vũ Quang"
+        },
+        {
+          "name": "Xã Mai Hoa",
+          "short": "Mai Hoa"
+        },
+        {
+          "name": "Xã Thượng Đức",
+          "short": "Thượng Đức"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Vũ Quang"
+        },
+        {
+          "name": "Xã Hương Minh"
+        },
+        {
+          "name": "Xã Quang Thọ"
+        },
+        {
+          "name": "Xã Thọ Điền"
+        },
+        {
+          "name": "Xã Ân Phú"
+        },
+        {
+          "name": "Xã Đức Bồng"
+        },
+        {
+          "name": "Xã Đức Giang"
+        },
+        {
+          "name": "Xã Đức Hương"
+        },
+        {
+          "name": "Xã Đức Liên"
+        },
+        {
+          "name": "Xã Đức Lĩnh"
+        }
+      ]
+    },
+    {
+      "displayName": "Huyện Đức Thọ",
+      "matchNames": [
+        "huyện đức thọ",
+        "đức thọ"
+      ],
+      "wards": [
+        {
+          "name": "Xã Đức Thọ",
+          "short": "Đức Thọ"
+        },
+        {
+          "name": "Xã Đức Đồng",
+          "short": "Đức Đồng"
+        },
+        {
+          "name": "Xã Đức Quang",
+          "short": "Đức Quang"
+        },
+        {
+          "name": "Xã Đức Thịnh",
+          "short": "Đức Thịnh"
+        },
+        {
+          "name": "Xã Đức Minh",
+          "short": "Đức Minh"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Thị trấn Đức Thọ"
+        },
+        {
+          "name": "Xã An Dũng"
+        },
+        {
+          "name": "Xã Bùi La Nhân"
+        },
+        {
+          "name": "Xã Hòa Lạc"
+        },
+        {
+          "name": "Xã Liên Minh"
+        },
+        {
+          "name": "Xã Lâm Trung Thủy"
+        },
+        {
+          "name": "Xã Quang Vĩnh"
+        },
+        {
+          "name": "Xã Thanh Bình Thịnh"
+        },
+        {
+          "name": "Xã Trường Sơn"
+        },
+        {
+          "name": "Xã Tân Dân"
+        },
+        {
+          "name": "Xã Tân Hương"
+        },
+        {
+          "name": "Xã Tùng Châu"
+        },
+        {
+          "name": "Xã Tùng Ảnh"
+        },
+        {
+          "name": "Xã Yên Hồ"
+        },
+        {
+          "name": "Xã Đức Lạng"
+        },
+        {
+          "name": "Xã Đức Quang"
+        },
+        {
+          "name": "Xã Đức Đồng"
+        }
+      ]
+    },
+    {
+      "displayName": "Thành phố Hà Tĩnh",
+      "matchNames": [
+        "hà tĩnh",
+        "thành phố hà tĩnh",
+        "tp hà tĩnh"
+      ],
+      "wards": [
+        {
+          "name": "Phường Thành Sen",
+          "short": "Thành Sen"
+        },
+        {
+          "name": "Phường Trần Phú",
+          "short": "Trần Phú"
+        },
+        {
+          "name": "Phường Hà Huy Tập",
+          "short": "Hà Huy Tập"
+        },
+        {
+          "name": "Xã Thạch Lạc",
+          "short": "Thạch Lạc"
+        },
+        {
+          "name": "Xã Đồng Tiến",
+          "short": "Đồng Tiến"
+        },
+        {
+          "name": "Xã Thạch Khê",
+          "short": "Thạch Khê"
+        },
+        {
+          "name": "Xã Cẩm Bình",
+          "short": "Cẩm Bình"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Phường Bắc Hà"
+        },
+        {
+          "name": "Phường Hà Huy Tập"
+        },
+        {
+          "name": "Phường Nam Hà"
+        },
+        {
+          "name": "Phường Nguyễn Du"
+        },
+        {
+          "name": "Phường Thạch Hưng"
+        },
+        {
+          "name": "Phường Thạch Hạ"
+        },
+        {
+          "name": "Phường Thạch Linh"
+        },
+        {
+          "name": "Phường Thạch Quý"
+        },
+        {
+          "name": "Phường Thạch Trung"
+        },
+        {
+          "name": "Phường Trần Phú"
+        },
+        {
+          "name": "Phường Tân Giang"
+        },
+        {
+          "name": "Phường Văn Yên"
+        },
+        {
+          "name": "Phường Đại Nài"
+        },
+        {
+          "name": "Phường Đồng Môn"
+        },
+        {
+          "name": "Xã Cẩm Bình"
+        },
+        {
+          "name": "Xã Cẩm Vịnh"
+        },
+        {
+          "name": "Xã Hộ Độ"
+        },
+        {
+          "name": "Xã Thạch Bình"
+        },
+        {
+          "name": "Xã Thạch Hải"
+        },
+        {
+          "name": "Xã Thạch Hội"
+        },
+        {
+          "name": "Xã Thạch Khê"
+        },
+        {
+          "name": "Xã Thạch Lạc"
+        },
+        {
+          "name": "Xã Thạch Thắng"
+        },
+        {
+          "name": "Xã Thạch Trị"
+        },
+        {
+          "name": "Xã Thạch Văn"
+        },
+        {
+          "name": "Xã Thạch Đài"
+        },
+        {
+          "name": "Xã Tân Lâm Hương"
+        },
+        {
+          "name": "Xã Tượng Sơn"
+        },
+        {
+          "name": "Xã Đỉnh Bàn"
+        }
+      ]
+    },
+    {
+      "displayName": "Thị xã Hồng Lĩnh",
+      "matchNames": [
+        "hồng lĩnh",
+        "thị xã hồng lĩnh",
+        "tx hồng lĩnh"
+      ],
+      "wards": [
+        {
+          "name": "Phường Bắc Hồng Lĩnh",
+          "short": "Bắc Hồng Lĩnh"
+        },
+        {
+          "name": "Phường Nam Hồng Lĩnh",
+          "short": "Nam Hồng Lĩnh"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Phường Bắc Hồng"
+        },
+        {
+          "name": "Phường Nam Hồng"
+        },
+        {
+          "name": "Phường Trung Lương"
+        },
+        {
+          "name": "Phường Đậu Liêu"
+        },
+        {
+          "name": "Phường Đức Thuận"
+        },
+        {
+          "name": "Xã Thuận Lộc"
+        },
+        {
+          "name": "Xã Xuân Lam"
+        }
+      ]
+    },
+    {
+      "displayName": "Thị xã Kỳ Anh",
+      "matchNames": [
+        "kỳ anh",
+        "thị xã kỳ anh",
+        "tx kỳ anh"
+      ],
+      "wards": [
+        {
+          "name": "Xã Vũng Áng",
+          "short": "Vũng Áng"
+        },
+        {
+          "name": "Xã Sông Trí",
+          "short": "Sông Trí"
+        },
+        {
+          "name": "Xã Hoành Sơn",
+          "short": "Hoành Sơn"
+        },
+        {
+          "name": "Xã Hải Ninh",
+          "short": "Hải Ninh"
+        },
+        {
+          "name": "Xã Kỳ Hoa",
+          "short": "Kỳ Hoa"
+        }
+      ],
+      "oldWards": [
+        {
+          "name": "Phường Hưng Trí"
+        },
+        {
+          "name": "Phường Kỳ Liên"
+        },
+        {
+          "name": "Phường Kỳ Long"
+        },
+        {
+          "name": "Phường Kỳ Phương"
+        },
+        {
+          "name": "Phường Kỳ Thịnh"
+        },
+        {
+          "name": "Phường Kỳ Trinh"
+        },
+        {
+          "name": "Xã Kỳ Hoa"
+        },
+        {
+          "name": "Xã Kỳ Hà"
+        },
+        {
+          "name": "Xã Kỳ Lợi"
+        },
+        {
+          "name": "Phường Kỳ Nam"
+        },
+        {
+          "name": "Phường Kỳ Ninh"
+        },
+        {
+          "name": "Xã Kỳ Châu"
+        },
+        {
+          "name": "Xã Kỳ Hải"
+        },
+        {
+          "name": "Xã Kỳ Tân"
+        }
+      ]
+    }
+  ]
+}
