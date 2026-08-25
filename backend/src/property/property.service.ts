@@ -1246,6 +1246,22 @@ export class PropertyService {
     return this.interactionService.incrementView(id);
   }
 
+  /**
+   * Cập nhật riêng `views` trong bản ghi đã cache, giữ nguyên phần còn lại.
+   *
+   * Không xoá cả khoá cache: `findOne` là truy vấn nặng (kèm user, ảnh, chuỗi khu vực để
+   * dựng breadcrumb) và cache 60 giây chính là thứ giữ trang chi tiết nhẹ. Xoá nó mỗi lượt
+   * xem là bỏ cache. Chỉ vá đúng con số đang lệch.
+   *
+   * Cache dùng chung khoá `property:{id}` với `findOne` — đổi khoá ở một nơi phải đổi cả hai.
+   */
+  async patchCachedViews(id: string, views: number): Promise<void> {
+    const key = `property:${id}`;
+    const cached = await this.cacheManager.get<any>(key).catch(() => undefined);
+    if (!cached) return;
+    await this.cacheManager.set(key, { ...cached, views }, 60_000).catch(() => undefined);
+  }
+
 
 
   async promote(userId: string, propertyId: string, type: 'VIP' | 'UP', packageId?: string, customDays?: number) {

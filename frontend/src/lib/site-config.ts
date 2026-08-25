@@ -71,6 +71,19 @@ export const siteConfig = {
     slug: provinceSlug,
   },
 
+  /**
+   * TẤT CẢ tỉnh site phục vụ, GIỮ NGUYÊN thứ tự khai trong `NEXT_PUBLIC_PROVINCE_SLUG`.
+   *
+   * `province.slug` chỉ là tỉnh đầu tiên. Site Nghệ An chạy `nghe-an,ha-tinh` nên những chỗ
+   * cần liệt kê đủ (trang /khu-vuc, menu khu vực) phải dùng danh sách này. Thứ tự khai chính
+   * là thứ tự khách muốn hiển thị: "sắp xếp lại các huyện, tp, tx Nghệ An, sau đó là của Hà
+   * Tĩnh (hiện đang để lẫn nhau)" — yêu cầu 25/08.
+   */
+  provinceSlugs: provinceSlugRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+
   /** Tên thương hiệu tách sẵn 2 dòng cho logo header — xem giải thích ở trên. */
   brand: {
     line1: brandLine1,

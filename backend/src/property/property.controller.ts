@@ -206,9 +206,21 @@ export class PropertyController {
     }
 
     if (!property.deletedAt && (property.status === 'APPROVED' || property.status === 'SOLD')) {
-      // Note: incrementView will only be called when cache misses, which is acceptable for high-traffic sites
-      this.propertyService.incrementView(id).catch(() => {});
-      
+      // Phải CHỜ kết quả rồi vá vào payload: `findOne` cache bản ghi 60 giây và hàm tăng
+      // view ghi thẳng SQL, nên nếu chỉ bắn rồi quên thì suốt 60 giây người xem vẫn thấy
+      // con số cũ — đo được: gọi 3 lần, CSDL lên 3 mà API vẫn trả 0 (khách báo 25/08).
+      // Không xoá cache: làm vậy là mỗi lượt xem lại truy vấn full bản ghi, đúng thứ cache
+      // này sinh ra để tránh. Chỉ cập nhật riêng con số.
+      try {
+        const { views } = await this.propertyService.incrementView(id);
+        if (views !== null) {
+          property.views = views;
+          await this.propertyService.patchCachedViews(id, views);
+        }
+      } catch {
+        // Đếm view hỏng không được làm hỏng trang chi tiết.
+      }
+
       if (req.user?.id) {
         this.viewedPropertyService.logView(req.user.id, property.id).catch(() => {});
       }

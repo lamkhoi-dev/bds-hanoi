@@ -145,12 +145,24 @@ export class PropertyInteractionService {
     return { success: true };
   }
 
-  async incrementView(id: string) {
-    // Xem chi tiết 3.3 trong plan: `prisma.property.update` áp @updatedAt, nên mỗi lượt
-    // xem trang đẩy Property.updatedAt và làm <lastmod> của mọi tin đổi liên tục —
-    // Google coi lastmod đó là vô nghĩa. Raw SQL bỏ qua @updatedAt.
-    await this.prisma
-      .$executeRaw`UPDATE "Property" SET "views" = "views" + 1 WHERE "id" = ${id}`;
-    return { success: true };
+  /**
+   * Tăng lượt xem và TRẢ VỀ số mới.
+   *
+   * Trả về số mới là phần bắt buộc, không phải tiện tay: `findOne` cache bản ghi tin 60
+   * giây, còn hàm này ghi thẳng SQL nên không đụng tới cache. Hệ quả là suốt 60 giây người
+   * xem luôn thấy con số cũ — đo được trên site: gọi 3 lần, CSDL lên 3 nhưng API vẫn trả 0.
+   * Khách báo 25/08 "bộ đếm view không hoạt động" chính là hiện tượng này; bộ đếm vẫn chạy
+   * (toàn site 39.641 lượt), chỉ là màn hình không phản ánh.
+   *
+   * Chỗ gọi dùng số trả về để vá cả payload lẫn cache — xem `PropertyController#findOne`.
+   */
+  async incrementView(id: string): Promise<{ success: boolean; views: number | null }> {
+    // `prisma.property.update` áp @updatedAt, nên mỗi lượt xem sẽ đẩy Property.updatedAt và
+    // làm <lastmod> của mọi tin đổi liên tục — Google coi lastmod đó là vô nghĩa. Raw SQL
+    // bỏ qua @updatedAt. Dùng $queryRaw (không phải $executeRaw) để lấy được RETURNING.
+    const rows = await this.prisma.$queryRaw<{ views: number }[]>`
+      UPDATE "Property" SET "views" = "views" + 1 WHERE "id" = ${id} RETURNING "views"`;
+    const views = rows?.[0]?.views;
+    return { success: true, views: views === undefined ? null : Number(views) };
   }
 }

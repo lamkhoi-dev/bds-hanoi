@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { groupDistrictsByProvince } from '@/lib/locations/group-by-province';
 import { siteConfig } from '@/lib/site-config';
 import { getLocationDictionary } from '@/lib/seo/locations';
 import { listingPath } from '@/lib/seo/canonical';
@@ -21,7 +22,16 @@ export default async function KhuVucPage() {
 
   const districts = Object.entries(dict)
     .filter(([, info]) => info.type === 'DISTRICT')
-    .map(([slug, info]) => ({ slug, name: info.name }));
+    .map(([slug, info]) => ({ slug, name: info.name, parent: info.parent }));
+
+  // Gom theo tỉnh, giữ thứ tự khai trong NEXT_PUBLIC_PROVINCE_SLUG (nghe-an rồi ha-tinh).
+  // Trước đây đổ tất cả vào một danh sách phẳng sắp theo tên nên 20 huyện Nghệ An và 13
+  // huyện Hà Tĩnh trộn vào nhau — khách yêu cầu tách 25/08.
+  const provinceGroups = groupDistrictsByProvince(
+    districts,
+    (slug) => dict[slug]?.name,
+    siteConfig.provinceSlugs,
+  );
 
   // Nhóm phường/xã theo quận/huyện cha để danh sách còn đọc được ở quy mô ~700 mục.
   // Tách riêng OLD_WARD: khách yêu cầu "/khu-vuc" liệt kê đủ cả phường/xã CŨ VÀ MỚI
@@ -58,16 +68,17 @@ export default async function KhuVucPage() {
             Danh sách khu vực đang được cập nhật.
           </div>
         ) : (
-          <section>
+          provinceGroups.map((province) => (
+          <section key={province.slug || 'khac'}>
             <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">{siteConfig.province.name}</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{province.name}</h2>
               <span className="px-3 py-1 bg-primary/10 text-primary text-sm font-bold rounded-full">
-                {districts.length}
+                {province.districts.length}
               </span>
             </div>
 
             <div className="space-y-8">
-              {districts.map((district) => {
+              {province.districts.map((district) => {
                 const wards = wardsByDistrict.get(district.slug) ?? [];
                 const oldWards = oldWardsByDistrict.get(district.slug) ?? [];
                 return (
@@ -112,6 +123,7 @@ export default async function KhuVucPage() {
               })}
             </div>
           </section>
+          ))
         )}
       </div>
     </div>
