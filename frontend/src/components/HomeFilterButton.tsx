@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
 import SidebarFilter from '@/components/SidebarFilter';
+import { useCloseOnNavigate } from '@/hooks/useCloseOnNavigate';
 
 /**
  * Nút mở bộ lọc trên TRANG CHỦ, đặt ngay dưới ô tìm kiếm.
@@ -20,6 +21,10 @@ export default function HomeFilterButton() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  // Áp dụng bộ lọc là điều hướng sang URL mới -> đóng popup, nếu không kết quả vừa lọc
+  // nằm ngay sau tấm phủ (khách báo 25/08).
+  useCloseOnNavigate(() => setOpen(false));
 
   useEffect(() => {
     if (!open) return;

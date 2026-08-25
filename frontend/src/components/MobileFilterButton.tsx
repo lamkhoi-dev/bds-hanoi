@@ -3,12 +3,16 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import SidebarFilter from './SidebarFilter';
+import { useCloseOnNavigate } from '@/hooks/useCloseOnNavigate';
 import { SlidersHorizontal, X, Trash2 } from 'lucide-react';
 
 export default function MobileFilterButton() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Xem HomeFilterButton — cùng một lỗi, cùng một cách sửa.
+  useCloseOnNavigate(() => setIsFilterOpen(false));
 
   const handleClearFilters = () => {
     // Keep 'q' if exists, clear others
