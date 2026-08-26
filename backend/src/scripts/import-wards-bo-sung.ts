@@ -211,6 +211,14 @@ async function main() {
   console.log(head.join('\n') || '  (không có thay đổi)');
   if (plan.length > head.length) console.log(`  … và ${plan.length - head.length} dòng nữa`);
 
+  // In riêng, không để lẫn vào mấy trăm dòng THÊM: đây là những chỗ máy tự quyết định và
+  // người chạy CẦN nhìn thấy để biết mà kiểm.
+  if (collisions.length > 0) {
+    console.log(`\n⚠ ${collisions.length} chỗ hai xã khác nhau cho cùng slug sau khi bỏ dấu.`);
+    console.log('  Giữ CẢ HAI, cái sau nhận hậu tố số ở cột slug (đoạn URL vẫn đọc được):');
+    for (const c of collisions) console.log(`   ${c}`);
+  }
+
   console.log(
     `\n${apply ? 'ĐÃ GHI' : 'CHẠY THỬ'} — thêm ${stats.created}, cập nhật ${stats.updated}, ` +
       `giữ nguyên ${stats.unchanged}, bỏ qua ${stats.skippedDistricts} huyện.`,

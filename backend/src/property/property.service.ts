@@ -977,11 +977,20 @@ export class PropertyService {
       if (tabsRaw.length === 0) return null;
       // Tiêu đề lấy theo layout (Nghệ An dùng tên địa danh cụ thể, xem
       // LOCATION_BLOCK_TITLES) chứ không lấy `def.title` dùng chung nữa.
+      //
+      // `href` là link của TIÊU ĐỀ khối. Trước đây không có nên frontend lùi về link của tab
+      // đang chọn, khiến "Bất động sản Nghệ An" trỏ về TP Vinh (tab đầu) và "Bất động sản
+      // TP Vinh" trỏ về phường Thành Vinh — khách yêu cầu sửa 25/08. Khối nào không khai
+      // trong LOCATION_BLOCK_HREFS thì `href` là undefined và frontend giữ hành vi cũ.
+      const href = LOCATION_BLOCK_HREFS[layout][key];
       return {
         id: key as SectionId,
         kind: 'tabs' as const,
         title: LOCATION_BLOCK_TITLES[layout][key],
-        tabs: [...tabsRaw, catchAllLocationTab],
+        href,
+        // Khối có phạm vi riêng thì nút "Tất cả các khu vực" cũng về đúng phạm vi đó, không
+        // về /khu-vuc — khách yêu cầu nút này của khối TP Vinh trỏ về bán BĐS TP Vinh.
+        tabs: [...tabsRaw, href ? { ...catchAllLocationTab, href } : catchAllLocationTab],
       };
     };
 
