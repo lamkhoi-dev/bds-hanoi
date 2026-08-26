@@ -229,3 +229,39 @@ Payload có hai chỗ trông giống nhau: `sections[]` (thứ frontend thật s
 
 > Cả 4 lỗi đều lộ ra nhờ bước **chạy thử trước khi ghi**. Nếu importer không có chế độ đó
 > thì lỗi 2 đã âm thầm làm hỏng dữ liệu địa giới của site đang chạy.
+
+---
+
+# DEPLOY XONG — 26/08/2026
+
+Cả hai site đã chạy code mới. Sao lưu trước khi động: `/root/backup-truoc-nap-xa-2026-08-26.sql.gz`
+(Nghệ An, 761K) và `/root/backup-truoc-25-8-2026-08-26.sql.gz` (Hà Nội, 56K), cả hai `gzip -t` hợp lệ.
+
+## Dữ liệu địa giới: 271 -> 838
+
+|  | Trước | Sau |
+|---|---|---|
+| Nghệ An — xã mới | 123 | **130** ✓ đúng con số khách nêu |
+| Nghệ An — xã cũ | 113 | **375** |
+| Hà Tĩnh — xã mới | 0 | **69** ✓ khớp số đơn vị sau sáp nhập |
+| Hà Tĩnh — xã cũ | 0 | **229** |
+
+`GET /locations`: 33 quận/huyện, **không còn huyện nào thiếu xã**. Lỗi Hà Tĩnh không đăng
+được tin giờ hết tận gốc, không còn phải dựa vào bản vá "cho phép bỏ trống".
+
+URL xã mới đều mở được: `/xa-can-loc`, `/phuong-thanh-sen`, `/xa-ky-anh`, `/nam-can-ky-son`,
+`/nghi-van`, `/thien-loc` — tất cả 200.
+
+## Các bản sửa đã kiểm trên site thật
+
+| Việc | Trước | Sau |
+|---|---|---|
+| Lọc giá 1–2 tỷ | 40/75 tin **sai khoảng** | 35 tin, **0 sai** |
+| Lọc diện tích 50–100 m² | 37/100 tin **sai khoảng** | 77 tin, **0 sai** |
+| Bộ đếm view | đứng yên ở 0 | 5 → 6 → 7 mỗi lượt |
+| Link "BĐS Nghệ An" | trỏ TP Vinh | `/khu-vuc` |
+| Link "BĐS TP Vinh" + nút Tất cả khu vực | phường Thành Vinh / `/khu-vuc` | `/thanh-pho-vinh` |
+| `/khu-vuc` | Nghệ An + Hà Tĩnh lẫn nhau | tách 2 nhóm, Nghệ An trước |
+
+Không phá gì: 13 khối trang chủ y nguyên, 193 tin / 171 đang hiện / 41 user, mọi trang 200.
+Hà Nội cũng deploy cùng lúc, 9 khối nguyên vẹn, mọi trang 200.
