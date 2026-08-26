@@ -179,3 +179,53 @@ Xã cũ: 10/13 huyện khớp chính xác số khách ghi; còn dư 3 mục ở 
    "vào search bình thường thì không autofocus". Bên em làm theo cách tự nhất quán: hỗ trợ
    tham số, không tự chuyển hướng. Nếu khách muốn link nào đó mang sẵn `?focus=1` thì cho
    biết link nào.
+
+---
+
+# BỐN LỖI BẮT ĐƯỢC KHI DEPLOY — 26/08
+
+Đều là lỗi của chính bản sửa, bắt được nhờ chạy thử trên CSDL thật trước khi ghi.
+
+## 1. Ghi dở giữa chừng vì trùng slug (đã ghi 68/269 dòng rồi mới nổ)
+
+`slug` ràng buộc DUY NHẤT theo `(parentId, type)`. Ba cặp xã **có thật** trong cùng một
+huyện cho ra cùng slug vì `slugify` bỏ dấu:
+
+```
+Kỳ Sơn:   Nậm Càn / Nậm Cắn      -> nam-can
+Nghi Lộc: Nghi Văn / Nghi Vạn    -> nghi-van
+Quỳ Châu: Châu Bình / Châu Bính  -> chau-binh
+```
+
+Bản đầu chỉ đối chiếu với bản ghi ĐÃ CÓ trong CSDL, không theo dõi slug sinh ra trong chính
+lượt chạy, nên lần ghi thứ hai mới nổ — và nổ giữa chừng. Sửa: cái sau nhận hậu tố số ở cột
+`slug`, còn `urlSegment` vẫn dựng từ dạng đọc được.
+
+## 2. Suýt biến xã này thành xã kia
+
+Nghiêm trọng nhất. Importer tra bản ghi theo `slug`, nên khi gặp "Xã Nậm Cắn" nó **tìm thấy
+bản ghi "Xã Nậm Càn"** rồi định ĐỔI TÊN bản ghi đó — mất hẳn một xã. Chạy thử in ra đúng
+dòng này mới lộ:
+
+```
+CẬP NHẬT  Huyện Kỳ Sơn / Xã Nậm Cắn  (giữ URL nam-can)
+```
+
+Sửa: khớp theo **TÊN**, không theo slug. Tên là thứ duy nhất phân biệt được hai xã đó.
+Sau khi sửa, chạy thử ra "cập nhật 0" — đúng, vì dữ liệu toàn xã mới.
+
+## 3. Sửa nhầm nhánh — deploy xong không có tác dụng gì
+
+Payload có hai chỗ trông giống nhau: `sections[]` (thứ frontend thật sự đọc) và
+`locationBlocks` (field cũ giữ lại cho consumer chưa chuyển). Lần đầu gắn `href` vào
+`locationBlocks`, deploy xong đo lại `sections[].href` vẫn `None`. Đã chuyển sang
+`locationSection()` và thêm test canh.
+
+## 4. Khớp huyện quá rộng
+
+`matchNames` chứa cả tên trần, mà Hà Tĩnh có **cả "Huyện Kỳ Anh" lẫn "Thị xã Kỳ Anh"** —
+`shortName` của cả hai đều là "Kỳ Anh". Mỗi huyện sẽ khớp 2 bản ghi và script dừng vì luật
+"không đoán". Sửa: thử tên đầy đủ trước, không có mới nới ra.
+
+> Cả 4 lỗi đều lộ ra nhờ bước **chạy thử trước khi ghi**. Nếu importer không có chế độ đó
+> thì lỗi 2 đã âm thầm làm hỏng dữ liệu địa giới của site đang chạy.
