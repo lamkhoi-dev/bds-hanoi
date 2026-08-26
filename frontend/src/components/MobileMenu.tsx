@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { Menu, X, Home, Building2, MapPin, User, Plus } from 'lucide-react';
 import { useLocations, groupLocations } from '@/hooks/useLocations';
 import { useAuth } from '@/contexts/AuthContext';
+import { groupDistrictsByProvince } from '@/lib/locations/group-by-province';
+import { provinceLabel } from '@/lib/locations/picker';
+import { siteConfig } from '@/lib/site-config';
 
 /** Loại BĐS hiện trên menu, theo thứ tự. Nhãn/slug vẫn lấy từ taxonomy. */
 const MENU_TYPE_ORDER: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN', 'MAT_BANG'];
@@ -66,16 +69,31 @@ export default function MobileMenu() {
             href: listingPath({ locationSlug: d.slug }),
           })),
         }))
-      : [
-          {
-            title: 'Khu vực',
-            icon: <MapPin className="w-5 h-5 text-gray-500" />,
-            links: locations.slice(0, 10).map((d: any) => ({
-              label: d.shortName || d.name,
-              href: listingPath({ locationSlug: d.slug }),
-            })),
-          },
-        ]),
+      : // Tỉnh không phân nhóm (Nghệ An) thì gom theo TỈNH.
+        //
+        // Bản cũ đổ một mục "Khu vực" duy nhất lấy `locations.slice(0, 10)` — 10 huyện đầu
+        // của danh sách phẳng 33 huyện gộp cả Nghệ An lẫn Hà Tĩnh, nên vừa trộn hai tỉnh vừa
+        // cắt mất 23 huyện. Khách yêu cầu 25/08: "Menu KHU VỰC là các huyện Hà Tĩnh — thêm
+        // đủ 13 huyện/tx/tp Hà Tĩnh, đổi tên thành BĐS Hà Tĩnh".
+        //
+        // Không cắt `slice` nữa: cắt là im lặng giấu mất khu vực, đúng thứ vừa bị phàn nàn.
+        groupDistrictsByProvince(
+          (locations as any[]).map((d) => ({
+            slug: d.slug,
+            name: d.shortName || d.name,
+            parent: provinceLabel(d) ?? undefined,
+          })),
+          (name) => name,
+          // Thứ tự theo TÊN vì `parent` ở trên là tên tỉnh: tỉnh chính trước, còn lại sau.
+          [siteConfig.province.name],
+        ).map((p) => ({
+          title: `BĐS ${p.name}`,
+          icon: <MapPin className="w-5 h-5 text-gray-500" />,
+          links: p.districts.map((d) => ({
+            label: d.name,
+            href: listingPath({ locationSlug: d.slug }),
+          })),
+        }))),
     {
       title: 'Dành cho bạn',
       icon: <User className="w-5 h-5 text-gray-500" />,

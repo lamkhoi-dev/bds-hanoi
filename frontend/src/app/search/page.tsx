@@ -198,6 +198,13 @@ export default async function SearchPage({
 
       {/* Results */}
       <div className="w-full max-w-[1600px] xl:px-8 mx-auto px-4 py-10">
+        {/* Bộ lọc mobile nằm NGAY DƯỚI ô tìm kiếm, giống các trang landing (xem
+            `[...slug]/page.tsx`). Trước đây nút này nằm cuối trang, sau toàn bộ kết quả —
+            khách phải cuộn hết mới thấy (yêu cầu 25/08: "kéo bộ lọc đang dưới cùng lên
+            trên, dưới thanh tìm kiếm, giống như những landingpage khác"). */}
+        <div className="mb-6 lg:hidden w-full">
+          <MobileFilterButton />
+        </div>
         <div className="flex flex-col lg:flex-row gap-8">
           {/* PC Sidebar Filter */}
           <div className="hidden lg:block lg:w-[320px] shrink-0">
@@ -282,8 +289,6 @@ export default async function SearchPage({
           </div>
         )}
 
-
-        <MobileFilterButton />
 
         {/* Pagination */}
         {totalPages > 1 && (
