@@ -168,7 +168,17 @@ Xã cũ: 10/13 huyện khớp chính xác số khách ghi; còn dư 3 mục ở 
 - **C2** Kéo bộ lọc lên trên ở các trang search.
 - **C5** Menu 3 gạch "BĐS Hà Tĩnh" đủ 13 huyện — **phụ thuộc A3/A4 đã nạp dữ liệu**.
 
-## CÂU HỎI CHO KHÁCH
+## CÂU HỎI CHO KHÁCH — ĐÃ RÀ LẠI, KHÔNG CÒN CÂU NÀO CHẶN
+
+> **Cập nhật 26/08:** ba câu dưới đây đã tự giải quyết, KHÔNG cần hỏi khách:
+> 1. Trùng 3 xã Kỳ Anh — đã nạp, cả hai huyện đều có, không lỗi. Khách đã nói danh sách xã
+>    cũ "không quan trọng lắm, không cần đối chiếu tiếp".
+> 2. Phường/xã — theo đúng nhãn khách viết, suy thêm bằng đối chiếu danh sách cũ.
+> 3. `?focus=1` — đã làm theo cách tự nhất quán.
+>
+> Khách trả lời 2 file là ĐỦ. Chỉ còn thiếu media (logo) và các key (SMTP, Google, DNS, SePay).
+
+### Bản gốc (giữ để đối chiếu)
 
 1. **TX Kỳ Anh và Huyện Kỳ Anh trùng 3 xã** (Kỳ Châu, Kỳ Hải, Kỳ Tân) — chuyển hẳn sang
    thị xã hay để cả hai nơi? Trùng tên giữa 2 huyện đụng đúng chuyện slug khách từng nêu.
@@ -265,3 +275,44 @@ URL xã mới đều mở được: `/xa-can-loc`, `/phuong-thanh-sen`, `/xa-ky-
 
 Không phá gì: 13 khối trang chủ y nguyên, 193 tin / 171 đang hiện / 41 user, mọi trang 200.
 Hà Nội cũng deploy cùng lúc, 9 khối nguyên vẹn, mọi trang 200.
+
+---
+
+# CHỐT — 26/08/2026: 16/17 XONG
+
+Tất cả đã deploy và kiểm trên site thật.
+
+| Mục | Trạng thái |
+|---|---|
+| A1–A4 dữ liệu | ✅ 271 → 838 khu vực; không huyện nào thiếu xã |
+| B1 lọc giá/diện tích | ✅ 0 tin sai khoảng (trước 40/75 và 37/100 sai) |
+| B2 lỗi tải danh sách | ✅ thêm thử lại 1 lần — không tái hiện được lỗi gốc |
+| B4 bộ đếm view | ✅ nhảy đúng từng lượt |
+| B6 popup lọc | ✅ tự đóng sau khi áp dụng |
+| B7 form lọc tách tỉnh | ✅ |
+| C1 link 2 khối | ✅ `/khu-vuc` và `/thanh-pho-vinh` |
+| C2 bộ lọc lên trên | ✅ ở `/search` |
+| C3 `/khu-vuc` theo tỉnh | ✅ |
+| C4 `?focus=1` | ✅ |
+| C5 menu BĐS Hà Tĩnh | ✅ gom 2 nhóm: Nghệ An 20 + Hà Tĩnh 13 |
+| **B3/B5 bình luận, lưu tin, tin đã xem** | ⏳ **cần tài khoản thử** |
+
+## Vì sao B3/B5 chưa khép được
+
+Kiểm hết những gì kiểm được từ ngoài, KHÔNG thấy lỗi nào:
+
+```
+POST /properties/{id}/comments   route có, trả 401 (đúng khi chưa đăng nhập)
+POST /properties/{id}/save       route có, trả 401
+GET  /users/me/recently-viewed   route có, trả 401
+NEXT_PUBLIC_API_URL = https://nhadatxunghe.vn/api/v1  -> cùng origin, cookie hoạt động
+POST /auth/login sai mật khẩu    -> 401 đúng
+```
+
+Cả ba đều là tính năng cần đăng nhập. Cần một tài khoản thử để tái hiện. Cũng nên nhờ khách
+thử lại trước — có thể lỗi cũ đã hết theo các bản vá hôm nay.
+
+## Chờ khách / anh
+
+Logo Hà Nội, SMTP PA Vietnam, tài khoản Google (GA4/Search Console), DNS `sanbdshanoi.vn`,
+và câu trả lời của SePay về webhook 2 URL.
