@@ -119,7 +119,15 @@ async function main() {
         where: { parentId: parent.id, type },
         select: { id: true, slug: true, name: true, urlSegment: true, isActive: true },
       });
-      const bySlug = new Map(existing.map((c) => [c.slug, c]));
+      // Khớp theo TÊN, không theo slug.
+      //
+      // Tra theo slug là đường dẫn tới hỏng dữ liệu: "Xã Nậm Cắn" và "Xã Nậm Càn" cùng cho
+      // slug `nam-can`, nên bản trước tìm thấy bản ghi Nậm Càn rồi ĐỔI TÊN nó thành Nậm Cắn
+      // — biến xã này thành xã kia và làm mất xã còn lại. Bắt được đúng ca này khi chạy thử
+      // trên CSDL thật ("CẬP NHẬT Huyện Kỳ Sơn / Xã Nậm Cắn (giữ URL nam-can)").
+      //
+      // Tên là thứ duy nhất phân biệt được hai xã đó, nên nó phải là khoá khớp.
+      const byName = new Map(existing.map((c) => [c.name.trim(), c]));
       let order = existing.length;
 
       // `slug` có ràng buộc DUY NHẤT theo (parentId, type). Hai xã KHÁC NHAU trong cùng một
@@ -129,7 +137,7 @@ async function main() {
       //     Nghi Lộc: Nghi Văn / Nghi Vạn    -> nghi-van
       //     Quỳ Châu: Châu Bình / Châu Bính  -> chau-binh
       // Bỏ một trong hai là mất xã thật, nên cái sau nhận slug có hậu tố số. Phải theo dõi
-      // trong CHÍNH lượt chạy này: `bySlug` chỉ biết bản ghi đã có trong CSDL, nên nếu không
+      // trong CHÍNH lượt chạy này: tập bản ghi đã có trong CSDL chỉ phản ánh trạng thái trước lượt chạy, nên nếu không
       // có tập này thì lần ghi thứ hai mới nổ ràng buộc — và nổ giữa chừng, sau khi đã ghi
       // được một phần (đã dính đúng như vậy lần chạy đầu).
       const slugTaken = new Set(existing.map((c) => c.slug));
@@ -138,7 +146,7 @@ async function main() {
         const shortName = w.short || stripUnitPrefix(w.name);
         const baseSlug = slugify(shortName);
         let slug = baseSlug;
-        const found = bySlug.get(slug);
+        const found = byName.get(w.name.trim());
         if (!found && slugTaken.has(slug)) {
           let n = 2;
           while (slugTaken.has(`${baseSlug}-${n}`)) n++;
