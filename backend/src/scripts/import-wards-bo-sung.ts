@@ -80,6 +80,9 @@ async function main() {
 
   const stats = { created: 0, updated: 0, unchanged: 0, skippedDistricts: 0 };
   const plan: string[] = [];
+  // Các ca hai xã khác nhau cho ra cùng slug vì bỏ dấu — in riêng để người chạy nhìn thấy,
+  // không lẫn vào 500 dòng THÊM.
+  const collisions: string[] = [];
 
   for (const d of payload.districts) {
     const wanted = new Set(d.matchNames.map(norm));
@@ -119,10 +122,30 @@ async function main() {
       const bySlug = new Map(existing.map((c) => [c.slug, c]));
       let order = existing.length;
 
+      // `slug` có ràng buộc DUY NHẤT theo (parentId, type). Hai xã KHÁC NHAU trong cùng một
+      // huyện có thể cho ra cùng slug vì slugify bỏ dấu — đây là xã có thật, không phải
+      // dữ liệu rác:
+      //     Kỳ Sơn:   Nậm Càn / Nậm Cắn      -> nam-can
+      //     Nghi Lộc: Nghi Văn / Nghi Vạn    -> nghi-van
+      //     Quỳ Châu: Châu Bình / Châu Bính  -> chau-binh
+      // Bỏ một trong hai là mất xã thật, nên cái sau nhận slug có hậu tố số. Phải theo dõi
+      // trong CHÍNH lượt chạy này: `bySlug` chỉ biết bản ghi đã có trong CSDL, nên nếu không
+      // có tập này thì lần ghi thứ hai mới nổ ràng buộc — và nổ giữa chừng, sau khi đã ghi
+      // được một phần (đã dính đúng như vậy lần chạy đầu).
+      const slugTaken = new Set(existing.map((c) => c.slug));
+
       for (const w of items) {
         const shortName = w.short || stripUnitPrefix(w.name);
-        const slug = slugify(shortName);
+        const baseSlug = slugify(shortName);
+        let slug = baseSlug;
         const found = bySlug.get(slug);
+        if (!found && slugTaken.has(slug)) {
+          let n = 2;
+          while (slugTaken.has(`${baseSlug}-${n}`)) n++;
+          slug = `${baseSlug}-${n}`;
+          collisions.push(`${parent.name} / ${w.name}: slug "${baseSlug}" đã có -> "${slug}"`);
+        }
+        slugTaken.add(slug);
 
         if (found) {
           const needs = found.name !== w.name || found.isActive !== true;
@@ -141,11 +164,14 @@ async function main() {
           continue;
         }
 
-        const candidates = [slug, `${slug}-${parentShort}`];
+        // Đoạn URL dựng từ `baseSlug` (dạng đọc được), KHÔNG từ `slug` đã thêm hậu tố số:
+        // hậu tố kia chỉ để lách ràng buộc DUY NHẤT của cột `slug`, đưa nó vào URL thì
+        // người đọc nhận được "/nghi-van-2" thay vì "/nghi-van-nghi-loc".
+        const candidates = [baseSlug, `${baseSlug}-${parentShort}`];
         let segment = candidates.find((c) => c && !used.has(c));
         if (!segment) {
           let n = 2;
-          const base = `${slug}-${parentShort}`;
+          const base = `${baseSlug}-${parentShort}`;
           while (used.has(`${base}-${n}`)) n++;
           segment = `${base}-${n}`;
         }
