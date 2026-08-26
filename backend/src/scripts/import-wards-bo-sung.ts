@@ -85,10 +85,16 @@ async function main() {
   const collisions: string[] = [];
 
   for (const d of payload.districts) {
+    // Ưu tiên khớp TÊN ĐẦY ĐỦ, chỉ khi không có mới nới ra tên trần/shortName.
+    //
+    // Hà Tĩnh có CẢ "Huyện Kỳ Anh" LẪN "Thị xã Kỳ Anh", `shortName` của cả hai đều là
+    // "Kỳ Anh". Nới ngay từ đầu thì mỗi huyện khớp 2 bản ghi và script dừng vì "không đoán"
+    // — đúng luật nhưng chặn oan, vì tên đầy đủ đã phân biệt được rồi.
     const wanted = new Set(d.matchNames.map(norm));
-    const matches = allDistricts.filter(
-      (x) => wanted.has(norm(x.name)) || wanted.has(norm(x.shortName ?? '')),
-    );
+    const exact = allDistricts.filter((x) => norm(x.name) === norm(d.displayName));
+    const matches = exact.length > 0
+      ? exact
+      : allDistricts.filter((x) => wanted.has(norm(x.name)) || wanted.has(norm(x.shortName ?? '')));
     // Chỉ nhận huyện nằm trong ĐÚNG tỉnh của file — chặn cây rác `tinh-*`.
     const inProvince = matches.filter(
       (x) => x.path === provinceSlug || x.path.startsWith(`${provinceSlug}/`),
