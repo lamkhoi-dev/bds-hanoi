@@ -125,3 +125,67 @@ quan, không hiện thông báo này"* — vế này tôi **chưa làm**. Vế �
 
 Dữ liệu địa giới (838 khu vực) và sitemap — khách đã gạch ngang, đang đúng.
 Không đổi `robots.txt` Hà Nội, không bật `DEPOSIT_PREFIX`.
+
+---
+
+## KẾT QUẢ — 05/09/2026, đã deploy cả 2 site
+
+Đo trên site thật sau khi deploy, không phải trên máy dev.
+
+### Mục 12 — lọc khoảng giá
+
+Endpoint `/properties/search` (chính cái trang `/search` dùng), trước → sau:
+
+| khoảng | trước | sau |
+|---|---|---|
+| LT_500M | 0 | 33 |
+| 500M_1B | 0 | 15 |
+| 1B_2B | 0 | 42 |
+| 2B_3B | 0 | 54 |
+| 3B_5B | 0 | 40 |
+| 5B_7B | 0 | 20 |
+| 7B_10B | 0 | 12 |
+| 10B_20B | 0 | 6 |
+
+Khớp từng con số với endpoint Prisma. Kiểm sâu: **223 tin, 0 tin sai khoảng**.
+Trên chỉ mục: `price <= 99999999999` từ 0 → **193** tin.
+
+### Mục 14 — bộ đếm view
+
+```
+POST /properties/:id/view  ->  views=10, 11, 12   (tăng đúng từng lượt)
+POST bằng shortCode        ->  views=13           (không hỏng khi hai bên lệch ID)
+GET  /properties/:id       ->  views=13, 13       (không đếm gấp đôi)
+```
+
+### Mục 15, 16 — ID sai
+
+```
+GET /properties/<UUID>/comments        -> 200
+GET /properties/10fwa/comments         -> 404   (shortCode không dùng được)
+GET /properties/<nguyên slug>/comments -> 404   (thứ frontend gửi TRƯỚC khi sửa)
+```
+
+Trang tin đã deploy: chuỗi `split("--")` biến mất khỏi bundle, UUID của tin xuất hiện 4 lần
+trong payload nên component bình luận nhận được đúng ID.
+
+**Chưa xác minh hết:** *lưu tin* và *tin đã xem của người đã đăng nhập* đi qua đúng dòng ID
+vừa sửa, nhưng cả hai đều cần đăng nhập mới chạy được nên tôi chưa tự chạy thử từ đầu đến
+cuối. Cần một tài khoản thử, hoặc nhờ khách bấm lại.
+
+### Mục 5 — `?focus=1`
+
+Phần khách yêu cầu vốn đã chạy: `/search?focus=1` trả `autoOpen:true`, `/search` thường trả
+`false`. Đã sửa lỗi kèm: tìm xong không còn bị popup bật lại đè lên kết quả
+(`/search?q=vinh` → `autoOpen:false`).
+
+### Mục 9 — trang khu vực không có tin
+
+`/xa-can-loc`, `/phuong-nghi-phu`: dòng "Không tải được danh sách tin" biến mất, thay bằng
+khối "Tin đăng mới nhất" với **7 tin thật** + ô quảng cáo.
+Vế đầu (thỉnh thoảng không tải được) vẫn không tái hiện được sau 10 lần đo.
+
+### Không hỏng gì
+
+Nghệ An 11 khối trang chủ, link tiêu đề đúng, TP Hà Tĩnh vẫn ghim vị trí 3.
+Hà Nội 9 khối nguyên vẹn. Mọi trang 200. Test: backend 144, frontend 108, đều xanh.
