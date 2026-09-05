@@ -19,12 +19,28 @@ import { normalizeSearchDocument } from '../search/search-document';
 const prisma = new PrismaClient();
 const BATCH = 200;
 
-/** Chờ một tác vụ của Meilisearch xong, không phụ thuộc tên hàm của phiên bản client. */
+/**
+ * Chờ một tác vụ của Meilisearch xong.
+ *
+ * Chỗ đặt hàm này đổi theo phiên bản client — `client.tasks.*` ở 0.5x, `index.waitForTask` /
+ * `client.waitForTask` ở các bản trước. Thử lần lượt rồi mới tự hỏi hàng đợi, để script còn
+ * chạy được nếu sau này ai đó nâng hay hạ phiên bản.
+ */
 async function waitForTask(client: any, index: any, taskUid: number) {
+  const tasks = client?.tasks;
+  if (typeof tasks?.waitForTask === 'function') return tasks.waitForTask(taskUid, { timeout: 120_000 });
   if (typeof index?.waitForTask === 'function') return index.waitForTask(taskUid, { timeOutMs: 120_000 });
   if (typeof client?.waitForTask === 'function') return client.waitForTask(taskUid, { timeOutMs: 120_000 });
+
+  const getTask = typeof tasks?.getTask === 'function'
+    ? (uid: number) => tasks.getTask(uid)
+    : typeof client?.getTask === 'function'
+      ? (uid: number) => client.getTask(uid)
+      : null;
+  if (!getTask) throw new Error('Client Meilisearch không có cách nào hỏi trạng thái tác vụ.');
+
   for (let i = 0; i < 240; i++) {
-    const t = await client.getTask(taskUid);
+    const t = await getTask(taskUid);
     if (t?.status === 'succeeded') return t;
     if (t?.status === 'failed' || t?.status === 'canceled') {
       throw new Error(`Tác vụ ${taskUid} ${t.status}: ${t?.error?.message ?? ''}`);
