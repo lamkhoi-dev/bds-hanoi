@@ -11,13 +11,28 @@
  * phần đã ghi là dữ liệu mới, phần còn lại vẫn là dữ liệu cũ — site vẫn tìm được, chỉ là
  * chạy lại cho xong.
  *
- * Chạy:  node dist/src/scripts/reindex-search.js
+ * Chạy:  node dist/scripts/reindex-search.js
  */
 import { PrismaClient } from '@prisma/client';
 import { normalizeSearchDocument } from '../search/search-document';
 
 const prisma = new PrismaClient();
 const BATCH = 200;
+
+/** Chờ một tác vụ của Meilisearch xong, không phụ thuộc tên hàm của phiên bản client. */
+async function waitForTask(client: any, index: any, taskUid: number) {
+  if (typeof index?.waitForTask === 'function') return index.waitForTask(taskUid, { timeOutMs: 120_000 });
+  if (typeof client?.waitForTask === 'function') return client.waitForTask(taskUid, { timeOutMs: 120_000 });
+  for (let i = 0; i < 240; i++) {
+    const t = await client.getTask(taskUid);
+    if (t?.status === 'succeeded') return t;
+    if (t?.status === 'failed' || t?.status === 'canceled') {
+      throw new Error(`Tác vụ ${taskUid} ${t.status}: ${t?.error?.message ?? ''}`);
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`Tác vụ ${taskUid} chờ quá lâu.`);
+}
 
 async function main() {
   const { Meilisearch } = await eval(`import('meilisearch')`);
@@ -46,7 +61,10 @@ async function main() {
     const task = await index.addDocuments(docs, { primaryKey: 'id' });
     // Chờ từng lô xử lý xong rồi mới gửi lô sau: gửi dồn thì hàng đợi của Meilisearch phình
     // ra và không biết lô nào hỏng.
-    await index.waitForTask(task.taskUid, { timeOutMs: 120_000 });
+    //
+    // Tên hàm chờ đổi theo phiên bản client (`index.waitForTask` ở bản mới,
+    // `client.waitForTask` ở bản cũ), nên thử lần lượt rồi mới rơi về tự hỏi hàng đợi.
+    await waitForTask(client, index, task.taskUid);
 
     done += rows.length;
     cursor = rows[rows.length - 1].id;
