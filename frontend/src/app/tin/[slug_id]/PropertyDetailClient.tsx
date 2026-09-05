@@ -1,7 +1,7 @@
 "use client";
 import { formatNumberString } from '@/lib/utils';
 import { siteConfig } from '@/lib/site-config';
-import { listingPath } from '@/lib/seo/canonical';
+import { parseListingRef, listingPath } from '@/lib/seo/canonical';
 import { propertyTypeByEnum, transactionByEnum } from '@/lib/seo/taxonomy';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -29,15 +29,25 @@ const PropertyComments = dynamic(() => import('@/components/PropertyComments'), 
 const Adsense = dynamic(() => import('@/components/Adsense'), { ssr: false });
 
 
-function looksLikePropertyId(value: string) {
-  return value.length >= 16;
-}
+/**
+ * URL tin là `{slug}-{shortCode}` (dạng cũ `{slug}--{uuid}`). Chỉ có `parseListingRef` biết
+ * tách đúng cả hai — chính hàm server đang dùng để tải tin, nên dùng lại để hai bên không
+ * bao giờ hiểu URL khác nhau.
+ *
+ * Trước đây chỗ này tự tách bằng `slug_id.split('--').pop()`, tức chỉ hiểu dạng CŨ. Với URL
+ * hiện tại không có `--` nên `.pop()` trả về NGUYÊN CẢ CHUỖI slug, và bộ canh "dài ≥ 16 ký
+ * tự" thì chuỗi slug nào cũng qua. Hệ quả: mọi lệnh gọi tương tác bắn vào một ID không tồn
+ * tại — đo trên site thật `/properties/<nguyên chuỗi>/comments` trả 404. Đó là lý do khách
+ * báo (25/08, rà lại 05/09) không bình luận được, không lưu tin được, tin đã xem không cập
+ * nhật: ba lỗi tưởng rời nhau nhưng chung đúng một dòng này.
+ */
 
 export default function PropertyDetailClient({ initialProperty }: { initialProperty?: any }) {
   const params = useParams();
   const router = useRouter();
   const slug_id = params?.slug_id as string;
-  const actualId: string = slug_id ? (slug_id.split('--').pop() || '') : '';
+  // Đoạn định danh lấy từ URL — chỉ đủ dùng cho lần TẢI ĐẦU.
+  const ref: string = parseListingRef(slug_id ?? '').ref;
 
   const [property, setProperty] = useState<any>(initialProperty ?? null);
   const [loading, setLoading] = useState(!initialProperty);
@@ -85,61 +95,102 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
   const isAdmin = user?.role === 'ADMIN';
   const [showOwnerMenu, setShowOwnerMenu] = useState(false);
 
+  /**
+   * ID dùng cho MỌI lệnh gọi tương tác (bình luận, lưu tin, đếm view, bấm gọi/Zalo).
+   *
+   * Ưu tiên `property.id` — UUID thật của bản ghi đã tải. Các route tương tác chỉ nhận UUID
+   * (đo trên site: `/properties/10fwa/comments` trả 404 dù `/properties/10fwa` trả 200), nên
+   * cầm đoạn URL đi gọi là hỏng. Khi render phía máy chủ thì `property` có ngay từ lần vẽ
+   * đầu, còn khi tải phía trình duyệt thì rơi tạm về `ref` cho tới khi tin về.
+   */
+  const actualId: string = property?.id || ref;
+
+  // Ghi vào "tin đã xem" của trình duyệt. Tách ra vì hai nhánh dưới đều cần, và trước đây
+  // hai bản sao của đoạn này đã lệch nhau.
+  const rememberViewed = (item: any) => {
+    if (!item?.id) return;
+    try {
+      const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+      const list = Array.isArray(recent) ? recent : [];
+      localStorage.setItem(
+        'recentlyViewed',
+        JSON.stringify([item, ...list.filter((p: any) => p?.id !== item.id)].slice(0, 10)),
+      );
+    } catch {
+      /* chế độ ẩn danh chặn localStorage — không được làm hỏng trang vì việc này */
+    }
+  };
+
   useEffect(() => {
-    if (!actualId || !looksLikePropertyId(actualId)) {
+    if (!ref) {
       setLoading(false);
       return;
     }
-    
+
+    // Đếm lượt xem cho MỌI khách, không riêng người đã đăng nhập.
+    //
+    // Đây giờ là chỗ duy nhất đếm view. Route `GET /properties/:id` không đếm nữa: trang này
+    // render phía máy chủ với `revalidate: 60` nên route đó chỉ bị gọi 1 lần/60 giây/tin dù
+    // bao nhiêu người vào — đếm ở đó thì con số gần như đứng im, đúng lỗi khách báo. Backend
+    // trả về số mới nên cập nhật thẳng lên màn hình, khỏi chờ hết 60 giây cache.
+    const countView = (id: string) => {
+      api
+        .post(`/properties/${id}/view`)
+        .then((res) => {
+          const views = res?.data?.views;
+          if (typeof views === 'number') setProperty((prev: any) => (prev ? { ...prev, views } : prev));
+        })
+        .catch(() => {});
+    };
+
+    // Đã có sẵn tin từ máy chủ: không gọi lại API chi tiết, chỉ làm phần phụ.
     if (initialProperty) {
-      // Save to recently viewed
-      const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-      const updated = [initialProperty, ...recent.filter((p: any) => p.id !== initialProperty.id)].slice(0, 10);
-      localStorage.setItem('recentlyViewed', JSON.stringify(updated));
-      
-      // Delay non-critical requests to avoid "Bão request"
-      setTimeout(() => {
-        api.get(`/properties/${actualId}/related`)
+      rememberViewed(initialProperty);
+      const id = initialProperty.id || ref;
+
+      // Hoãn 1 giây cho các việc không gấp, tránh dồn request lúc trang vừa mở.
+      const timer = setTimeout(() => {
+        countView(id);
+
+        api.get(`/properties/${id}/related`)
           .then(res => setRelated(Array.isArray(res.data) ? res.data : []))
           .catch(() => {});
 
         if (getAuthToken()) {
           api.get('/users/saved').then(res => {
-            if (res.data.find((p: any) => p.id === actualId)) setIsSaved(true);
+            if (Array.isArray(res.data) && res.data.some((p: any) => p.id === id)) setIsSaved(true);
           }).catch(() => {});
-          
-          api.post(`/properties/${actualId}/view`).catch(() => {});
         }
-      }, 1000); // 1s delay
-      return;
+      }, 1000);
+      return () => clearTimeout(timer);
     }
 
-    api.get(`/properties/${actualId}`)
+    api.get(`/properties/${ref}`)
       .then(res => {
         setProperty(res.data);
-        const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
-        const updated = [res.data, ...recent.filter((p: any) => p.id !== res.data.id)].slice(0, 10);
-        localStorage.setItem('recentlyViewed', JSON.stringify(updated));
-        if (getAuthToken()) {
-          api.post(`/properties/${actualId}/view`).catch(() => {});
-        }
+        rememberViewed(res.data);
+        countView(res.data?.id || ref);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    setTimeout(() => {
-      api.get(`/properties/${actualId}/related`)
+    const timer = setTimeout(() => {
+      api.get(`/properties/${ref}/related`)
         .then(res => setRelated(Array.isArray(res.data) ? res.data : []))
         .catch(() => {});
 
       if (getAuthToken()) {
         api.get('/users/saved').then(res => {
-          if (res.data.find((p: any) => p.id === actualId)) setIsSaved(true);
+          if (Array.isArray(res.data) && res.data.some((p: any) => p.id === ref)) setIsSaved(true);
         }).catch(() => {});
       }
     }, 1000);
+    return () => clearTimeout(timer);
 
-  }, [actualId, initialProperty]);
+    // `actualId` CỐ TÌNH không nằm trong danh sách phụ thuộc: nó đổi khi tin tải xong, mà
+    // effect này lại là thứ tải tin — đưa vào là chạy vòng lặp.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ref, initialProperty]);
 
   const requireLogin = () => {
     if (!getAuthToken()) {

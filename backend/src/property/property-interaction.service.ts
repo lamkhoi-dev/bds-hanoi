@@ -160,8 +160,14 @@ export class PropertyInteractionService {
     // `prisma.property.update` áp @updatedAt, nên mỗi lượt xem sẽ đẩy Property.updatedAt và
     // làm <lastmod> của mọi tin đổi liên tục — Google coi lastmod đó là vô nghĩa. Raw SQL
     // bỏ qua @updatedAt. Dùng $queryRaw (không phải $executeRaw) để lấy được RETURNING.
+    //
+    // Nhận CẢ `id` (UUID) lẫn `shortCode`: URL tin dạng `{slug}-{shortCode}` nên trình duyệt
+    // có thể cầm đoạn nào cũng được, và nếu hai bên lệch nhau thì lệnh này khớp 0 dòng rồi
+    // im lặng — bộ đếm đứng yên mà không ai biết vì sao. Đúng cách nó đã hỏng trước đây.
     const rows = await this.prisma.$queryRaw<{ views: number }[]>`
-      UPDATE "Property" SET "views" = "views" + 1 WHERE "id" = ${id} RETURNING "views"`;
+      UPDATE "Property" SET "views" = "views" + 1
+      WHERE "id"::text = ${id} OR "shortCode" = ${id}
+      RETURNING "views"`;
     const views = rows?.[0]?.views;
     return { success: true, views: views === undefined ? null : Number(views) };
   }

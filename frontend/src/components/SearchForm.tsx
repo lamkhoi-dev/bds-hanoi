@@ -86,6 +86,10 @@ export default function SearchForm({
     }
 
     const params = new URLSearchParams(window.location.search);
+    // Bỏ `focus`: nó là lệnh "mở popup lúc vào trang", không phải điều kiện lọc. Giữ lại thì
+    // trang kết quả cũng mang `?focus=1` và popup bật lại ĐÈ LÊN kết quả vừa tìm — tìm xong
+    // không xem được gì, nhìn y như tính năng hỏng.
+    params.delete('focus');
     if (q) { params.set('q', q); } else { params.delete('q'); }
     if (category) { params.set('category', category); } else { params.delete('category'); }
     if (district) { params.set('district', district); } else { params.delete('district'); }

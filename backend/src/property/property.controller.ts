@@ -205,22 +205,11 @@ export class PropertyController {
       throw new NotFoundException('Không tìm thấy bất động sản');
     }
 
+    // KHÔNG đếm view ở đây. Trang chi tiết render phía máy chủ với `next: { revalidate: 60 }`
+    // nên route này chỉ bị gọi 1 lần / 60 giây / tin bất kể bao nhiêu người vào — đếm ở đây
+    // thì con số đứng gần như im, đúng như khách báo 25/08 và rà lại 05/09 vẫn còn.
+    // Việc đếm chuyển sang `POST :id/view`, do trình duyệt gọi, mỗi lượt xem một lần.
     if (!property.deletedAt && (property.status === 'APPROVED' || property.status === 'SOLD')) {
-      // Phải CHỜ kết quả rồi vá vào payload: `findOne` cache bản ghi 60 giây và hàm tăng
-      // view ghi thẳng SQL, nên nếu chỉ bắn rồi quên thì suốt 60 giây người xem vẫn thấy
-      // con số cũ — đo được: gọi 3 lần, CSDL lên 3 mà API vẫn trả 0 (khách báo 25/08).
-      // Không xoá cache: làm vậy là mỗi lượt xem lại truy vấn full bản ghi, đúng thứ cache
-      // này sinh ra để tránh. Chỉ cập nhật riêng con số.
-      try {
-        const { views } = await this.propertyService.incrementView(id);
-        if (views !== null) {
-          property.views = views;
-          await this.propertyService.patchCachedViews(id, views);
-        }
-      } catch {
-        // Đếm view hỏng không được làm hỏng trang chi tiết.
-      }
-
       if (req.user?.id) {
         this.viewedPropertyService.logView(req.user.id, property.id).catch(() => {});
       }
@@ -285,10 +274,25 @@ export class PropertyController {
   @Post(':id/view')
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   async logView(@Request() req, @Param('id') id: string) {
-    if (req.user?.id) {
-      await this.viewedPropertyService.logView(req.user.id, id);
+    // Đây là chỗ DUY NHẤT tăng bộ đếm view, và nó chạy cho MỌI khách — kể cả chưa đăng
+    // nhập. Trước đây cả thân hàm nằm trong `if (req.user?.id)` nên khách vãng lai (gần
+    // như toàn bộ lưu lượng) không đếm được gì.
+    //
+    // Trả về số mới để trang chi tiết cập nhật ngay: `findOne` cache bản ghi 60 giây, nếu
+    // để trang tự tải lại thì suốt 60 giây người xem vẫn thấy con số cũ.
+    let views: number | null = null;
+    try {
+      const res = await this.propertyService.incrementView(id);
+      views = res.views;
+      if (views !== null) await this.propertyService.patchCachedViews(id, views);
+    } catch {
+      // Đếm view hỏng không được làm hỏng trang chi tiết.
     }
-    return { success: true };
+
+    if (req.user?.id) {
+      await this.viewedPropertyService.logView(req.user.id, id).catch(() => {});
+    }
+    return { success: true, views };
   }
 
   @UseGuards(JwtAuthGuard)

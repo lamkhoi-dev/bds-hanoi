@@ -1,4 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+import { normalizeSearchDocument } from './search-document';
 
 @Injectable()
 export class SearchService implements OnModuleInit {
@@ -148,45 +149,13 @@ export class SearchService implements OnModuleInit {
 
   async addDocuments(documents: any[]) {
     if (!this.propertyIndex) return null;
-    const normalizedDocuments = documents.map(document => ({
-      ...document,
-      tier: document.tier || 'NORMAL',
-      tierRank: document.status === 'SOLD' || document.status === 'RENTED' ? 0 : (document.tier === 'VIP' ? 3 : document.tier === 'UP' ? 2 : 1),
-      deletedAt: document.deletedAt ? new Date(document.deletedAt).getTime() : null,
-      publishedAt: document.publishedAt ? new Date(document.publishedAt).getTime() : null,
-      createdAt: document.createdAt ? new Date(document.createdAt).getTime() : null,
-      pushedAt: document.pushedAt ? new Date(document.pushedAt).getTime() : null,
-      provinceId: document.provinceId || null,
-      districtId: document.districtId || null,
-      wardId: document.wardId || null,
-      isNegotiable: !!document.isNegotiable,
-      propertyCode: document.propertyCode || null,
-      slug: document.slug || null,
-      callClicks: document.callClicks || 0,
-      zaloClicks: document.zaloClicks || 0,
-    }));
+    const normalizedDocuments = documents.map(normalizeSearchDocument);
     return this.propertyIndex.addDocuments(normalizedDocuments, { primaryKey: 'id' });
   }
 
   async addDocument(document: any) {
     if (!this.propertyIndex) return null;
-    const normalizedDocument = {
-      ...document,
-      tier: document.tier || 'NORMAL',
-      tierRank: document.status === 'SOLD' || document.status === 'RENTED' ? 0 : (document.tier === 'VIP' ? 3 : document.tier === 'UP' ? 2 : 1),
-      deletedAt: document.deletedAt ? new Date(document.deletedAt).getTime() : null,
-      publishedAt: document.publishedAt ? new Date(document.publishedAt).getTime() : null,
-      createdAt: document.createdAt ? new Date(document.createdAt).getTime() : null,
-      pushedAt: document.pushedAt ? new Date(document.pushedAt).getTime() : null,
-      provinceId: document.provinceId || null,
-      districtId: document.districtId || null,
-      wardId: document.wardId || null,
-      isNegotiable: !!document.isNegotiable,
-      propertyCode: document.propertyCode || null,
-      slug: document.slug || null,
-      callClicks: document.callClicks || 0,
-      zaloClicks: document.zaloClicks || 0,
-    };
+    const normalizedDocument = normalizeSearchDocument(document);
     return this.propertyIndex.addDocuments([normalizedDocument], { primaryKey: 'id' });
   }
 

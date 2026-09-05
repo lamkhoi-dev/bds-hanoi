@@ -57,6 +57,28 @@ const fetchSeoListing = cache(async (queryString: string): Promise<SeoListingDat
 });
 
 /**
+ * Vài tin mới nhất toàn site, dùng khi trang khu vực không có tin nào để hiển thị.
+ *
+ * Khách yêu cầu 25/08: "nếu không có tin thì giao diện vẫn hiện quảng cáo, hoặc tin liên
+ * quan, không hiện thông báo này" — thay vì để trơ một dòng chữ báo lỗi trên trang trống.
+ *
+ * Hỏng thì trả mảng rỗng, KHÔNG ném lỗi: đây là phần trang trí cho một trang vốn đã không
+ * có gì: để nó làm sập cả trang là đổi một trang nghèo nội dung thành một trang lỗi.
+ */
+export const fetchFallbackListings = cache(async (): Promise<any[]> => {
+  try {
+    const res = await fetch(serverApiUrl('/properties/seo?loaiBds=tat-ca&khuVuc=toan-quoc&page=1&limit=8'), {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as SeoListingData;
+    return [...(data.vips ?? []), ...(data.normals ?? [])].slice(0, 8);
+  } catch {
+    return [];
+  }
+});
+
+/**
  * Dựng truy vấn gửi backend từ route ĐÃ resolve.
  *
  * Điểm mấu chốt: gửi thẳng `transactionType`/`propertyType` dạng enum thay vì để backend

@@ -24,7 +24,7 @@ import { parseListingPath } from '@/lib/seo/route';
 import type { ListingRoute } from '@/lib/seo/route';
 import { parseListingQuery, buildListingUrl, totalPages, listingPath, LISTING_PAGE_SIZE } from '@/lib/seo/canonical';
 import { decideIndexability, applyMode, getSeoMode, isPaginationEnforced } from '@/lib/seo/indexability';
-import { getRouteFacts } from '@/lib/seo/facts';
+import { getRouteFacts, fetchFallbackListings } from '@/lib/seo/facts';
 import { siteLayout } from '@/lib/site-layout';
 import WardJumpSelects, { type WardSelectGroup } from '@/components/WardJumpSelects';
 
@@ -160,6 +160,12 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
   const page = query.page;
   const pageCount = totalPages(data?.total ?? 0);
 
+  // Trang không có tin nào (hoặc gọi API hỏng) thì vẫn phải có nội dung để xem — khách yêu
+  // cầu 25/08 bỏ dòng báo lỗi trơ, thay bằng quảng cáo hoặc tin liên quan. Chỉ gọi khi thật
+  // sự cần, để trang bình thường không tốn thêm một lượt gọi API.
+  const isEmptyPage = !data || (data.total ?? 0) === 0;
+  const fallbackListings = isEmptyPage ? await fetchFallbackListings() : [];
+
   // Breadcrumb: phần tử cuối là trang hiện tại nên không gắn url.
   const breadcrumbs: BreadcrumbItem[] = [];
   if (typeLabel) {
@@ -280,10 +286,27 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
           </div>
           <div className="flex-1 min-w-0">
         {!data ? (
-          <div className="bg-white rounded-2xl p-8 shadow-card text-center text-gray-500">
-            {/* Trước đây dội nguyên slug người dùng gõ vào HTML — với URL rác thì đó là
-                nội dung do người lạ điều khiển, lại nằm trên trang index được. */}
-            <p>Không tải được danh sách tin. Vui lòng thử lại.</p>
+          /* Không còn dội slug người dùng gõ vào HTML — với URL rác thì đó là nội dung do
+             người lạ điều khiển, lại nằm trên trang index được.
+
+             Cũng không còn dòng "Không tải được danh sách tin": khách yêu cầu 25/08 rằng
+             trang không có tin thì vẫn hiện quảng cáo hoặc tin liên quan chứ đừng hiện
+             thông báo đó. Người vào từ Google gặp một trang chỉ có câu báo lỗi là quay ra
+             ngay; đưa họ mấy tin đang có thì còn giữ được. */
+          <div className="space-y-8">
+            {fallbackListings.length > 0 && (
+              <section className="mt-2">
+                <h2 className="text-xl font-bold text-textMain mb-5">Tin đăng mới nhất</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {fallbackListings.map((item: any) => (
+                    <PropertyCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </section>
+            )}
+            <div className="mt-8">
+              <GoogleAdPlaceholder />
+            </div>
           </div>
         ) : (
           <div className="space-y-12">
@@ -378,6 +401,7 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                 </>
               ) : (
                 data.normals && data.normals.length === 0 ? (
+                  <>
                   <div className="bg-white rounded-2xl p-8 shadow-card text-center">
                     {/* Khách yêu cầu: đổi "Chưa có bài đăng nào" thành "không có kết quả
                         tìm kiếm phù hợp", bỏ tiêu đề/mô tả, thêm gợi ý về trang chủ và
@@ -392,6 +416,21 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                       </Link>
                     </div>
                   </div>
+                  {/* Khu vực chưa có tin thì đưa tin đang có, đừng để trang trống trơn. */}
+                  {fallbackListings.length > 0 && (
+              <section className="mt-2">
+                <h2 className="text-xl font-bold text-textMain mb-5">Tin đăng mới nhất</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {fallbackListings.map((item: any) => (
+                    <PropertyCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </section>
+            )}
+            <div className="mt-8">
+              <GoogleAdPlaceholder />
+            </div>
+                  </>
                 ) : (
                   <div className="py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
                     <p className="text-gray-500">Chưa có tin thường nào.</p>
