@@ -62,32 +62,49 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-// Public Profile Page
-export default async function UserPublicProfile({ params, searchParams }: PageProps) {
+/** `null` khi không tra được (không tồn tại, hoặc gọi API hỏng) — KHÔNG ném lỗi ra ngoài. */
+async function getPublicProfileUser(ref: string): Promise<any | null> {
+  if (!ref) return null;
   try {
-    const resolvedParams = await params;
-    const resolvedSearchParams = await searchParams;
-    const { ref } = parseUserRef(resolvedParams.slug ?? '');
     const res = await fetch(serverApiUrl(`/users/public/${encodeURIComponent(ref)}`), {
       next: { revalidate: 0 }, // dynamic
     });
-    if (!res.ok) throw new Error('User not found');
-    const user = await res.json();
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
-    // Pagination logic
-    const pageParam = firstParam(resolvedSearchParams.page);
-    const page = pageParam ? parseInt(pageParam, 10) : 1;
+// Public Profile Page
+export default async function UserPublicProfile({ params, searchParams }: PageProps) {
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const { ref } = parseUserRef(resolvedParams.slug ?? '');
+  const user = await getPublicProfileUser(ref);
 
-    // URL chuẩn là dạng NGẮN. Mọi biến thể khác — kể cả URL UUID cũ đang được Google
-    // index — đều 301 về đây, cùng cách đã làm cho tin đăng (`tin/[slug_id]/page.tsx`).
-    // Bản ghi không đổi `id`, chỉ đổi cách địa chỉ hoá, nên 301 không mất gì. GIỮ `?page=`
-    // khi có — redirect mà bỏ mất trang đang xem thì người dùng bấm trang 2 lại quay về 1.
-    const expectedPath = userProfilePath(generateSlug(user.name || 'nguoi-dung'), user.shortCode, user.id);
-    const currentPath = `/user/${resolvedParams.slug}`;
-    if (currentPath !== expectedPath) {
-      permanentRedirect(page > 1 ? `${expectedPath}?page=${page}` : expectedPath);
-    }
-    const itemsPerPage = 6; // Set items per page here
+  // KHÔNG bọc phần dưới trong try/catch bao trùm. `permanentRedirect()` hoạt động bằng
+  // cách NÉM một lỗi đặc biệt để tầng trên của Next tự bắt và phát 301 — bọc nó trong một
+  // catch-tất-cả (như bản cũ) sẽ nuốt mất lỗi đó và biến redirect thành notFound(). Bắt
+  // được đúng lỗi này khi kiểm chứng trên site thật: mở link với tên sai nhưng shortCode
+  // đúng đáng lẽ 301 sang tên đúng thì lại trả về 404.
+  if (!user) notFound();
+
+  // Pagination logic
+  const pageParam = firstParam(resolvedSearchParams.page);
+  const page = pageParam ? parseInt(pageParam, 10) : 1;
+
+  // URL chuẩn là dạng NGẮN. Mọi biến thể khác — kể cả URL UUID cũ đang được Google
+  // index — đều 301 về đây, cùng cách đã làm cho tin đăng (`tin/[slug_id]/page.tsx`).
+  // Bản ghi không đổi `id`, chỉ đổi cách địa chỉ hoá, nên 301 không mất gì. GIỮ `?page=`
+  // khi có — redirect mà bỏ mất trang đang xem thì người dùng bấm trang 2 lại quay về 1.
+  const expectedPath = userProfilePath(generateSlug(user.name || 'nguoi-dung'), user.shortCode, user.id);
+  const currentPath = `/user/${resolvedParams.slug}`;
+  if (currentPath !== expectedPath) {
+    permanentRedirect(page > 1 ? `${expectedPath}?page=${page}` : expectedPath);
+  }
+
+  const itemsPerPage = 6; // Set items per page here
     const totalPages = Math.ceil((user.properties?.length || 0) / itemsPerPage);
     const startIndex = (page - 1) * itemsPerPage;
     const currentItems = user.properties?.slice(startIndex, startIndex + itemsPerPage) || [];
@@ -206,14 +223,8 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
               </div>
             )}
           </div>
-          
+
         </div>
       </div>
     );
-  } catch {
-    // Trước đây nhánh này render một trang "404" nhưng vẫn trả HTTP 200 — đúng định
-    // nghĩa soft 404 mà yêu cầu I.9 bắt loại bỏ. Thẻ <h1>404</h1> ở đó cũng là thẻ h1
-    // thứ hai của trang (yêu cầu II.8). notFound() trả 404 thật và dùng app/not-found.tsx.
-    notFound();
-  }
 }
