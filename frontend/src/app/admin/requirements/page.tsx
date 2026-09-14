@@ -1,6 +1,7 @@
 "use client";
-import { formatNumberString } from '@/lib/utils';
+import { formatNumberString, generateSlug } from '@/lib/utils';
 import { propertyTypeByEnum } from '@/lib/seo/taxonomy';
+import { userProfilePath } from '@/lib/seo/canonical';
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
@@ -210,7 +211,16 @@ export default function AdminRequirementsPage() {
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Khách hàng</label>
                   <p className="font-medium text-gray-900">
                     {viewingReq.userId ? (
-                      <a href={`/user/${viewingReq.userId}`} target="_blank" rel="noreferrer" className="text-primary hover:underline font-bold">
+                      <a
+                        href={userProfilePath(
+                          generateSlug(viewingReq.user?.name || viewingReq.name || 'nguoi-dung'),
+                          viewingReq.user?.shortCode,
+                          viewingReq.userId,
+                        )}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline font-bold"
+                      >
                         {(viewingReq.name && viewingReq.name.toLowerCase() !== 'khách hàng' ? viewingReq.name : (viewingReq.user?.name && viewingReq.user?.name?.toLowerCase() !== 'khách hàng' ? viewingReq.user?.name : 'Khách vãng lai'))} (Xem hồ sơ)
                       </a>
                     ) : (
@@ -250,9 +260,9 @@ export default function AdminRequirementsPage() {
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Khoảng Giá</label>
                   <p className="font-medium text-gray-900">
-                    {viewingReq.priceMin ? viewingReq.priceMin + ' ' : ''} 
-                    {viewingReq.priceMin && viewingReq.priceMax ? '-' : ''} 
-                    {viewingReq.priceMax ? ' ' + viewingReq.priceMax : ''}
+                    {viewingReq.priceMin ? formatNumberString(viewingReq.priceMin) + ' ' : ''}
+                    {viewingReq.priceMin && viewingReq.priceMax ? '-' : ''}
+                    {viewingReq.priceMax ? ' ' + formatNumberString(viewingReq.priceMax) : ''}
                     {!viewingReq.priceMin && !viewingReq.priceMax ? 'Thỏa thuận' : ''}
                   </p>
                 </div>

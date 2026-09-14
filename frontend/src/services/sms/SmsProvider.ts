@@ -20,4 +20,11 @@ export interface SmsProvider {
    * @param containerId HTML element id
    */
   setupRecaptcha?(containerId: string): Promise<any>;
+
+  /**
+   * Dọn widget reCAPTCHA đang giữ (nếu có). Gọi khi người dùng rời luồng SMS trước khi hoàn
+   * tất — không chỉ khi gửi OTP thất bại — để lần sau quay lại không dùng nhầm verifier cũ
+   * trỏ vào một phần tử DOM đã bị gỡ.
+   */
+  clearRecaptcha?(): void;
 }

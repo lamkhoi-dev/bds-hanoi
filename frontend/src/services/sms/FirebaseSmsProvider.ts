@@ -1,5 +1,6 @@
 import type { ConfirmationResult, RecaptchaVerifier as RecaptchaVerifierType } from "firebase/auth";
 import type { SmsProvider } from "./SmsProvider";
+import { normalizeVnPhoneForFirebase } from "@/lib/phone";
 
 export class FirebaseSmsProvider implements SmsProvider {
   /**
@@ -38,8 +39,10 @@ export class FirebaseSmsProvider implements SmsProvider {
     const { signInWithPhoneNumber } = await import("firebase/auth");
     const { auth } = await import("@/lib/firebase");
 
-    // Firebase requires phone numbers to include country code (e.g., +84)
-    const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+84' + phoneNumber.replace(/^0/, '');
+    // Firebase requires phone numbers to include country code (e.g., +84). Dùng hàm dùng
+    // chung thay vì tự nối chuỗi — nối tay từng làm `+84912...` gõ sẵn quốc mã thành
+    // `+8484912...` vì ô nhập ở trang đăng nhập đã lọc dấu `+` trước khi tới đây.
+    const formattedPhone = normalizeVnPhoneForFirebase(phoneNumber);
     
     try {
       const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifier);

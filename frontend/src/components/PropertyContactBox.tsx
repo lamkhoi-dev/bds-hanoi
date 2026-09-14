@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRightLeft, Phone, MessageCircle } from 'lucide-react';
 import { generateSlug } from '@/lib/utils';
+import { userProfilePath } from '@/lib/seo/canonical';
 
 interface PropertyContactBoxProps {
   property: any;
@@ -31,7 +32,7 @@ export default function PropertyContactBox({
 }: PropertyContactBoxProps) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-card text-center">
-      <Link href={`/user/${generateSlug(property.user?.name || 'user')}-${property.user?.id || ''}`} className="block group">
+      <Link href={userProfilePath(generateSlug(property.user?.name || 'user'), property.user?.shortCode, property.user?.id)} className="block group">
         <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 overflow-hidden relative" title={`Tên: ${property.user?.name || 'Ẩn danh'} - Tham gia: ${new Date(property.user?.createdAt || Date.now()).getFullYear()}`}>
           {property.user?.avatar ? (
             <Image fill src={toMediaUrl(property.user.avatar)} className="object-cover group-hover:scale-110 transition-transform" alt="Avatar" />

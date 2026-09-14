@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/axios';
 import { toast } from 'react-hot-toast';
 import { uploadImage } from '@/lib/upload';
+import { getApiErrorMessage } from '@/lib/api-error';
 import Image from 'next/image';
 import SimpleEditor from '@/components/SimpleEditor';
 
@@ -53,7 +54,10 @@ export default function CreateNews() {
       router.push('/admin/news');
     } catch (error) {
       console.error(error);
-      toast.error('Lỗi khi đăng bài viết');
+      // Không còn toast chung chung "Lỗi khi đăng bài viết" — khách báo 12/9 không đăng
+      // được tin tức trên PC mà không rõ vì sao; lỗi thật (413, do dán ảnh trực tiếp) giờ
+      // chỉ đúng hướng khắc phục.
+      toast.error(getApiErrorMessage(error, 'Lỗi khi đăng bài viết'));
     } finally {
       setIsSubmitting(false);
     }

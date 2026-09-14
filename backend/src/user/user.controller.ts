@@ -2,6 +2,7 @@ import { Controller, Get, Post, Delete, Param, Body, UseGuards, Request, Forbidd
 import { UserService } from './user.service';
 import { ViewedPropertyService } from './viewed-property.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { parseUserRef } from './user-ref';
 
 @Controller('users')
 export class UserController {
@@ -12,9 +13,7 @@ export class UserController {
 
   @Get('public/:slug')
   async getPublicProfile(@Param('slug') slug: string) {
-    const uuidMatch = slug.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
-    const id = uuidMatch ? uuidMatch[0] : slug;
-    const profile = await this.userService.getPublicProfile(id);
+    const profile = await this.userService.getPublicProfile(parseUserRef(slug));
     
     if (profile.isPhoneVisible === false) {
       profile.phone = 'Đã ẩn';

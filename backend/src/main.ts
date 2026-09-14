@@ -88,6 +88,21 @@ async function bootstrap() {
   );
   
   app.setGlobalPrefix('api/v1');
+
+  // Nâng giới hạn thân request JSON — mặc định của Express (100 KB) chặn đăng tin tức.
+  //
+  // Khách báo 12/9: "không đăng được tin tức trên PC". Log máy chủ 07/09 ghi 15 lần
+  // `PayloadTooLargeError` tại `POST /api/v1/news`, đúng giờ khách đăng bài. Trình soạn
+  // thảo tin tức (`SimpleEditor.tsx`) dán ảnh chụp/nội dung Word thành `<img src="data:...">`
+  // NHÚNG THẲNG vào nội dung — một ảnh chụp màn hình bình thường đã vượt 100 KB dễ dàng.
+  //
+  // 2 MB là biện pháp PHÒNG THỦ THỨ HAI, không phải cách chữa gốc: gốc là editor không
+  // được nhúng base64 nữa (xem SimpleEditor.tsx), giới hạn này chỉ để một bài dài + vài ảnh
+  // lọt qua không bị chặn oan, và để một request cố tình gửi payload khổng lồ vẫn bị chặn.
+  const jsonBodyLimit = process.env.JSON_BODY_LIMIT || '2mb';
+  app.useBodyParser('json', { limit: jsonBodyLimit });
+  app.useBodyParser('urlencoded', { extended: true, limit: jsonBodyLimit });
+
   app.use(cookieParser());
   app.enableShutdownHooks();
 

@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
 import { PRICE_RANGES_SELL, PRICE_RANGES_RENT, AREA_RANGES } from '@/constants/ranges';
 import LocationPicker, { resolveLocationIds, LocationValue } from '@/components/LocationPicker';
+import NumberInput from '@/components/NumberInput';
 
 /**
  * Hộp kiểm duyệt tin cho admin — lựa chọn thứ hai và thứ ba trong quy trình khách yêu cầu:
@@ -147,7 +148,8 @@ export default function ReviewModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Giá cụ thể (VNĐ)</label>
-              <input className={field} type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+              {/* Hiện dấu chấm phân cách hàng nghìn (1.400.000.000) — khách báo 12/9. */}
+              <NumberInput className={field} value={form.price} onChange={(v) => setForm({ ...form, price: v })} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Khoảng giá</label>
@@ -165,7 +167,7 @@ export default function ReviewModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Diện tích cụ thể (m²)</label>
-              <input className={field} type="number" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+              <NumberInput className={field} value={form.area} onChange={(v) => setForm({ ...form, area: v })} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Khoảng diện tích</label>

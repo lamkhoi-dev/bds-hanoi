@@ -12,6 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { phoneLookupCandidates } from './phone-utils';
 
 // Khởi tạo Firebase Admin (chỉ chạy 1 lần)
 // Ưu tiên biến môi trường FIREBASE_SERVICE_ACCOUNT (JSON thô hoặc base64) để không phải
@@ -501,14 +502,18 @@ export class AuthService {
     }
 
     const phoneNumber = decodedToken.phone_number;
-    
+
     if (!phoneNumber) {
       throw new BadRequestException('Firebase token does not contain a phone number.');
     }
 
-    // Find user by phone number
+    // Firebase luôn trả số ở dạng E.164 ("+84912345678"), nhưng tài khoản có thể đã đăng ký
+    // bằng dạng "0912345678" (đăng ký thường không qua Firebase). So khớp đúng một chuỗi thì
+    // không tìm thấy tài khoản đã có, rồi ÂM THẦM TẠO TÀI KHOẢN MỚI trùng số điện thoại —
+    // đây từng là nguồn gốc thật của "lỗi fiber" khách báo, không chỉ là hiển thị sai câu lỗi.
+    const phoneCandidates = phoneLookupCandidates(phoneNumber);
     let user = await this.prisma.user.findFirst({
-      where: { phone: phoneNumber }
+      where: { phone: { in: phoneCandidates } },
     });
 
     // Nếu chưa có tài khoản, tự động tạo mới (tùy vào logic nghiệp vụ của hệ thống, ở đây tạm thời tạo luôn)
@@ -549,9 +554,10 @@ export class AuthService {
       throw new BadRequestException('Firebase token does not contain a phone number.');
     }
 
-    // Check if phone number is already used by another user
+    // Check if phone number is already used by another user — kiểm mọi dạng biểu diễn, để
+    // không lách được việc "số đã có người dùng" chỉ bằng cách đổi 0 thành +84.
     const existingUser = await this.prisma.user.findFirst({
-      where: { phone: phoneNumber, id: { not: userId } }
+      where: { phone: { in: phoneLookupCandidates(phoneNumber) }, id: { not: userId } },
     });
 
     if (existingUser) {

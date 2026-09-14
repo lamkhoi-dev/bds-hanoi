@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSmsProvider } from '@/services/sms';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { translateFirebaseAuthError } from '@/lib/phone';
 import { toast } from 'react-hot-toast';
 
 export default function Login() {
@@ -43,9 +45,10 @@ export default function Login() {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('recentPhones');
-        if (stored) {
-          setRecentPhones(JSON.parse(stored));
-        }
+        // Luôn kiểm `Array.isArray`: nếu key này từng bị ghi đè bởi giá trị khác dạng, gọi
+        // `.map`/`.length` bên dưới ở JSX sẽ ném lỗi giữa lúc render và làm sập cả tab SMS.
+        const parsed = stored ? JSON.parse(stored) : null;
+        if (Array.isArray(parsed)) setRecentPhones(parsed);
       } catch (e) {}
     }
   }, []);
@@ -158,7 +161,9 @@ export default function Login() {
       setSmsStep('OTP');
       toast.success('Mã OTP đã được gửi đến điện thoại của bạn.');
     } catch (err: any) {
-      setError(err.message || 'Không thể gửi mã OTP. Vui lòng thử lại.');
+      // Không hiện thẳng err.message ra màn hình: SDK Firebase trả nguyên văn
+      // "Firebase: Error (auth/...)." — đây chính là câu khách đọc thành "lỗi fiber".
+      setError(translateFirebaseAuthError(err) || 'Không thể gửi mã OTP. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -189,10 +194,31 @@ export default function Login() {
         router.push(returnUrl);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
+      const backendMsg = err.response?.data?.message;
+      setError(backendMsg || translateFirebaseAuthError(err) || 'Mã OTP không hợp lệ hoặc đã hết hạn.');
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * `RecaptchaVerifier` được `FirebaseSmsProvider` giữ trong `window.recaptchaVerifier` và
+   * chỉ tự xoá khi GỬI OTP thất bại — không xoá khi người dùng chủ động rời màn hình SMS
+   * (đổi số điện thoại, chuyển sang tab Email). Verifier cũ đó gắn vào phần tử
+   * `#recaptcha-container` đã bị gỡ khỏi DOM khi quay lại bước "Số điện thoại", nên lần gửi
+   * sau âm thầm dùng một verifier trỏ vào phần tử không còn tồn tại. Phải dọn tay ở mọi lối
+   * thoát khỏi luồng SMS.
+   */
+  const resetSmsFlow = async () => {
+    try {
+      const provider = await getSmsProvider();
+      provider.clearRecaptcha?.();
+    } catch {
+      /* chưa từng khởi tạo verifier — không có gì để dọn */
+    }
+    setSmsStep('PHONE');
+    setConfirmationResult(null);
+    setSmsOtp('');
   };
 
   const handleResendOtp = async () => {
@@ -286,20 +312,22 @@ export default function Login() {
             )}
 
             
-            {/* Method Toggle */}
-            {!needsActivation && (
+            {/* Method Toggle — tab "Số điện thoại" chỉ hiện khi site này đã có cấu hình
+                Firebase riêng. Site Hà Nội (nhân bản từ Nghệ An) chưa có, hiện nút này ra là
+                bấm vào chắc chắn lỗi. */}
+            {!needsActivation && isFirebaseConfigured && (
               <div className="flex justify-center mb-4 sm:mb-6 relative z-10">
                 <div className="bg-gray-100 p-1 rounded-xl inline-flex w-full max-w-[300px]">
                   <button
                     type="button"
-                    onClick={() => setLoginMethod('EMAIL')}
+                    onClick={() => { setLoginMethod('EMAIL'); resetSmsFlow(); setError(''); }}
                     className={`flex-1 py-1.5 sm:py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${loginMethod === 'EMAIL' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                   >
                     Email
                   </button>
                   <button
                     type="button"
-                    onClick={() => setLoginMethod('SMS')}
+                    onClick={() => { setLoginMethod('SMS'); setError(''); }}
                     className={`flex-1 py-1.5 sm:py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${loginMethod === 'SMS' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                   >
                     Số điện thoại
@@ -314,7 +342,9 @@ export default function Login() {
               <form className="space-y-4 sm:space-y-5 relative z-10" onSubmit={handleSubmit}>
                 {/* Email Field */}
                 <div className="group">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Email</label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    {isFirebaseConfigured ? 'Email' : 'Email hoặc số điện thoại'}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <svg className="w-5 h-5 text-gray-400 group-focus-within:text-primary transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -327,7 +357,7 @@ export default function Login() {
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       className="w-full pl-12 pr-4 py-2.5 sm:py-3.5 bg-gray-50/80 border-2 border-gray-100 rounded-xl outline-none focus:border-primary/40 focus:bg-white focus:shadow-[0_0_0_4px_rgba(15,52,96,0.08)] transition-all duration-300 text-textMain placeholder:text-gray-300"
-                      placeholder="name@example.com"
+                      placeholder={isFirebaseConfigured ? 'name@example.com' : 'name@example.com hoặc 0912345678'}
                     />
                   </div>
                 </div>
@@ -447,7 +477,7 @@ export default function Login() {
                       <div className="text-center pt-2">
                         <button
                           type="button"
-                          onClick={() => setSmsStep('PHONE')}
+                          onClick={() => { resetSmsFlow(); setError(''); }}
                           className="text-xs text-primary font-semibold hover:underline"
                         >
                           Đổi số điện thoại

@@ -11,8 +11,30 @@
  * Chạy:  DATABASE_URL="..." npx ts-node src/scripts/preflight-check.ts
  */
 import { PrismaClient } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const prisma = new PrismaClient();
+
+/**
+ * Tên mọi migration trong repo, đọc trực tiếp từ thư mục — không chép tay danh sách.
+ *
+ * Trước đây danh sách này viết cứng và dừng ở `20260814040000_property_short_code`; đến
+ * `20260914100000_user_short_code` thì đã lệch mất 7 migration, khiến script luôn báo
+ * "sẽ áp 0 migration" dù thực ra còn cả đống chưa chạy. Đọc thư mục thì không bao giờ lệch.
+ */
+function allMigrationNames(): string[] {
+  const dir = path.join(__dirname, '..', '..', 'prisma', 'migrations');
+  try {
+    return fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
 
 const problems: string[] = [];
 const warnings: string[] = [];
@@ -66,15 +88,13 @@ async function main() {
           '. Phải giải quyết bằng `prisma migrate resolve` trước.',
       );
     }
-    const pending = [
-      '20260813235959_add_news_table',
-      '20260814000000_add_news_previous_slugs',
-      '20260814010000_add_property_content_updated_at',
-      '20260814020000_location_url_segments',
-      '20260814030000_location_group',
-      '20260814040000_property_short_code',
-    ].filter((n) => !applied.some((a) => a.migration_name === n));
-    console.log(`  → Sẽ áp ${pending.length} migration: ${pending.join(', ') || '(không có)'}`);
+    const allMigrations = allMigrationNames();
+    if (allMigrations.length === 0) {
+      warn('Không đọc được thư mục prisma/migrations — bỏ qua bước liệt kê migration còn thiếu.');
+    } else {
+      const pending = allMigrations.filter((n) => !applied.some((a) => a.migration_name === n));
+      console.log(`  → Sẽ áp ${pending.length}/${allMigrations.length} migration: ${pending.join(', ') || '(không có)'}`);
+    }
   }
 
   // ---------- 2. Bảng News ----------

@@ -57,26 +57,42 @@ export default function SidebarFilter() {
     let matchedCity = searchParams.get('city') || '';
     let matchedDistrict = searchParams.get('district') || '';
     let matchedWard = searchParams.get('ward') || searchParams.get('location') || '';
+    let matchedOldWard = searchParams.get('oldWard') || '';
 
     // Map slugLocation to correct city, district, and ward
-    if (parsedLoc && parsedLoc !== 'toan-quoc' && !matchedCity && !matchedDistrict && !matchedWard) {
+    if (parsedLoc && parsedLoc !== 'toan-quoc' && !matchedCity && !matchedDistrict && !matchedWard && !matchedOldWard) {
       if (parsedLoc === siteConfig.province.slug) {
         matchedCity = siteConfig.province.name;
       } else {
         // So khớp theo `slug` (= urlSegment) backend trả về, KHÔNG suy từ tên nữa:
         // generateSlug('Phường Yên Hòa') ra 'phuong-yen-hoa' trong khi urlSegment thật
         // là 'yen-hoa', nên cách cũ không khớp được phường nào có tiền tố.
+        //
+        // Tỉnh lấy từ CHÍNH huyện vừa khớp (`provinceLabel`), không gán cứng
+        // `siteConfig.province.name` — site Nghệ An phục vụ 2 tỉnh, gán cứng làm mọi trang
+        // Hà Tĩnh tự điền sẵn "Nghệ An" vào ô lọc. Bấm "Áp dụng" ngay lúc đó gửi
+        // `city=Nghệ An&district=Huyện Can Lộc` (huyện Hà Tĩnh) — hai điều kiện AND với nhau
+        // không tin nào khớp cả hai, bộ lọc luôn ra 0 kết quả (khách báo 12/9, đúng lúc rà
+        // "khu vực thỉnh thoảng lấy tin của khu vực khác": chiều ngược lại của cùng một lỗi
+        // gán sai tỉnh — ở đây là gán sai làm MẤT tin thay vì LẪN tin).
         matchLoop: for (const dist of locations) {
           if (dist.slug === parsedLoc) {
-            matchedCity = siteConfig.province.name;
+            matchedCity = provinceLabel(dist as any) || siteConfig.province.name;
             matchedDistrict = dist.name;
             break;
           }
           for (const w of dist.children ?? []) {
             if (w.slug === parsedLoc) {
-              matchedCity = siteConfig.province.name;
+              matchedCity = provinceLabel(dist as any) || siteConfig.province.name;
               matchedDistrict = dist.name;
-              matchedWard = w.name;
+              // Xã CŨ phải đi vào `oldWard`, không phải `ward` — hai cột lọc độc lập
+              // (khách chốt: xã cũ/xã mới là 2 field ngang hàng). Gộp chung trước đây làm
+              // link `/xa-cu-nao-do` gửi lên `?ward=Xã Cũ` và không khớp cột nào.
+              if ((w as any).type === 'OLD_WARD') {
+                matchedOldWard = w.name;
+              } else {
+                matchedWard = w.name;
+              }
               break matchLoop;
             }
           }
@@ -90,7 +106,7 @@ export default function SidebarFilter() {
       city: matchedCity,
       district: matchedDistrict,
       ward: matchedWard,
-      oldWard: searchParams.get('oldWard') || '',
+      oldWard: matchedOldWard,
       priceRangeKey: searchParams.get('priceRangeKey') || '',
       areaRangeKey: searchParams.get('areaRangeKey') || '',
       direction: searchParams.get('direction') || ''

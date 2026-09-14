@@ -536,7 +536,7 @@ export class PropertyService {
         skip,
         take: limit,
         orderBy: buildPrismaOrder(filters.sort),
-        include: { user: { select: { id: true, slug: true, name: true, avatar: true } }, imageObjects: true },
+        include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true },
       }),
       this.prisma.property.count({ where })
     ]);
@@ -565,7 +565,7 @@ export class PropertyService {
         where: vipWhere,
         orderBy: [{ pushedAt: { sort: 'desc', nulls: 'last' }}, {publishedAt: {sort: 'desc', nulls: 'last'}}],
         take: 50,
-        include: { user: { select: { id: true, slug: true, name: true, avatar: true } }, imageObjects: true },
+        include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true },
       });
       const newestVips = allVips.slice(0, 2);
       const remainingVips = allVips.slice(2);
@@ -763,7 +763,7 @@ export class PropertyService {
 
     const baseWhere = { status: { in: [...this.publicStatuses] }, deletedAt: null };
     const includeOptions = {
-      user: { select: { id: true, slug: true, name: true, avatar: true } },
+      user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } },
       imageObjects: true,
     };
 
@@ -877,7 +877,7 @@ export class PropertyService {
     if (cached) return cached;
 
     const baseWhere = { status: { in: [...this.publicStatuses] }, deletedAt: null };
-    const includeOptions = { user: { select: { id: true, slug: true, name: true, avatar: true } }, imageObjects: true };
+    const includeOptions = { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true };
 
     const getItems = (where: any) => this.prisma.property.findMany({
       where: { ...baseWhere, ...where, tier: 'NORMAL' },
@@ -1216,7 +1216,7 @@ export class PropertyService {
         { publishedAt: { sort: 'desc', nulls: 'last' } },
         { createdAt: 'desc' },
       ],
-      include: { user: { select: { id: true, slug: true, name: true, avatar: true } } },
+      include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } } },
     });
   }
 
@@ -1238,7 +1238,7 @@ export class PropertyService {
     const property = await this.prisma.property.findFirst({
       where: UUID_PATTERN.test(id) ? { OR: [{ id }, { shortCode: id }] } : { shortCode: id },
       include: {
-        user: { select: { id: true, slug: true, name: true, avatar: true, phone: true, isPhoneVisible: true, createdAt: true } },
+        user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true, phone: true, isPhoneVisible: true, createdAt: true } },
         imageObjects: true,
         // Cần đoạn URL thật của tỉnh/quận/phường để dựng breadcrumb. Không suy được từ
         // tên: slugify("Phường Trường Vinh") = "phuong-truong-vinh" trong khi urlSegment
@@ -1422,7 +1422,7 @@ export class PropertyService {
       return tx.property.update({
         where: { id: propertyId },
         data: updateData,
-        include: { user: { select: { id: true, slug: true, name: true, avatar: true } }, imageObjects: true } as any
+        include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true } as any
       });
     });
 
@@ -1445,7 +1445,7 @@ export class PropertyService {
         tier: 'NORMAL',
         tierExpiresAt: null
       },
-      include: { user: { select: { id: true, slug: true, name: true, avatar: true } }, imageObjects: true } as any
+      include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true } as any
     });
 
     if (updatedProperty.status === 'APPROVED') {
@@ -1706,7 +1706,7 @@ export class PropertyService {
         { publishedAt: { sort: 'desc', nulls: 'last' } }
       ],
       include: {
-        user: { select: { id: true, slug: true, name: true, avatar: true } },
+        user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } },
         imageObjects: { orderBy: { sortOrder: 'asc' } },
         location: true,
       } as any
@@ -1913,18 +1913,30 @@ export class PropertyService {
     }
 
     // 2. Map `khu-vuc` slug to Location
+    let matchedLocation: { id: string; type: string; name: string; parentId: string | null } | null = null;
     if (actualKhuVucSlug && actualKhuVucSlug !== 'toan-quoc') {
-      const matchedLocation = await this.prisma.location.findFirst({
+      matchedLocation = await this.prisma.location.findFirst({
         where: { urlSegment: actualKhuVucSlug, isActive: true }
       });
 
       if (matchedLocation) {
-        // Lọc theo TÊN vì các cột city/district/ward/oldWard trên Property là văn bản
-        // tự do và là nguồn sự thật cho hiển thị lẫn tìm kiếm.
-        if (matchedLocation.type === 'WARD') filters.ward = matchedLocation.name;
-        if (matchedLocation.type === 'OLD_WARD') filters.oldWard = matchedLocation.name;
-        if (matchedLocation.type === 'DISTRICT') filters.district = matchedLocation.name;
-        if (matchedLocation.type === 'CITY') filters.city = matchedLocation.name;
+        // Lọc theo MÃ (id), KHÔNG theo tên chữ — xem giải thích đầy đủ ở
+        // `NormalizedFilters.locationMatch` (property-utils.ts).
+        //
+        // Trước đây lọc theo tên (`filters.ward = matchedLocation.name`...). 35 tên
+        // xã/phường trùng nhau giữa các huyện/tỉnh (vd "Xã Nghi Phong" có ở cả Huyện Nghi
+        // Lộc lẫn TP Vinh) khiến trang của xã này hiện tin của xã trùng tên — khách báo
+        // 12/9 "khu vực thỉnh thoảng lấy tin của khu vực khác". Đo trên site thật:
+        // `/ha-huy-tap-ha-tinh-2` (Hà Tĩnh) hiện 6 tin, CẢ 6 đều là tin TP Vinh.
+        filters.locationMatch = {
+          type: matchedLocation.type as any,
+          id: matchedLocation.id,
+          name: matchedLocation.name,
+          districtId:
+            matchedLocation.type === 'WARD' || matchedLocation.type === 'OLD_WARD'
+              ? matchedLocation.parentId ?? undefined
+              : undefined,
+        };
       } else {
         // Trước đây rơi về tìm kiếm toàn văn `filters.q = slug.replace(/-/g,' ')`, nên
         // MỌI URL rác (/nha-rieng/$, /chung-cu/&) đều ra một trang 200 index được.
@@ -1939,10 +1951,61 @@ export class PropertyService {
         };
       }
     }
-    
+
     (filters as any).status = { in: ['APPROVED', 'SOLD'] };
     (filters as any).deletedAt = null;
 
-    return this.searchDatabase(filters);
+    const result = await this.searchDatabase(filters);
+
+    // Khu vực có thật nhưng chưa có tin nào — khách yêu cầu 12/9 (tiếp nối yêu cầu 25/08):
+    // đưa tin của khu vực CHA (huyện/tỉnh) thay vì hiện trang trắng hay lẫn tin nơi khác.
+    // Chỉ đổi CÁCH có tin dự phòng, không đổi Ý NGHĨA `total`: trang vẫn biết là "0 tin của
+    // đúng khu vực này" để không tự nhận nhầm là có tin.
+    if (result.total === 0 && matchedLocation) {
+      const nearby = await this.getNearbyProperties(matchedLocation, filters.transactionType);
+      if (nearby) return { ...result, nearby };
+    }
+
+    return result;
+  }
+
+  /**
+   * Tin của khu vực CHA — dùng khi trang con (xã/huyện) chưa có tin nào.
+   *
+   * Chỉ giữ ràng buộc GIAO DỊCH (bán/thuê): trang thuê phải hiện tin thuê, không được lẫn
+   * tin bán. Bỏ ràng buộc loại BĐS để còn cơ hội có tin hiện ra — mục tiêu là "có gì gần
+   * đúng nhất", không phải lọc chặt như trang chính.
+   */
+  private async getNearbyProperties(
+    location: { id: string; type: string; parentId: string | null },
+    transactionType?: string,
+    limit = 8,
+  ) {
+    if (!location.parentId) return null;
+    const parent = await this.prisma.location.findUnique({ where: { id: location.parentId } });
+    if (!parent || (parent.type !== 'CITY' && parent.type !== 'DISTRICT')) return null;
+
+    const nearbyFilters: NormalizedFilters = {
+      page: 1,
+      limit,
+      transactionType,
+      locationMatch: { type: parent.type as any, id: parent.id, name: parent.name },
+    } as any;
+
+    const where = buildPrismaWhere(nearbyFilters);
+    const listings = await this.prisma.property.findMany({
+      where,
+      take: limit,
+      orderBy: buildPrismaOrder(undefined),
+      include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true },
+    });
+    if (listings.length === 0) return null;
+
+    return {
+      locationType: parent.type,
+      locationName: parent.name,
+      locationUrlSegment: parent.urlSegment,
+      listings,
+    };
   }
 }

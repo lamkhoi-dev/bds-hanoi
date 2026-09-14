@@ -2,8 +2,9 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { SeoService } from '../seo/seo.service';
+import { SearchService } from '../search/search.service';
 import { PropertyService } from './property.service';
-import { normalizePropertyPayload } from './property-utils';
+import { normalizePropertyPayload, applyRangeKeys } from './property-utils';
 
 /**
  * Quy trình duyệt tin HAI CHIỀU (PHẦN I).
@@ -69,11 +70,25 @@ export class PropertyReviewService {
     private notificationService: NotificationService,
     private seoService: SeoService,
     private propertyService: PropertyService,
+    private searchService: SearchService,
   ) {}
 
   private format(value: unknown): string {
     if (value === null || value === undefined || value === '') return '(trống)';
     if (typeof value === 'number') return value.toLocaleString('vi-VN');
+    // `price`/`area`... phía "trước" đọc thẳng từ Prisma là `Decimal` — không phải `number`
+    // JS nên bỏ lọt nhánh trên, rơi xuống `String(value)` mất luôn dấu chấm phân cách trong
+    // khi phía "sau" (đã qua `normalizePropertyPayload` → `Number(...)`) LẠI có dấu chấm.
+    // Khách rà lỗi 12/9: hiển thị "trước: 1400000000 → sau: 1.400.000.000" trông như đổi
+    // nhiều hơn thực tế. Chỉ ép những giá trị THỰC SỰ trông như số (Decimal.toString() ra
+    // toàn chữ số) — không đụng vào field chữ tình cờ chứa số (vd địa chỉ "123 Lê Lợi").
+    if (typeof value === 'object' && typeof (value as any).toString === 'function') {
+      const asString = String(value);
+      if (/^-?\d+(\.\d+)?$/.test(asString)) {
+        const n = Number(asString);
+        if (Number.isFinite(n)) return n.toLocaleString('vi-VN');
+      }
+    }
     const s = String(value);
     return s.length > 120 ? `${s.slice(0, 120)}…` : s;
   }
@@ -129,6 +144,39 @@ export class PropertyReviewService {
       if (f in normalized) safePatch[f] = (normalized as any)[f];
     }
 
+    // Tính lại priceMin/Max, areaMin/Max, pricePerM2, isNegotiable — dùng CHUNG `applyRangeKeys`
+    // với nơi đăng/sửa tin, để không có một nơi thứ ba tự suy khác đi.
+    //
+    // Trước đây bước này KHÔNG chạy ở màn hình kiểm duyệt — đúng màn hình khách chụp ảnh
+    // gửi 12/9: gõ "Giá cụ thể" 1,4 tỷ nhưng không đụng ô "Khoảng giá" (đang hiển thị sẵn từ
+    // giá trị CŨ) thì `priceRangeKey` không nằm trong safePatch, được ghi thẳng xuống DB với
+    // nhãn khoảng đã lệch, và Meilisearch (bộ lọc trên /search) giữ luôn bản CŨ vì hàm review
+    // này chưa từng gọi tới nó.
+    if (['price', 'area', 'priceRangeKey', 'areaRangeKey', 'transactionType'].some((f) => f in safePatch)) {
+      const merged: Record<string, any> = {
+        price: safePatch.price !== undefined ? safePatch.price : property.price !== null ? Number(property.price) : null,
+        area: safePatch.area !== undefined ? safePatch.area : property.area,
+        priceRangeKey: safePatch.priceRangeKey !== undefined ? safePatch.priceRangeKey : property.priceRangeKey,
+        areaRangeKey: safePatch.areaRangeKey !== undefined ? safePatch.areaRangeKey : property.areaRangeKey,
+        transactionType: safePatch.transactionType !== undefined ? safePatch.transactionType : property.transactionType,
+        isNegotiable: property.isNegotiable,
+      };
+      // Admin vừa TỰ CHỌN "Thỏa thuận" — tôn trọng lựa chọn đó, đừng để bước tính-theo-giá
+      // bên dưới lật lại thành khoảng số chỉ vì tin còn giữ giá cũ (isNegotiable chưa cập
+      // nhật do form kiểm duyệt không có ô này).
+      if (safePatch.priceRangeKey === 'THOA_THUAN') merged.isNegotiable = true;
+
+      applyRangeKeys(merged);
+
+      for (const f of [
+        'price', 'priceRangeKey', 'priceMin', 'priceMax',
+        'area', 'areaRangeKey', 'areaMin', 'areaMax',
+        'pricePerM2', 'pricePerM2Display', 'isNegotiable',
+      ]) {
+        if (f in merged) safePatch[f] = merged[f];
+      }
+    }
+
     const changes = this.diff(property, safePatch);
     const nextStatus = returnToAuthor ? 'AWAITING_AUTHOR' : 'APPROVED';
 
@@ -164,6 +212,10 @@ export class PropertyReviewService {
       // TTL 60s thụ động — xem PropertyService.invalidateHomepageCache().
       await this.propertyService.invalidateHomepageCache();
     }
+    // Trước đây review() không đụng tới Meilisearch — /search giữ nguyên giá/trạng thái CŨ
+    // của tin sau khi admin duyệt hoặc sửa, có thể mãi không khớp CSDL nếu tin không được
+    // ghi lại lần nào khác. `update()` (tin tự sửa) đã làm việc này; review() thì chưa.
+    await this.searchService.addDocument(updated).catch(() => undefined);
     await this.notifyAuthor(property.userId, property.title, changes, returnToAuthor, note);
     return { property: updated, changes };
   }

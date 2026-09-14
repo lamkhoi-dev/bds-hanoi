@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/axios';
 import { toast } from 'react-hot-toast';
 import { uploadImage } from '@/lib/upload';
+import { getApiErrorMessage } from '@/lib/api-error';
 import Image from 'next/image';
 import SimpleEditor from '@/components/SimpleEditor';
 
@@ -72,7 +73,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
       router.push('/admin/news');
     } catch (error) {
       console.error(error);
-      toast.error('Lỗi khi cập nhật bài viết');
+      toast.error(getApiErrorMessage(error, 'Lỗi khi cập nhật bài viết'));
     } finally {
       setIsSubmitting(false);
     }

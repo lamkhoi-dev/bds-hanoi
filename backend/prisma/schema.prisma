@@ -57,6 +57,12 @@ model User {
   password              String?
   name                  String?
   slug                  String?   @unique
+  /// Mã ngắn dùng trong URL: `/user/{tên}-{shortCode}`, thay cho UUID 36 ký tự.
+  /// Sinh từ sequence `user_short_code_seq` (base36) — DEFAULT đặt ở CSDL nên MỌI đường tạo
+  /// tài khoản đều tự có mã, không cần sửa từng chỗ tạo user trong code. `id` KHÔNG đổi —
+  /// URL cũ dạng `-{uuid}` vẫn 301 về đây. Nullable ở tầng schema để migration thêm cột
+  /// chạy được trên bảng đang có dữ liệu; mọi bản ghi đã được backfill.
+  shortCode             String?   @unique
   bio                   String?
   provider              String    @default("LOCAL")
   providerId            String?

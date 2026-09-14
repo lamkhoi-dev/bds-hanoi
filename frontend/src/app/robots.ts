@@ -1,25 +1,15 @@
 import { MetadataRoute } from 'next';
 import { siteConfig } from '@/lib/site-config';
+import { USER_PRIVATE_SEGMENTS } from '@/lib/user-private-paths';
 
 /**
  * Các đường dẫn thuộc khu vực tài khoản (route group `app/user/(dashboard)`).
  * Liệt kê tường minh vì `/user/[slug]` là trang hồ sơ CÔNG KHAI, chặn cả `/user/`
  * sẽ chặn nhầm nó. P7 sẽ đổi khu vực tài khoản sang `/tai-khoan/` để rút gọn còn 1 dòng.
+ *
+ * Danh sách tên trang lấy từ `USER_PRIVATE_SEGMENTS` — MỘT nguồn dùng chung với `proxy.ts`.
  */
-const ACCOUNT_PATHS = [
-  '/user$',
-  '/user/my-listings',
-  '/user/packages',
-  '/user/properties',
-  '/user/requirements',
-  '/user/saved',
-  '/user/settings',
-  '/user/wallet',
-  '/user/favorites',
-  '/user/nap-tien',
-  '/user/recently-viewed',
-  '/user/transactions',
-];
+const ACCOUNT_PATHS = ['/user$', ...USER_PRIVATE_SEGMENTS.map((s) => `/user/${s}`)];
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = siteConfig.url;

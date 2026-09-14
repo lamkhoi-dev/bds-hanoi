@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
 import { toMediaUrl } from '@/lib/media';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, isFirebaseConfigured } from '@/lib/firebase';
+import { translateFirebaseAuthError } from '@/lib/phone';
 import { toast } from 'react-hot-toast';
 import { confirmAction } from '@/lib/toast-helpers';
 
@@ -120,7 +121,7 @@ export default function SettingsPage() {
       setStepPhone('OTP_SENT');
     } catch (err: any) {
       console.error(err);
-      setPhoneMsg({ type: 'error', text: 'Lỗi gửi mã OTP. Vui lòng thử lại.' });
+      setPhoneMsg({ type: 'error', text: translateFirebaseAuthError(err) || 'Lỗi gửi mã OTP. Vui lòng thử lại.' });
     } finally {
       setPhoneSaving(false);
     }
@@ -408,17 +409,23 @@ export default function SettingsPage() {
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => setShowPhoneForm(!showPhoneForm)}
-              className="text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors"
-            >
-              {showPhoneForm ? 'Đóng' : (phoneData.currentPhone ? 'Thay đổi' : 'Thêm mới')}
-            </button>
+            {isFirebaseConfigured ? (
+              <button
+                type="button"
+                onClick={() => setShowPhoneForm(!showPhoneForm)}
+                className="text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+              >
+                {showPhoneForm ? 'Đóng' : (phoneData.currentPhone ? 'Thay đổi' : 'Thêm mới')}
+              </button>
+            ) : (
+              // Site chưa có cấu hình Firebase riêng (Hà Nội) — ẩn nút thay vì để bấm vào
+              // rồi gặp lỗi xác thực ngay từ bước gửi OTP.
+              <span className="text-xs text-gray-400 italic">Tạm chưa hỗ trợ</span>
+            )}
           </div>
         </div>
 
-        {showPhoneForm && (
+        {showPhoneForm && isFirebaseConfigured && (
           <div className="pt-4 border-t border-gray-100 mt-4 animate-in fade-in slide-in-from-top-2">
             {stepPhone === 'IDLE' ? (
               <form onSubmit={handleRequestPhoneChange} className="space-y-4">

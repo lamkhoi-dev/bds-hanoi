@@ -15,6 +15,19 @@ export interface SeoListingData {
   limit: number;
   /** Backend đặt cờ này khi đoạn khu vực không tra được. */
   unknownLocation?: string;
+  /**
+   * Tin của khu vực CHA (huyện/tỉnh), backend tự bù khi khu vực đang xem có thật nhưng
+   * chưa có tin nào (`total === 0`). Khách yêu cầu 12/9: khu vực trống phải đưa tin GẦN ĐÚNG
+   * nhất tìm được và NÓI RÕ đó là tin của khu vực khác — không lặng lẽ hiện như tin toàn
+   * site (khối "Tin đăng mới nhất" cũ dễ đọc nhầm thành đúng khu vực) và càng không được lẫn
+   * vào danh sách chính (đó là lỗi khác — xem `locationMatch` ở backend).
+   */
+  nearby?: {
+    locationType: 'CITY' | 'DISTRICT';
+    locationName: string;
+    locationUrlSegment: string;
+    listings: any[];
+  };
 }
 
 /**

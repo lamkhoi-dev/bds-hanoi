@@ -1,5 +1,6 @@
 import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { phoneLookupCandidates } from '../auth/phone-utils';
 
 type UserRecord = any;
 
@@ -16,11 +17,17 @@ export class UserService {
     if (!identifier) return null;
     const normalizedIdentifier = identifier.trim();
     const emailIdentifier = normalizedIdentifier.includes('@') ? normalizedIdentifier.toLowerCase() : normalizedIdentifier;
+    // CSDL lưu số điện thoại ở nhiều dạng khác nhau tuỳ đường tạo tài khoản (đăng ký giữ
+    // "0912345678", đổi số trong Cài đặt lưu "+84912345678" vì Firebase luôn trả E.164) —
+    // thử mọi dạng thay vì so khớp đúng một chuỗi, để đăng nhập không phụ thuộc vào việc
+    // người dùng gõ số có "0" hay "+84" ở đầu.
+    const phoneCandidates = normalizedIdentifier.includes('@') ? [] : phoneLookupCandidates(normalizedIdentifier);
     return this.prisma.user.findFirst({
       where: {
         OR: [
           { email: emailIdentifier },
           { phone: normalizedIdentifier },
+          ...phoneCandidates.map((phone) => ({ phone })),
         ],
       },
     });
@@ -341,9 +348,17 @@ export class UserService {
     });
   }
 
-  async getPublicProfile(idOrSlug: string) {
-    let user = await this.prisma.user.findFirst({
-      where: { id: idOrSlug, status: { notIn: ['BANNED', 'DELETED'] } },
+  /**
+   * Nhận CẢ BA dạng: `id` (UUID cũ, đang được Google index), `shortCode` (URL mới, 5 ký tự
+   * — khách báo 12/9 "link user bị dài, đổi thành slug ngắn"), và `slug` (dự phòng, hiếm khi
+   * có giá trị thật). Gộp một truy vấn thay vì tra tuần tự để không phải đoán dạng nào trước.
+   */
+  async getPublicProfile(idOrCode: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        status: { notIn: ['BANNED', 'DELETED'] },
+        OR: [{ id: idOrCode }, { shortCode: idOrCode }, { slug: idOrCode }],
+      },
       select: {
         id: true,
         name: true,
@@ -351,26 +366,11 @@ export class UserService {
         phone: true,
         createdAt: true,
         slug: true,
+        shortCode: true,
         bio: true,
         isPhoneVisible: true,
       }
     });
-
-    if (!user) {
-      user = await this.prisma.user.findFirst({
-        where: { slug: idOrSlug, status: { notIn: ['BANNED', 'DELETED'] } },
-        select: {
-          id: true,
-          name: true,
-          avatar: true,
-          phone: true,
-          createdAt: true,
-          slug: true,
-          bio: true,
-          isPhoneVisible: true,
-        }
-      });
-    }
 
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
 

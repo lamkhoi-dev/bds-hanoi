@@ -80,3 +80,21 @@ export function getAreaRange(key?: string | null): NumericRange | null {
   if (match.min === null && match.max === null) return null;
   return { min: match.min, max: match.max };
 }
+
+type RangeDef = { key: string; min: number | null; max: number | null };
+
+/**
+ * Suy khoảng đúng cho một giá trị số cụ thể — dùng để ô "Khoảng giá"/"Khoảng diện tích"
+ * TỰ CHỌN theo giá trị người dùng gõ vào ô cụ thể, thay vì để hai ô lệch nhau (khách báo
+ * 12/9: kiểm duyệt tin gõ 1,4 tỷ nhưng khoảng vẫn ghi "2-3 tỷ"). Bản sao y hệt
+ * `backend/src/constants/ranges.ts rangeKeyForValue` — hai bên đối chiếu bằng test.
+ */
+export function rangeKeyForValue(ranges: RangeDef[], value: number): string | undefined {
+  if (!Number.isFinite(value)) return undefined;
+  return ranges.find(
+    // Loại "Thỏa thuận" (min=null VÀ max=null) trước: nó không phải một khoảng số mà là chỗ
+    // giữ chỗ cho "không có giá", nên khớp MỌI giá trị nếu không loại — và vì luôn đứng ĐẦU
+    // bảng, `.find()` sẽ trả nó trước cả khoảng số thật. Bản backend đối chiếu cùng lỗi này.
+    (r) => !(r.min === null && r.max === null) && (r.min === null || value >= r.min) && (r.max === null || value <= r.max),
+  )?.key;
+}

@@ -33,3 +33,26 @@ export const AREA_RANGES = [
   { key: '300_500', label: '300 - 500 m²', min: 300, max: 500, canCalculate: true },
   { key: 'GT_500', label: 'Trên 500 m²', min: 500, max: null, canCalculate: false }
 ];
+
+type RangeDef = { key: string; min: number | null; max: number | null };
+
+/**
+ * Suy khoảng (nhãn) đúng cho một giá trị SỐ CỤ THỂ — giá hoặc diện tích.
+ *
+ * Dùng khi lưu tin: khách chốt 12/9 "giá cụ thể luôn thắng nhãn khoảng do người đăng tự
+ * chọn" (rà lỗi "kiểm duyệt tin gõ 1,4 tỷ nhưng lại chọn khoảng 2-3 tỷ"). Giá trị đúng MỐC
+ * (vd 2 tỷ) rơi vào khoảng ĐẦU TIÊN chứa nó theo thứ tự khai báo ở trên — ở đây là "1-2 tỷ"
+ * chứ không phải "2-3 tỷ". Chọn nào cũng đúng theo nghĩa toán học (biên trùng nhau); việc
+ * lọc theo khoảng đã bao trọn cả 2 phía qua so sánh inclusive, nên đây chỉ là quy ước hiển
+ * thị, không ảnh hưởng kết quả lọc thấy được.
+ */
+export function rangeKeyForValue(ranges: RangeDef[], value: number): string | undefined {
+  if (!Number.isFinite(value)) return undefined;
+  return ranges.find(
+    // `min === null && max === null` là mục "Thỏa thuận" — không phải một khoảng số, mà là
+    // chỗ giữ chỗ cho "không có giá". Điều kiện dưới không loại nó ra thì nó khớp MỌI giá
+    // trị (cả hai vế `min===null` / `max===null` đều đúng) và vì luôn đứng ĐẦU bảng nên
+    // `.find()` trả về nó trước mọi khoảng số thật — bắt được lỗi này qua test.
+    (r) => !(r.min === null && r.max === null) && (r.min === null || value >= r.min) && (r.max === null || value <= r.max),
+  )?.key;
+}

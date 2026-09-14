@@ -1,25 +1,36 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { USER_PRIVATE_SEGMENTS } from './lib/user-private-paths';
 
 /**
- * Hồ sơ CÔNG KHAI của người dùng: `/user/{ten-nguoi-dung}-{uuid}`.
+ * Hồ sơ CÔNG KHAI của người dùng: `/user/{ten-nguoi-dung}-{uuid}` (URL cũ) hoặc
+ * `/user/{ten-nguoi-dung}-{shortCode}` (URL mới, 12/9 — khách báo "link user quá dài").
  *
  * Trước đây mọi đường dẫn dưới `/user/` đều bị bắt đăng nhập, nên Googlebot vào trang
  * hồ sơ công khai chỉ nhận 307 về `/login` — trang không bao giờ được index (Search
  * Console có 12 URL `/user/*` bị bỏ qua).
  *
  * Logic được ĐẢO lại thay vì liệt kê từng đường dẫn riêng tư: mặc định mọi thứ dưới
- * `/user/` là riêng tư, chỉ hồ sơ công khai (nhận diện bằng hậu tố UUID) mới được
- * cho qua. Nhờ vậy thêm một trang tài khoản mới sẽ TỰ ĐỘNG được bảo vệ — cách liệt kê
- * đường dẫn riêng tư thì trang mới sẽ âm thầm thành công khai.
+ * `/user/` là riêng tư, chỉ hồ sơ công khai (nhận diện bằng hậu tố UUID hoặc shortCode)
+ * mới được cho qua. Nhờ vậy thêm một trang tài khoản mới sẽ TỰ ĐỘNG được bảo vệ — cách
+ * liệt kê đường dẫn riêng tư thì trang mới sẽ âm thầm thành công khai.
+ *
+ * shortCode là chữ+số ngắn (base36) — về mặt CHUỖI có thể trùng ngẫu nhiên với một trang
+ * riêng tư đặt tên kiểu "chữ-chữ" (vd một trang tên lẻ nào đó sau này). Vì vậy vẫn phải
+ * chặn CỨNG các trang riêng tư đã biết ở `USER_PRIVATE_SEGMENTS` TRƯỚC khi thử mẫu công
+ * khai — hai lớp phòng thủ độc lập, không lớp nào một mình đủ an toàn.
  */
 const PUBLIC_PROFILE_PATTERN =
-  /^\/user\/[\w-]+-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i;
+  /^\/user\/[\w-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[a-z0-9]{3,10})\/?$/i;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith('/user/') && !PUBLIC_PROFILE_PATTERN.test(pathname)) {
+  const firstSegment = pathname.startsWith('/user/') ? pathname.slice('/user/'.length).split('/')[0] : '';
+  const isKnownPrivateSegment = USER_PRIVATE_SEGMENTS.includes(firstSegment);
+  const looksLikePublicProfile = !isKnownPrivateSegment && PUBLIC_PROFILE_PATTERN.test(pathname);
+
+  if (pathname.startsWith('/user/') && !looksLikePublicProfile) {
     const isLoggedIn = request.cookies.get('isLoggedIn');
 
     if (!isLoggedIn || isLoggedIn.value !== '1') {

@@ -161,10 +161,16 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
   const pageCount = totalPages(data?.total ?? 0);
 
   // Trang không có tin nào (hoặc gọi API hỏng) thì vẫn phải có nội dung để xem — khách yêu
-  // cầu 25/08 bỏ dòng báo lỗi trơ, thay bằng quảng cáo hoặc tin liên quan. Chỉ gọi khi thật
-  // sự cần, để trang bình thường không tốn thêm một lượt gọi API.
+  // cầu 25/08 bỏ dòng báo lỗi trơ, thay bằng quảng cáo hoặc tin liên quan.
+  //
+  // Khách bổ sung 12/9: bản 25/08 lấy tin MỚI NHẤT TOÀN SITE làm dự phòng, ghi nhãn "Tin
+  // đăng mới nhất" — không nói rõ đó không phải tin của khu vực đang xem, nên đọc nhầm
+  // thành "khu vực này lẫn tin khu vực khác". Nay ưu tiên `data.nearby` (tin của khu vực CHA
+  // — huyện/tỉnh — backend đã tự bù khi biết chắc khu vực có thật nhưng trống), và chỉ gọi
+  // API tin toàn site khi THẬT SỰ không còn nguồn nào khác (lỗi tải, hoặc không có nearby).
   const isEmptyPage = !data || (data.total ?? 0) === 0;
-  const fallbackListings = isEmptyPage ? await fetchFallbackListings() : [];
+  const nearby = data?.nearby ?? null;
+  const fallbackListings = isEmptyPage && !nearby ? await fetchFallbackListings() : [];
 
   // Breadcrumb: phần tử cuối là trang hiện tại nên không gắn url.
   const breadcrumbs: BreadcrumbItem[] = [];
@@ -296,7 +302,10 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
           <div className="space-y-8">
             {fallbackListings.length > 0 && (
               <section className="mt-2">
-                <h2 className="text-xl font-bold text-textMain mb-5">Tin đăng mới nhất</h2>
+                {/* KHÔNG ghi "Tin đăng mới nhất" — đây là lỗi tải thật (`!data`), tin dưới
+                    đây là tin TOÀN SITE, không liên quan khu vực đang xem. Ghi rõ để không
+                    đọc nhầm thành tin của khu vực này (khách báo 12/9). */}
+                <h2 className="text-xl font-bold text-textMain mb-5">Tin đăng khác bạn có thể quan tâm</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   {fallbackListings.map((item: any) => (
                     <PropertyCard key={item.id} item={item} />
@@ -405,8 +414,15 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                   <div className="bg-white rounded-2xl p-8 shadow-card text-center">
                     {/* Khách yêu cầu: đổi "Chưa có bài đăng nào" thành "không có kết quả
                         tìm kiếm phù hợp", bỏ tiêu đề/mô tả, thêm gợi ý về trang chủ và
-                        gợi ý dùng bộ lọc. */}
-                    <p className="text-gray-600 mb-5">Không có kết quả tìm kiếm phù hợp.</p>
+                        gợi ý dùng bộ lọc. Có `nearby` thì nói thẳng khu vực này chưa có tin
+                        — khách bổ sung 12/9, tránh việc tin khu vực khác hiện ra mà không
+                        ai biết vì sao (trước đây khối dự phòng ghi "Tin đăng mới nhất" như
+                        thể đúng là tin của khu vực đang xem). */}
+                    <p className="text-gray-600 mb-5">
+                      {nearby
+                        ? `Chưa có tin đăng tại ${locationName || 'khu vực này'}.`
+                        : 'Không có kết quả tìm kiếm phù hợp.'}
+                    </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                       <Link href="/" className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
                         Về trang chủ
@@ -416,17 +432,34 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                       </Link>
                     </div>
                   </div>
-                  {/* Khu vực chưa có tin thì đưa tin đang có, đừng để trang trống trơn. */}
-                  {fallbackListings.length > 0 && (
-              <section className="mt-2">
-                <h2 className="text-xl font-bold text-textMain mb-5">Tin đăng mới nhất</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                  {fallbackListings.map((item: any) => (
-                    <PropertyCard key={item.id} item={item} />
-                  ))}
-                </div>
-              </section>
-            )}
+                  {/* Khu vực chưa có tin thì đưa tin đang có, đừng để trang trống trơn — ưu
+                      tiên tin của khu vực CHA (huyện/tỉnh), ghi RÕ đó là khu vực khác. */}
+                  {nearby ? (
+                    <section className="mt-2">
+                      <h2 className="text-xl font-bold text-textMain mb-5">
+                        Tin đăng gần đó tại{' '}
+                        <Link href={`/${nearby.locationUrlSegment}`} className="text-primary hover:underline">
+                          {nearby.locationName}
+                        </Link>
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {nearby.listings.map((item: any) => (
+                          <PropertyCard key={item.id} item={item} />
+                        ))}
+                      </div>
+                    </section>
+                  ) : (
+                    fallbackListings.length > 0 && (
+                      <section className="mt-2">
+                        <h2 className="text-xl font-bold text-textMain mb-5">Tin đăng mới nhất</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                          {fallbackListings.map((item: any) => (
+                            <PropertyCard key={item.id} item={item} />
+                          ))}
+                        </div>
+                      </section>
+                    )
+                  )}
             <div className="mt-8">
               <GoogleAdPlaceholder />
             </div>

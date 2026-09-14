@@ -172,3 +172,17 @@ export function parseListingRef(slugId: string): { ref: string; isLegacy: boolea
   const i = slugId.lastIndexOf('-');
   return { ref: i >= 0 ? slugId.slice(i + 1) : slugId, isLegacy: false };
 }
+
+/**
+ * Link trang cá nhân người đăng — khách báo 12/9 "link user bị dài, đổi thành slug ngắn
+ * (đoạn id cuối cùng của link)". Cùng khuôn `listingDetailPath`: có `shortCode` (mã 5 ký tự,
+ * xem migration `20260914100000_user_short_code`) thì dùng nó; chưa có (backfill chưa chạy,
+ * hoặc dữ liệu cũ) thì lùi về UUID để URL còn hoạt động, dạng `--{uuid}` sẽ 301 sau này.
+ */
+export function userProfilePath(nameSlug: string, shortCode?: string | null, id?: string): string {
+  if (shortCode) return `/user/${nameSlug}-${shortCode}`;
+  return `/user/${nameSlug}--${id ?? ''}`;
+}
+
+/** Tách đoạn định danh khỏi tham số `/user/[slug]` — logic giống hệt tin đăng, đặt tên riêng cho rõ ngữ cảnh. */
+export const parseUserRef = parseListingRef;

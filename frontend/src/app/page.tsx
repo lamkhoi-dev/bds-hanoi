@@ -252,7 +252,11 @@ export default async function Home() {
             <div>
               <h3 className="font-bold text-gray-900 mb-3 text-sm uppercase tracking-wide">Phân khúc giá</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/search?priceRangeKey=LT_1B" className="text-gray-600 hover:text-primary transition-colors">Bất động sản dưới 1 tỷ</Link></li>
+                {/* `LT_1B` không phải mã khoảng có thật (bảng giá chỉ có LT_500M) — mã lạ
+                    trước đây bị `normalizeSearchFilters` bỏ qua nên link này lọc ra MỌI tin,
+                    không phải "dưới 1 tỷ" như nhãn ghi. Dùng khoảng tuỳ chỉnh `price=<1000`
+                    (đơn vị triệu, xem `applyRangeAlias`) thay vì một mã không tồn tại. */}
+                <li><Link href="/search?price=%3C1000" className="text-gray-600 hover:text-primary transition-colors">Bất động sản dưới 1 tỷ</Link></li>
                 <li><Link href="/search?priceRangeKey=1B_2B" className="text-gray-600 hover:text-primary transition-colors">Bất động sản 1 - 2 tỷ</Link></li>
                 <li><Link href="/search?priceRangeKey=2B_3B" className="text-gray-600 hover:text-primary transition-colors">Bất động sản 2 - 3 tỷ</Link></li>
                 <li><Link href="/search?priceRangeKey=3B_5B" className="text-gray-600 hover:text-primary transition-colors">Bất động sản 3 - 5 tỷ</Link></li>

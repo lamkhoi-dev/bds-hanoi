@@ -1,7 +1,7 @@
 import React from 'react';
-import { listingDetailPath } from '@/lib/seo/canonical';
+import { listingDetailPath, userProfilePath, parseUserRef } from '@/lib/seo/canonical';
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { Star, MapPin, Calendar, Phone } from 'lucide-react';
 import { serverApiUrl } from '@/lib/server-api';
@@ -25,8 +25,11 @@ const NOT_FOUND_METADATA: Metadata = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
+  // Nhận cả URL cũ `{tên}--{uuid}` lẫn URL mới `{tên}-{shortCode}` — cùng quy ước với tin
+  // đăng (`parseListingRef`).
+  const { ref } = parseUserRef(resolvedParams.slug ?? '');
   try {
-    const res = await fetch(serverApiUrl(`/users/public/${resolvedParams.slug}`), {
+    const res = await fetch(serverApiUrl(`/users/public/${encodeURIComponent(ref)}`), {
       next: { revalidate: 0 },
     });
 
@@ -42,8 +45,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title,
       description,
-      // Trang hồ sơ công khai vốn thiếu canonical, mà `?page=` lại sinh URL biến thể.
-      alternates: { canonical: `/user/${resolvedParams.slug}` },
+      // Khách báo 12/9: link người đăng quá dài. Canonical luôn trỏ về dạng NGẮN
+      // ({tên}-{shortCode}), kể cả khi trang được mở qua URL UUID cũ.
+      alternates: { canonical: userProfilePath(generateSlug(user.name || 'nguoi-dung'), user.shortCode, user.id) },
       openGraph: {
         title,
         description,
@@ -63,15 +67,26 @@ export default async function UserPublicProfile({ params, searchParams }: PagePr
   try {
     const resolvedParams = await params;
     const resolvedSearchParams = await searchParams;
-    const res = await fetch(serverApiUrl(`/users/public/${resolvedParams.slug}`), {
+    const { ref } = parseUserRef(resolvedParams.slug ?? '');
+    const res = await fetch(serverApiUrl(`/users/public/${encodeURIComponent(ref)}`), {
       next: { revalidate: 0 }, // dynamic
     });
     if (!res.ok) throw new Error('User not found');
     const user = await res.json();
-    
+
     // Pagination logic
     const pageParam = firstParam(resolvedSearchParams.page);
     const page = pageParam ? parseInt(pageParam, 10) : 1;
+
+    // URL chuẩn là dạng NGẮN. Mọi biến thể khác — kể cả URL UUID cũ đang được Google
+    // index — đều 301 về đây, cùng cách đã làm cho tin đăng (`tin/[slug_id]/page.tsx`).
+    // Bản ghi không đổi `id`, chỉ đổi cách địa chỉ hoá, nên 301 không mất gì. GIỮ `?page=`
+    // khi có — redirect mà bỏ mất trang đang xem thì người dùng bấm trang 2 lại quay về 1.
+    const expectedPath = userProfilePath(generateSlug(user.name || 'nguoi-dung'), user.shortCode, user.id);
+    const currentPath = `/user/${resolvedParams.slug}`;
+    if (currentPath !== expectedPath) {
+      permanentRedirect(page > 1 ? `${expectedPath}?page=${page}` : expectedPath);
+    }
     const itemsPerPage = 6; // Set items per page here
     const totalPages = Math.ceil((user.properties?.length || 0) / itemsPerPage);
     const startIndex = (page - 1) * itemsPerPage;

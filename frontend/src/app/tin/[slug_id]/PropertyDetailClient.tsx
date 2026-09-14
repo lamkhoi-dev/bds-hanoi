@@ -1,7 +1,7 @@
 "use client";
 import { formatNumberString } from '@/lib/utils';
 import { siteConfig } from '@/lib/site-config';
-import { parseListingRef, listingPath } from '@/lib/seo/canonical';
+import { parseListingRef, listingPath, userProfilePath } from '@/lib/seo/canonical';
 import { propertyTypeByEnum, transactionByEnum } from '@/lib/seo/taxonomy';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -594,7 +594,7 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
 
             {/* Mobile Author Info */}
             <div className="flex items-center gap-4 mb-6 lg:hidden bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-              <Link href={`/user/${generateSlug(property.user?.name || 'user')}-${property.user?.id || ''}`} className="flex items-center gap-3 w-full">
+              <Link href={userProfilePath(generateSlug(property.user?.name || 'user'), property.user?.shortCode, property.user?.id)} className="flex items-center gap-3 w-full">
                 <div className="w-14 h-14 bg-gray-200 rounded-full overflow-hidden relative shrink-0">
                   {property.user?.avatar ? (
                     <Image fill src={toMediaUrl(property.user.avatar)} className="object-cover" alt="Avatar" />
