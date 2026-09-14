@@ -10,6 +10,13 @@
     "test": "jest"
   },
   "dependencies": {
+    "@tiptap/extension-file-handler": "3.31.3",
+    "@tiptap/extension-table": "3.31.3",
+    "@tiptap/extension-text-align": "3.31.3",
+    "@tiptap/extension-text-style": "3.31.3",
+    "@tiptap/pm": "3.31.3",
+    "@tiptap/react": "3.31.3",
+    "@tiptap/starter-kit": "3.31.3",
     "axios": "^1.16.1",
     "date-fns": "^3.6.0",
     "firebase": "^12.15.0",
@@ -22,7 +29,6 @@
     "react-dom": "^18",
     "react-hot-toast": "^2.6.0",
     "react-leaflet": "^4.2.1",
-    "react-quill": "^2.0.0",
     "selfsigned": "^5.5.0",
     "socket.io-client": "^4.7.5"
   },

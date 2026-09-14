@@ -7,13 +7,24 @@ import api from '@/lib/axios';
 import { getAuthToken, isUnauthorizedError } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
 import { confirmAction } from '@/lib/toast-helpers';
+import { getApiErrorMessage } from '@/lib/api-error';
+import { newsStatusBadge } from '@/lib/news/status-badge';
+import { formatNewsDateTime } from '@/lib/news/dates';
 import Image from 'next/image';
+
+const STATUS_FILTERS = [
+  { value: '', label: 'Tất cả' },
+  { value: 'PUBLISHED', label: 'Đã đăng' },
+  { value: 'DRAFT', label: 'Nháp' },
+  { value: 'HIDDEN', label: 'Đã ẩn' },
+];
 
 export default function AdminNews() {
   const [newsList, setNewsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('');
   const limit = 20;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -24,21 +35,18 @@ export default function AdminNews() {
     }
 
     try {
-      const res = await api.get('/news', {
-        params: {
-          page,
-          limit,
-        }
-      });
+      // Danh sách quản trị dùng /news/admin/all — endpoint công khai /news giờ CHỈ trả bài
+      // đã đăng và tới giờ hẹn (PHẦN B, 12/9), admin cần thấy cả Nháp/Ẩn/hẹn giờ tương lai.
+      const res = await api.get('/news/admin/all', { params: { page, limit, status: status || undefined } });
       setNewsList(res.data.data || []);
       setTotal(res.data.total || 0);
     } catch (e) {
       if (!isUnauthorizedError(e)) console.error(e);
-      toast.error('Lỗi khi tải danh sách tin tức');
+      toast.error(getApiErrorMessage(e, 'Lỗi khi tải danh sách tin tức'));
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, status]);
 
   useEffect(() => {
     fetchNews();
@@ -57,7 +65,7 @@ export default function AdminNews() {
       }
     } catch (e) {
       if (!isUnauthorizedError(e)) console.error(e);
-      toast.error('Lỗi khi xoá bài viết');
+      toast.error(getApiErrorMessage(e, 'Lỗi khi xoá bài viết'));
     }
   };
 
@@ -70,6 +78,21 @@ export default function AdminNews() {
         </Link>
       </div>
 
+      <div className="flex items-center gap-2">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => { setStatus(f.value); setPage(1); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${status === f.value ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+          >
+            {f.label}
+          </button>
+        ))}
+        <Link href="/admin/news/categories" className="ml-auto text-sm text-blue-600 hover:underline font-medium">
+          Quản lý chuyên mục
+        </Link>
+      </div>
+
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="admin-mobile-table w-full md:min-w-[900px] text-left text-sm whitespace-nowrap">
@@ -77,16 +100,19 @@ export default function AdminNews() {
               <tr>
                 <th className="px-6 py-4">Thumbnail</th>
                 <th className="px-6 py-4">Tiêu đề</th>
-                <th className="px-6 py-4">Ngày đăng</th>
+                <th className="px-6 py-4">Chuyên mục</th>
+                <th className="px-6 py-4">Trạng thái</th>
                 <th className="px-6 py-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan={4} className="text-center py-4">Đang tải...</td></tr>
+                <tr><td colSpan={5} className="text-center py-4">Đang tải...</td></tr>
               ) : newsList.length === 0 ? (
-                <tr><td colSpan={4} className="text-center py-4">Chưa có bài viết nào</td></tr>
-              ) : newsList.map((news) => (
+                <tr><td colSpan={5} className="text-center py-4">Chưa có bài viết nào</td></tr>
+              ) : newsList.map((news) => {
+                const badge = newsStatusBadge(news.status, news.publishedAt);
+                return (
                 <tr key={news.id} className="hover:bg-gray-50/50 transition-colors">
                   <td data-label="Thumbnail" className="px-6 py-4">
                     <div className="h-12 w-20 relative rounded overflow-hidden bg-gray-100">
@@ -101,10 +127,15 @@ export default function AdminNews() {
                     <div className="font-bold text-gray-900 max-w-md truncate" title={news.title}>
                       {news.title}
                     </div>
-                    <div className="text-gray-500 text-xs mt-1">Slug: {news.slug}</div>
+                    <div className="text-gray-500 text-xs mt-1">
+                      {news.publishedAt ? formatNewsDateTime(news.publishedAt) : `Slug: ${news.slug}`}
+                    </div>
                   </td>
-                  <td data-label="Ngày đăng" className="px-6 py-4">
-                    <div className="text-gray-900">{new Date(news.createdAt).toLocaleDateString('vi-VN')}</div>
+                  <td data-label="Chuyên mục" className="px-6 py-4 text-gray-700">
+                    {news.category?.name || <span className="text-gray-400">—</span>}
+                  </td>
+                  <td data-label="Trạng thái" className="px-6 py-4">
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${badge.className}`}>{badge.label}</span>
                   </td>
                   <td data-label="Thao tác" className="px-6 py-4 text-right space-x-2">
                     <Link href={`/admin/news/${news.id}`} className="inline-flex p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Chỉnh sửa">
@@ -115,7 +146,7 @@ export default function AdminNews() {
                     </button>
                   </td>
                 </tr>
-              ))}
+              );})}
             </tbody>
           </table>
         </div>

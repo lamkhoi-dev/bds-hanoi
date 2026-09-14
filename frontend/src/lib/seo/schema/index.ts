@@ -7,3 +7,5 @@ export { buildRealEstateListing, buildOffer } from './listing';
 export type { ListingSchemaOptions } from './listing';
 export { buildArticle } from './article';
 export type { ArticleSchemaOptions } from './article';
+export { buildNewsArticle } from './news-article';
+export type { NewsArticleSchemaOptions } from './news-article';

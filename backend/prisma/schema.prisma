@@ -719,6 +719,29 @@ model ViewedProperty {
   @@index([propertyId, viewedAt])
 }
 
+enum NewsStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+
+/// Chuyên mục tin tức — quản lý riêng, KHÔNG dùng chung `Category` của tin đăng (đối tượng
+/// khác hẳn: chuyên mục tin không có cha/con, không gắn với Property).
+model NewsCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  news News[]
+
+  @@index([isActive, sortOrder])
+}
+
 model News {
   id            String   @id @default(uuid())
   title         String
@@ -730,7 +753,41 @@ model News {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  /// Đoạn dẫn ngắn hiện ngay dưới tiêu đề — khác `content` (toàn bộ thân bài).
+  sapo             String? @db.Text
+  thumbnailAlt     String?
+  thumbnailCaption String?
+  thumbnailCredit  String?
+  thumbnailWidth   Int?
+  thumbnailHeight  Int?
+
+  /// Mặc định PUBLISHED + publishedAt = now(): một dòng tạo bằng INSERT thô (bỏ qua tầng
+  /// service) vẫn hiện công khai như hành vi trước khi có cột này — service LUÔN đặt cả
+  /// hai tường minh, default chỉ là lưới an toàn.
+  status      NewsStatus @default(PUBLISHED)
+  publishedAt DateTime?  @default(now())
+  /// Lastmod cho sitemap và "ngày cập nhật" hiển thị công khai — KHÔNG dùng `updatedAt`,
+  /// cột đó đổi cả khi chỉ sửa slug hay các trường quản trị nội bộ.
+  contentUpdatedAt DateTime?
+
+  authorName String?
+  categoryId String?
+  category   NewsCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// Mảng {title, url} — đặt tên "sources" chứ không phải "references": từ khoá SQL.
+  sources Json?
+
+  seoTitle        String?
+  metaDescription String?
+  /// Ghi đè canonical mặc định (`/news/{slug}`) khi bài đăng lại từ nguồn khác.
+  canonicalUrl String?
+
+  /// Id các Property chọn tay làm "BĐS liên quan", theo đúng thứ tự admin sắp xếp.
+  relatedPropertyIds String[] @default([])
+
   @@index([createdAt])
+  @@index([status, publishedAt])
+  @@index([categoryId, status, publishedAt])
 }
 
 /// "Khu vực hot" của trang chủ Hà Nội (Bảng 4 tài liệu khách, 31 tên).

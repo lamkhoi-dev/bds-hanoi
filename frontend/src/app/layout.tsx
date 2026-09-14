@@ -4,6 +4,9 @@ import Link from "next/link";
 
 import Script from "next/script";
 import "./globals.css";
+// Định dạng thân bài tin tức — dùng CHUNG giữa trình soạn thảo quản trị và trang công khai
+// (`.news-content`), nên nạp ở layout gốc thay vì import riêng lẻ từng nơi dùng.
+import "@/styles/news-content.css";
 import FloatingButtons from "@/components/FloatingButtons";
 import CompareWidget from "@/components/CompareWidget";
 import MobileMenu from "@/components/MobileMenu";

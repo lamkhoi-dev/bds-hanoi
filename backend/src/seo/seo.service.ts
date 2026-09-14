@@ -13,6 +13,7 @@ import {
   type SitemapUrl,
 } from './seo-urls';
 import { generateSlug } from './slug';
+import { publicNewsWhere } from '../news/news-visibility';
 
 /**
  * Trạng thái được XEM công khai. Dùng cho roll-up trang danh mục: một phường có tin đã
@@ -212,20 +213,69 @@ export class SeoService {
     });
   }
 
+  /**
+   * Chỉ bài ĐÃ ĐĂNG và ĐÃ TỚI GIỜ HẸN — `publicNewsWhere()` cùng định nghĩa "công khai" mà
+   * trang chi tiết và danh sách `/news` đang dùng. Bài Nháp/Ẩn/hẹn giờ tương lai vắng mặt ở
+   * đây thay vì vào sitemap rồi trả 404 khi Google ghé thăm.
+   *
+   * `lastmod` lấy `contentUpdatedAt` (mốc "sửa nội dung thật"), lùi về `publishedAt` khi
+   * chưa từng sửa — KHÔNG dùng `updatedAt`: cột đó còn đổi vì những việc quản trị nội bộ
+   * không ai đọc thấy (đổi slug, sửa SEO title...), làm <lastmod> nhảy vô căn cứ.
+   */
   async getNewsUrls(): Promise<SitemapUrl[]> {
     return this.cached('seo:news', async () => {
-      const items = await this.prisma.news.findMany({
-        select: { slug: true, updatedAt: true, createdAt: true },
-        orderBy: { createdAt: 'desc' },
-        take: 50000,
-      });
-      return items.map((n) => ({
-        loc: this.abs(`/news/${n.slug}`),
-        lastmod: n.updatedAt ?? n.createdAt,
-        changefreq: 'weekly',
-        priority: 0.6,
-      }));
+      const [items, categoryUrls] = await Promise.all([
+        this.prisma.news.findMany({
+          where: publicNewsWhere(),
+          select: { slug: true, contentUpdatedAt: true, publishedAt: true, canonicalUrl: true },
+          orderBy: { publishedAt: 'desc' },
+          take: 50000,
+        }),
+        this.getNewsCategoryUrls(),
+      ]);
+      const articleUrls = items
+        .filter((n) => {
+          // Canonical trỏ sang nơi khác (site khác, hoặc URL khác trong chính site) — URL
+          // /news/{slug} không còn là "nguồn thật" của nội dung này, không đưa vào sitemap.
+          if (!n.canonicalUrl) return true;
+          return n.canonicalUrl === `/news/${n.slug}` || n.canonicalUrl === this.abs(`/news/${n.slug}`);
+        })
+        .map((n) => ({
+          loc: this.abs(`/news/${n.slug}`),
+          lastmod: n.contentUpdatedAt ?? n.publishedAt,
+          changefreq: 'weekly',
+          priority: 0.6,
+        }));
+      return [...articleUrls, ...categoryUrls];
     });
+  }
+
+  /**
+   * URL trang chuyên mục — chỉ chuyên mục ĐANG BẬT (`isActive`, cùng điều kiện `findAllPublic`
+   * quyết định có menu/route công khai hay không) và có ít nhất 1 bài đang hiển thị công khai,
+   * cùng nguyên tắc "0 tin ⇒ không vào sitemap" đang áp cho trang Dự án/khu vực.
+   */
+  private async getNewsCategoryUrls(): Promise<SitemapUrl[]> {
+    const [categories, counts] = await Promise.all([
+      this.prisma.newsCategory.findMany({
+        where: { isActive: true },
+        select: { id: true, slug: true, updatedAt: true },
+      }),
+      this.prisma.news.groupBy({
+        by: ['categoryId'],
+        where: { ...publicNewsWhere(), categoryId: { not: null } },
+        _count: { id: true },
+      }),
+    ]);
+    const countByCategoryId = new Map(counts.map((c) => [c.categoryId as string, c._count.id]));
+    return categories
+      .filter((c) => (countByCategoryId.get(c.id) ?? 0) > 0)
+      .map((c) => ({
+        loc: this.abs(`/news/chuyen-muc/${c.slug}`),
+        lastmod: c.updatedAt,
+        changefreq: 'weekly',
+        priority: 0.5,
+      }));
   }
 
   /**

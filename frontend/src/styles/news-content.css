@@ -1,0 +1,149 @@
+/**
+ * Định dạng cho thân bài tin tức — dùng ở HAI nơi: trong trình soạn thảo (`.news-content`
+ * gắn thẳng vào vùng contentEditable của TipTap, xem `NewsEditor.tsx`) và ở trang công khai
+ * (`app/news/[slug]/page.tsx` bọc `dangerouslySetInnerHTML` trong div cùng class) — PHẢI
+ * ra một class, để "thấy sao khi soạn, ra vậy khi đăng" chứ không phải soạn một kiểu, đăng
+ * ra một kiểu khác.
+ *
+ * `@tailwindcss/typography` KHÔNG được cài (đã kiểm khi rà mã 12/9) nên lớp `prose` trước
+ * đây không có tác dụng gì — CSS thường ở đây thay cho nó, không phụ thuộc thêm gói nào.
+ */
+.news-content {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #1f2937;
+}
+
+.news-content > * + * {
+  margin-top: 1.1em;
+}
+
+.news-content h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-top: 1.6em;
+}
+
+.news-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 1.4em;
+}
+
+.news-content p {
+  margin: 0;
+}
+
+.news-content a {
+  color: #0f3460;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.news-content ul,
+.news-content ol {
+  padding-left: 1.4em;
+}
+
+.news-content ul {
+  list-style: disc;
+}
+
+.news-content ol {
+  list-style: decimal;
+}
+
+.news-content li + li {
+  margin-top: 0.35em;
+}
+
+.news-content blockquote {
+  border-left: 3px solid #0f3460;
+  padding-left: 1em;
+  color: #4b5563;
+  font-style: italic;
+}
+
+.news-content hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 2em 0;
+}
+
+.news-content figure {
+  margin: 0;
+}
+
+.news-content figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  display: block;
+}
+
+.news-content figcaption {
+  margin-top: 0.5em;
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Bảng — cuộn ngang riêng khi tràn, không kéo cả trang lệch sang phải trên điện thoại. */
+.news-content table {
+  width: 100%;
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.news-content th,
+.news-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em 0.75em;
+  text-align: left;
+  vertical-align: top;
+}
+
+.news-content th {
+  background: #f9fafb;
+  font-weight: 700;
+}
+
+.news-content td p,
+.news-content th p {
+  margin: 0;
+}
+
+/* Vùng soạn thảo — thêm padding/tiêu điểm mà bài đã xuất bản không cần. */
+.news-content.ProseMirror {
+  outline: none;
+  min-height: 320px;
+}
+
+.news-content .ProseMirror-selectednode {
+  outline: 2px solid #0f3460;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .news-content {
+    color: #e5e7eb;
+  }
+  .news-content a {
+    color: #7dd3fc;
+  }
+  .news-content blockquote {
+    border-left-color: #7dd3fc;
+    color: #9ca3af;
+  }
+  .news-content th {
+    background: #1f2937;
+  }
+  .news-content th,
+  .news-content td {
+    border-color: #374151;
+  }
+}

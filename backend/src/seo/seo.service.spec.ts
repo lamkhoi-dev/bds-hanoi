@@ -14,7 +14,8 @@ function makeService() {
   const findMany = jest.fn().mockResolvedValue([]);
   const prisma: any = {
     property: { groupBy, findMany },
-    news: { findMany: jest.fn().mockResolvedValue([]) },
+    news: { findMany: jest.fn().mockResolvedValue([]), groupBy: jest.fn().mockResolvedValue([]) },
+    newsCategory: { findMany: jest.fn().mockResolvedValue([]) },
     project: { findMany: jest.fn().mockResolvedValue([]) },
   };
   const locationService: any = {
@@ -57,6 +58,83 @@ describe('phạm vi trạng thái của sitemap', () => {
     // Trang phường có tin đã bán vẫn là trang có nội dung thật. Nếu bỏ SOLD ở đây thì
     // sitemap nói "không có" trong khi trang vẫn hiển thị tin -> hai bên mâu thuẫn.
     expect(groupBy.mock.calls[0][0].where.status.in).toEqual(['APPROVED', 'SOLD']);
+  });
+});
+
+describe('sitemap tin tức — PHẦN B, khách rà 12/9', () => {
+  it('chỉ lấy bài PUBLISHED và đã tới giờ hẹn — cùng bộ lọc trang công khai đang dùng', async () => {
+    const { service, prisma } = makeService();
+    await service.getNewsUrls();
+
+    const where = prisma.news.findMany.mock.calls[0][0].where;
+    expect(where.status).toBe('PUBLISHED');
+    expect(where.publishedAt).toHaveProperty('lte');
+  });
+
+  it('lastmod ưu tiên contentUpdatedAt, lùi về publishedAt khi chưa từng sửa — không dùng updatedAt', async () => {
+    const { service, prisma } = makeService();
+    const contentUpdatedAt = new Date('2026-03-01');
+    const publishedAt = new Date('2026-01-01');
+    prisma.news.findMany.mockResolvedValueOnce([
+      { slug: 'a', contentUpdatedAt, publishedAt, canonicalUrl: null },
+      { slug: 'b', contentUpdatedAt: null, publishedAt, canonicalUrl: null },
+    ]);
+
+    const urls = await service.getNewsUrls();
+    expect(urls[0].lastmod).toBe(contentUpdatedAt);
+    expect(urls[1].lastmod).toBe(publishedAt);
+  });
+
+  it('bài canonical trỏ sang nơi khác bị loại khỏi sitemap — /news/{slug} không còn là nguồn thật', async () => {
+    const { service, prisma } = makeService();
+    prisma.news.findMany.mockResolvedValueOnce([
+      { slug: 'dang-lai', contentUpdatedAt: null, publishedAt: new Date(), canonicalUrl: 'https://nguon-goc.vn/bai-viet' },
+      { slug: 'binh-thuong', contentUpdatedAt: null, publishedAt: new Date(), canonicalUrl: null },
+    ]);
+
+    const urls = await service.getNewsUrls();
+    expect(urls).toHaveLength(1);
+    expect(urls[0].loc).toContain('binh-thuong');
+  });
+
+  it('canonical trỏ ĐÚNG về chính bài đó (tự tham chiếu) vẫn được giữ trong sitemap', async () => {
+    const { service, prisma } = makeService();
+    prisma.news.findMany.mockResolvedValueOnce([
+      { slug: 'tu-tham-chieu', contentUpdatedAt: null, publishedAt: new Date(), canonicalUrl: '/news/tu-tham-chieu' },
+    ]);
+    const urls = await service.getNewsUrls();
+    expect(urls).toHaveLength(1);
+  });
+
+  it('chuyên mục CÓ bài công khai -> có mặt trong sitemap', async () => {
+    const { service, prisma } = makeService();
+    prisma.newsCategory.findMany.mockResolvedValueOnce([
+      { id: 'c1', slug: 'thi-truong', updatedAt: new Date('2026-02-01') },
+    ]);
+    prisma.news.groupBy.mockResolvedValueOnce([{ categoryId: 'c1', _count: { id: 5 } }]);
+
+    const urls = await service.getNewsUrls();
+    const categoryUrl = urls.find((u) => u.loc.includes('/news/chuyen-muc/thi-truong'));
+    expect(categoryUrl).toBeDefined();
+  });
+
+  it('chuyên mục RỖNG (không bài công khai nào) -> không vào sitemap', async () => {
+    const { service, prisma } = makeService();
+    prisma.newsCategory.findMany.mockResolvedValueOnce([
+      { id: 'c1', slug: 'rong', updatedAt: new Date() },
+    ]);
+    prisma.news.groupBy.mockResolvedValueOnce([]); // không bài nào thuộc chuyên mục này
+
+    const urls = await service.getNewsUrls();
+    expect(urls.some((u) => u.loc.includes('/news/chuyen-muc/rong'))).toBe(false);
+  });
+
+  it('đếm bài theo chuyên mục CHỈ tính bài công khai (PUBLISHED, tới giờ hẹn)', async () => {
+    const { service, prisma } = makeService();
+    await service.getNewsUrls();
+    const where = prisma.news.groupBy.mock.calls[0][0].where;
+    expect(where.status).toBe('PUBLISHED');
+    expect(where.publishedAt).toHaveProperty('lte');
   });
 });
 

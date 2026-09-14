@@ -33,6 +33,21 @@ function translateMessage(msg: string): string {
   t = t.replace(/^street/, 'Đường/Phố');
   t = t.replace(/^content/, 'Nội dung');
   t = t.replace(/^subject/, 'Tiêu đề');
+  // Tin tức (PHẦN B) — đặt sau các quy tắc chung vì `^content`/`^title` đã dùng chung.
+  t = t.replace(/^sapo/, 'Sa-pô');
+  t = t.replace(/^authorName/, 'Tác giả');
+  t = t.replace(/^categoryId/, 'Chuyên mục');
+  t = t.replace(/^sources\.\d+\.title/, 'Tên nguồn tham khảo');
+  t = t.replace(/^sources\.\d+\.url/, 'Đường dẫn nguồn tham khảo');
+  t = t.replace(/^sources/, 'Nguồn tham khảo');
+  t = t.replace(/^seoTitle/, 'SEO title');
+  t = t.replace(/^metaDescription/, 'Meta description');
+  t = t.replace(/^canonicalUrl/, 'Canonical URL');
+  t = t.replace(/^publishedAt/, 'Ngày đăng');
+  t = t.replace(/^relatedPropertyIds/, 'BĐS liên quan');
+  t = t.replace(/^thumbnailAlt/, 'Mô tả ảnh đại diện (alt)');
+  t = t.replace(/^thumbnailCaption/, 'Chú thích ảnh đại diện');
+  t = t.replace(/^thumbnailCredit/, 'Nguồn ảnh đại diện');
 
   // Constraints mapping
   t = t.replace(/must not be less than 0/, 'không được nhỏ hơn 0');
@@ -43,6 +58,11 @@ function translateMessage(msg: string): string {
   t = t.replace(/must be a string/, 'phải là văn bản');
   t = t.replace(/must be an array/, 'phải là danh sách');
   t = t.replace(/must be a boolean/, 'phải là đúng/sai');
+  t = t.replace(/must be shorter than or equal to (\d+) characters/, 'tối đa $1 ký tự');
+  t = t.replace(/must be a valid ISO 8601 date string/, 'phải là ngày giờ hợp lệ');
+  t = t.replace(/must be a URL address/, 'phải là một đường dẫn URL hợp lệ');
+  t = t.replace(/must be a UUID/, 'không hợp lệ');
+  t = t.replace(/must be one of the following values: .+$/, 'không hợp lệ');
   t = t.replace(/is not valid/, 'không hợp lệ');
   
   // Standard HTTP errors

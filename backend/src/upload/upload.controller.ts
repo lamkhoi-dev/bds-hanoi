@@ -28,14 +28,22 @@ export class UploadController {
     if (!file) throw new BadRequestException('No file uploaded');
 
     const outputFilename = `optimized-${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
-    let optimizedBuffer;
-    
+    let optimizedBuffer: Buffer;
+    let width: number | undefined;
+    let height: number | undefined;
+
     try {
-      // Compress and resize
-      optimizedBuffer = await sharp(file.buffer)
+      // Compress, resize, VÀ lấy kích thước thật sau khi resize — `resolveWithObject` để
+      // không phải gọi `sharp(buffer).metadata()` một lần nữa trên ảnh đã nén (tốn CPU gấp
+      // đôi cho cùng một việc). Trình soạn thảo tin tức dùng width/height này để cảnh báo
+      // ảnh đại diện dưới khuyến nghị 1200×675, và để khai đúng kích thước ảnh cho SEO.
+      const result = await sharp(file.buffer)
         .resize({ width: 1200, withoutEnlargement: true })
         .webp({ quality: 80 })
-        .toBuffer();
+        .toBuffer({ resolveWithObject: true });
+      optimizedBuffer = result.data;
+      width = result.info.width;
+      height = result.info.height;
     } catch (error) {
       throw new BadRequestException('Invalid or corrupted image file');
     }
@@ -44,7 +52,9 @@ export class UploadController {
 
     return {
       message: 'File uploaded and optimized successfully',
-      url
+      url,
+      width,
+      height,
     };
   }
 }
