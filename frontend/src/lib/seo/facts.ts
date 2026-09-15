@@ -9,6 +9,7 @@ import type { LocationDictionary } from './locations';
 
 export interface SeoListingData {
   vips: any[];
+  ups: any[];
   normals: any[];
   total: number;
   page: number;
@@ -42,19 +43,23 @@ export interface SeoListingData {
  * `total: 0`, nên trang phân biệt được "lỗi tải" với "chưa có tin" — hai trạng thái đó hiển
  * thị khác nhau.
  *
- * Thử lại MỘT lần: khách báo 25/08 "link khu vực nhiều lúc không tải được tin, F5 hoặc vào
- * lại vài lần thì mới hiện". Đo lại 10 lần liên tiếp đều 200 trong ~0,2s nên đây là lỗi chớp
- * nhoáng chứ không phải hỏng thường trực — nhiều khả năng rơi đúng lúc backend khởi động lại
- * sau một lần deploy. Một lần thử lại nuốt được phần lớn những cú như vậy.
+ * Thử lại: khách báo 25/08 "link khu vực nhiều lúc không tải được tin, F5 hoặc vào lại vài
+ * lần thì mới hiện". Đo lại 10 lần liên tiếp đều 200 trong ~0,2s nên đây là lỗi chớp nhoáng
+ * chứ không phải hỏng thường trực — nhiều khả năng rơi đúng lúc backend khởi động lại sau
+ * một lần deploy. Khách báo lại 15/9 vẫn còn gặp (đúng khung giờ deploy Phần B) — nâng từ 1
+ * lên 3 lần thử, giãn cách dài hơn (300ms rồi 800ms), nuốt được nhiều cửa sổ khởi động lại
+ * hơn mà tổng thời gian chờ vẫn dưới 1,2 giây.
  *
- * Chỉ MỘT lần, và chờ ngắn: đây là render phía máy chủ, thử lại nhiều lần chỉ làm người dùng
- * ngồi nhìn trang trắng lâu hơn rồi vẫn lỗi. Backend restart mất khoảng 20 giây — quá lâu để
- * đợi trong một request, nên ca đó vẫn sẽ hiện thông báo lỗi, đúng như thiết kế.
+ * Vẫn có giới hạn: đây là render phía máy chủ, thử lại nhiều lần chỉ làm người dùng ngồi
+ * nhìn trang trắng lâu hơn rồi vẫn lỗi. Backend restart mất khoảng 20-40 giây — quá lâu để
+ * đợi trong một request, nên ca trúng đúng lúc đó vẫn sẽ hiện thông báo lỗi, đúng như thiết kế.
  */
+const RETRY_DELAYS_MS = [300, 800];
+
 const fetchSeoListing = cache(async (queryString: string): Promise<SeoListingData | null> => {
   const url = serverApiUrl(`/properties/seo?${queryString}`);
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
     try {
       const res = await fetch(url, { cache: 'no-store' });
       // 4xx là câu trả lời dứt khoát của backend (truy vấn sai) — thử lại cũng thế.
@@ -64,7 +69,7 @@ const fetchSeoListing = cache(async (queryString: string): Promise<SeoListingDat
     } catch {
       /* lỗi mạng — rơi xuống nhánh thử lại bên dưới */
     }
-    if (attempt === 0) await new Promise((r) => setTimeout(r, 250));
+    if (attempt < RETRY_DELAYS_MS.length) await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
   }
   return null;
 });

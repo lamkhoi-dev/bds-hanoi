@@ -17,11 +17,16 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const PROVINCE_NAME = siteConfig.province.name;
 
+// Khách yêu cầu 15/9: đa số tin đăng tập trung ở TP Vinh, mặc định sẵn quận/huyện này đỡ
+// một thao tác chọn cho người đăng — CHỈ áp cho site Nghệ An, Hà Nội giữ nguyên để trống
+// (huyện/quận của Hà Nội khác hẳn, không có "Thành phố Vinh").
+const DEFAULT_DISTRICT = siteConfig.province.slug === 'nghe-an' ? 'Thành phố Vinh' : '';
+
 const INITIAL_FORM_DATA = {
   transactionType: 'BAN',
   propertyType: '',
   city: PROVINCE_NAME,
-  district: '',
+  district: DEFAULT_DISTRICT,
   ward: '',
   oldWard: '',
   projectId: '',

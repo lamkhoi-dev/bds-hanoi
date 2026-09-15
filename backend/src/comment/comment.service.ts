@@ -75,7 +75,9 @@ export class CommentService {
 
     return this.prisma.comment.findMany({
       where: { propertyId },
-      orderBy: { createdAt: 'desc' },
+      // Khách yêu cầu 15/9: bình luận CŨ trước, MỚI sau (như luồng chat thường thấy) —
+      // trước đây `desc` khiến bình luận mới nhất trồi lên đầu, ngược với thói quen đọc.
+      orderBy: { createdAt: 'asc' },
       include: { user: { select: { name: true, avatar: true } } }
     });
   }

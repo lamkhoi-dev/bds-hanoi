@@ -176,7 +176,11 @@ export class PropertyService {
       const ids = propertiesToDowngrade.map(p => p.id);
       await this.prisma.property.updateMany({
         where: { id: { in: ids } },
-        data: { tier: 'NORMAL' }
+        // Khách báo 15/9: "hết hiệu lực up tin thì tin vẫn nằm trên - cảm giác bị spam".
+        // Trước đây chỉ đổi `tier` — `pushedAt` (mốc lần UP gần nhất) vẫn còn, mà sắp xếp
+        // mặc định ưu tiên `pushedAt desc` nên tin hết hạn vẫn ghim ở đầu. Xoá `pushedAt`
+        // để tin rơi về đúng vị trí theo `publishedAt` (ngày đăng thật) như tin thường.
+        data: { tier: 'NORMAL', pushedAt: null }
       });
       
       const updatedProperties = await this.prisma.property.findMany({
@@ -573,7 +577,30 @@ export class PropertyService {
       vipsToReturn = [...newestVips, ...randomVips];
     }
 
-    return { vips: vipsToReturn, ups: [], normals, total, page, limit, appliedFilters, chips };
+    // Khách yêu cầu 15/9: tin UP trước đây không giới hạn — tràn hết vào `normals` theo
+    // `pushedAt desc` mặc định, "cảm giác bị spam" khi nhiều người cùng UP. Giới hạn 5 tin
+    // (3 mới UP nhất + 2 ngẫu nhiên trong số còn hiệu lực), cùng khuôn với khối `vips` ở
+    // trên — chỉ khác tỷ lệ 3/2 thay vì 2/3 theo đúng số khách chốt.
+    let upsToReturn: any[] = [];
+    if (!(filters as any).tier || (filters as any).tier === 'UP') {
+      const upWhere = {
+        ...where,
+        tier: 'UP',
+        status: 'APPROVED',
+      };
+      const allUps = await this.prisma.property.findMany({
+        where: upWhere,
+        orderBy: [{ pushedAt: { sort: 'desc', nulls: 'last' } }, { publishedAt: { sort: 'desc', nulls: 'last' } }],
+        take: 50,
+        include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } }, imageObjects: true },
+      });
+      const newestUps = allUps.slice(0, 3);
+      const remainingUps = allUps.slice(3);
+      const randomUps = remainingUps.sort(() => 0.5 - Math.random()).slice(0, 2);
+      upsToReturn = [...newestUps, ...randomUps];
+    }
+
+    return { vips: vipsToReturn, ups: upsToReturn, normals, total, page, limit, appliedFilters, chips };
   }
 
 

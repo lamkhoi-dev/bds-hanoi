@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { propertyTypeByEnum, propertyTypeLabel } from '@/lib/seo/taxonomy';
-import { Star } from 'lucide-react';
+import { Star, Rocket } from 'lucide-react';
 import SearchForm from '@/components/SearchForm';
 import { serverApiUrl } from '@/lib/server-api';
 import ExploreMoreContextual from '@/components/ExploreMoreContextual';
@@ -272,15 +272,31 @@ export default async function SearchPage({
               </section>
             )}
 
+            {/* UP Tier — khách yêu cầu 15/9: giới hạn tối đa 5 tin (3 mới UP nhất + 2 ngẫu
+                nhiên), không còn tràn hết vào danh sách thường. */}
+            {ups.length > 0 && (
+              <section className="mb-12">
+                <div className="flex items-center gap-3 mb-6">
+                  <Rocket className="w-7 h-7 text-primary" />
+                  <h2 className="text-xl font-extrabold text-primary">Tin Được Đẩy Lên</h2>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {ups.map((item: any) => (
+                    <PropertyCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* NORMAL Tier */}
-            {normals.filter((item: any) => !vips.some((vip: any) => vip.id === item.id)).length > 0 && (
+            {normals.filter((item: any) => !vips.some((vip: any) => vip.id === item.id) && !ups.some((up: any) => up.id === item.id)).length > 0 && (
               <section>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                   <h2 className="text-xl font-bold text-gray-800">Tin Cập Nhật Mới Nhất</h2>
                   <SearchControls />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {normals.filter((item: any) => !vips.some((vip: any) => vip.id === item.id)).map((item: any) => (
+                  {normals.filter((item: any) => !vips.some((vip: any) => vip.id === item.id) && !ups.some((up: any) => up.id === item.id)).map((item: any) => (
                     <PropertyCard key={item.id} item={item} />
                   ))}
                 </div>

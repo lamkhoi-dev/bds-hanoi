@@ -33,7 +33,9 @@ export default function PropertyComments({ propertyId, isOwner, isAdmin }: { pro
     }
     try {
       const res = await api.post(`/properties/${propertyId}/comments`, { content, parentId });
-      setComments([res.data, ...comments]);
+      // Danh sách hiện xếp CŨ trước MỚI sau (khách yêu cầu 15/9) — bình luận vừa gửi phải
+      // nối vào CUỐI, chèn đầu như trước sẽ đẩy nó lên trên các bình luận cũ hơn.
+      setComments([...comments, res.data]);
       if (parentId) {
         setReplyContent('');
         setReplyingTo(null);
@@ -93,14 +95,14 @@ export default function PropertyComments({ propertyId, isOwner, isAdmin }: { pro
       <p className="text-gray-700 text-sm">{comment.content}</p>
       
       <div className="flex items-center gap-4 mt-2">
-        {!isOwner && (
-          <button 
-            onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} 
-            className="text-xs text-primary hover:underline font-medium"
-          >
-            Phản hồi
-          </button>
-        )}
+        {/* Trước đây ẩn nút Phản hồi với `isOwner` — khách báo 15/9: chủ bài đăng cũng cần
+            trả lời bình luận trên chính bài của mình, giống bất kỳ người dùng nào khác. */}
+        <button
+          onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+          className="text-xs text-primary hover:underline font-medium"
+        >
+          Phản hồi
+        </button>
         {(user?.id === comment.userId || isOwner || isAdmin) && (
            <button onClick={() => deleteComment(comment.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1">
               <Trash2 className="w-3 h-3" />

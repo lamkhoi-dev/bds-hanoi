@@ -72,8 +72,9 @@ describe('getSeoProperties — lọc khu vực theo MÃ, không theo tên (12/9)
       urlSegment: 'thanh-pho-ha-tinh',
     });
 
-    // Lần findMany đầu (danh sách chính) rỗng, lần hai (VIP) rỗng, lần ba (nearby) có tin.
+    // Lần findMany: (1) danh sách chính rỗng, (2) VIP rỗng, (3) UP rỗng, (4) nearby có tin.
     propertyFindMany
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'p-gan-do' }]);
@@ -88,8 +89,8 @@ describe('getSeoProperties — lọc khu vực theo MÃ, không theo tên (12/9)
     expect(result.nearby.locationName).toBe('Thành phố Hà Tĩnh');
     expect(result.nearby.listings).toEqual([{ id: 'p-gan-do' }]);
 
-    // Truy vấn thứ 3 (nearby) phải khoanh đúng huyện cha và giữ đúng loại giao dịch.
-    const nearbyWhere = propertyFindMany.mock.calls[2][0].where;
+    // Truy vấn thứ 4 (nearby) phải khoanh đúng huyện cha và giữ đúng loại giao dịch.
+    const nearbyWhere = propertyFindMany.mock.calls[3][0].where;
     const nearbyClauses = nearbyWhere.AND ?? [];
     expect(nearbyClauses).toContainEqual({ districtId: 'district-tp-ha-tinh' });
     expect(nearbyClauses).toContainEqual(expect.objectContaining({ transactionType: expect.anything() }));

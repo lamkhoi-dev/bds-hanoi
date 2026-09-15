@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
-import { Star } from 'lucide-react';
+import { Star, Rocket } from 'lucide-react';
 import { Metadata } from 'next';
 import Adsense from '@/components/Adsense';
 import ShareButtons from '@/components/ShareButtons';
@@ -171,6 +171,12 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
   const isEmptyPage = !data || (data.total ?? 0) === 0;
   const nearby = data?.nearby ?? null;
   const fallbackListings = isEmptyPage && !nearby ? await fetchFallbackListings() : [];
+  const ups = data?.ups ?? [];
+  // Tin thường bỏ những tin đã hiện ở khối VIP/UP riêng — khách yêu cầu 15/9 thêm khối UP,
+  // trước đây chỗ này chỉ lọc trùng VIP nên tin UP hiện ở CẢ hai khối.
+  const visibleNormals = (data?.normals ?? []).filter(
+    (item: any) => !data?.vips?.some((vip: any) => vip.id === item.id) && !ups.some((up: any) => up.id === item.id),
+  );
 
   // Breadcrumb: phần tử cuối là trang hiện tại nên không gắn url.
   const breadcrumbs: BreadcrumbItem[] = [];
@@ -341,6 +347,22 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
               </section>
             )}
 
+            {/* UP Tier — khách yêu cầu 15/9: giới hạn tối đa 5 tin (3 mới UP nhất + 2 ngẫu
+                nhiên), không còn tràn hết vào danh sách thường. */}
+            {ups.length > 0 && (
+              <section className="mb-12">
+                <div className="flex items-center gap-3 mb-6">
+                  <Rocket className="w-7 h-7 text-primary" />
+                  <h2 className="text-xl font-extrabold text-primary">Tin Được Đẩy Lên</h2>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {ups.map((item: any) => (
+                    <PropertyCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </section>
+            )}
+
             <div className="my-8">
               <GoogleAdPlaceholder />
             </div>
@@ -351,10 +373,10 @@ export default async function CategoryLandingPage({ params, searchParams }: Page
                 <h2 className="text-xl font-bold text-gray-800">Tin Cập Nhật Mới Nhất</h2>
                 <SearchControls />
               </div>
-              {data.normals && data.normals.filter((item: any) => !data.vips?.some((vip: any) => vip.id === item.id)).length > 0 ? (
+              {visibleNormals.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {data.normals.filter((item: any) => !data.vips?.some((vip: any) => vip.id === item.id)).map((item: any) => (
+                    {visibleNormals.map((item: any) => (
                       <PropertyCard key={item.id} item={item} />
                     ))}
                   </div>
