@@ -151,13 +151,28 @@ export class PropertyController {
         vipsToReturn = [...newestVips, ...randomVips];
       }
 
+      // Khách yêu cầu 15/9: tin UP giới hạn tối đa 5 (3 mới UP nhất + 2 ngẫu nhiên), cùng
+      // khuôn với khối VIP ở trên — trang `/search` này đi qua Meilisearch nên KHÔNG dùng
+      // chung code với `PropertyService.searchDatabase()` (đường Prisma của trang khu vực),
+      // phải lặp lại đúng cấu trúc ở đây, không thể tái dùng trực tiếp.
+      let upsToReturn: any[] = [];
+      if (!query.tier || query.tier === 'UP') {
+        const upFilters = [...baseFilters, 'tier = "UP"', 'status = "APPROVED"'].filter(Boolean) as string[];
+        const upRes = await this.searchService.search(searchText, upFilters, ['pushedAt:desc'], 1, 50);
+        const allUps = upRes.hits || [];
+        const newestUps = allUps.slice(0, 3);
+        const remainingUps = allUps.slice(3);
+        const randomUps = remainingUps.sort(() => 0.5 - Math.random()).slice(0, 2);
+        upsToReturn = [...newestUps, ...randomUps];
+      }
+
       const res = await this.searchService.search(searchText, filters as string[], sort, normalized.page, normalized.limit);
       const hits = res.hits || [];
       const totalFromMeili = res.estimatedTotalHits || res.totalHits || 0;
 
       return {
         vips: vipsToReturn,
-        ups: [],
+        ups: upsToReturn,
         normals: hits,
         total: totalFromMeili,
         page: normalized.page,
