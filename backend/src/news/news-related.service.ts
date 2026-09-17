@@ -84,7 +84,8 @@ export class NewsRelatedService {
   }
 
   private async findRelatedArticles(excludeId: string, categoryId: string | null) {
-    const take = 4;
+    // Khách chốt 16/9: 2 bài (không phải 4) — gọn hơn, đúng khuôn với khối "BĐS liên quan".
+    const take = 2;
     const baseWhere = { id: { not: excludeId }, ...publicNewsWhere() };
 
     const sameCategory = categoryId
@@ -97,10 +98,19 @@ export class NewsRelatedService {
       : [];
     if (sameCategory.length >= take) return sameCategory;
 
-    // Chưa đủ 4 bài cùng chuyên mục — bù bằng bài mới nhất bất kỳ, không để khối trống trơn
-    // hoặc chỉ có 1-2 bài trông như lỗi.
+    // Chưa đủ bài cùng chuyên mục — bù bằng bài mới nhất bất kỳ, không để khối trống trơn
+    // hoặc chỉ có 1 bài trông như lỗi.
+    //
+    // BUG ĐÃ SỬA (khách báo 16/9 "không để chính bài đang đọc" — bài hiện tại lại xuất
+    // hiện trong danh sách liên quan của CHÍNH NÓ): `{ ...baseWhere, id: {notIn: [...]} }`
+    // spread rồi ghi đè cùng khoá `id` — bản cũ MẤT LUÔN điều kiện `not: excludeId` của
+    // `baseWhere.id`, JS không tự gộp hai điều kiện trên cùng field. Gộp thẳng vào MỘT
+    // object `id` duy nhất để cả hai điều kiện cùng có hiệu lực.
     const filler = await this.prisma.news.findMany({
-      where: { ...baseWhere, id: { notIn: sameCategory.map((a) => a.id) } },
+      where: {
+        ...baseWhere,
+        id: { notIn: [excludeId, ...sameCategory.map((a) => a.id)] },
+      },
       orderBy: { publishedAt: 'desc' },
       take: take - sameCategory.length,
       select: ARTICLE_CARD_SELECT,
@@ -119,12 +129,15 @@ export class NewsRelatedService {
     const manual = relatedIds.map((id) => manualRows.find((p) => p.id === id)).filter((p): p is (typeof manualRows)[number] => Boolean(p));
     if (manual.length >= take) return manual.slice(0, take);
 
+    // Khách chốt 16/9: chỉ bù bằng tin VIP, bỏ UP khỏi nguồn tự động — tin UP đổi vòng
+    // quay liên tục (khối "Tin Được Đẩy Lên" ngày 15/9) nên xen vào đây không ổn định
+    // bằng VIP (thời hạn dài, ít đổi hơn).
     const excludeIds = manual.map((p) => p.id);
-    const vipUp = await this.prisma.property.findMany({
+    const vips = await this.prisma.property.findMany({
       where: {
         ...baseWhere,
         id: { notIn: excludeIds },
-        tier: { in: ['VIP', 'UP'] },
+        tier: 'VIP',
         OR: [{ tierExpiresAt: null }, { tierExpiresAt: { gt: new Date() } }],
       },
       orderBy: [{ pushedAt: { sort: 'desc', nulls: 'last' } }, { publishedAt: { sort: 'desc', nulls: 'last' } }],
@@ -132,7 +145,7 @@ export class NewsRelatedService {
       include: PROPERTY_CARD_INCLUDE,
     });
 
-    let combined = [...manual, ...vipUp];
+    let combined = [...manual, ...vips];
     if (combined.length < take) {
       const already = combined.map((p) => p.id);
       const newest = await this.prisma.property.findMany({

@@ -158,11 +158,17 @@ export default async function NewsDetail({ params }: { params: Promise<{ slug: s
         <div className="mt-10 pt-6 border-t border-gray-100">
           <h2 className="text-sm font-bold text-gray-700 mb-2">Nguồn tham khảo</h2>
           <ul className="space-y-1">
-            {newsItem.sources.map((s: { title: string; url: string }, i: number) => (
+            {newsItem.sources.map((s: { title: string; url?: string }, i: number) => (
               <li key={i} className="text-sm">
-                <a href={s.url} target="_blank" rel="noreferrer nofollow" className="text-blue-600 hover:underline">
-                  {s.title}
-                </a>
+                {/* URL không bắt buộc (khách báo 16/9) — nguồn chỉ có tên hiện dạng chữ
+                    thường, không phải link tới chính trang này (href="" trước đây). */}
+                {s.url ? (
+                  <a href={s.url} target="_blank" rel="noreferrer nofollow" className="text-blue-600 hover:underline">
+                    {s.title}
+                  </a>
+                ) : (
+                  <span className="text-gray-600">{s.title}</span>
+                )}
               </li>
             ))}
           </ul>

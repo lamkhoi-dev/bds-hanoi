@@ -27,8 +27,14 @@ export class NewsSourceDto {
   @MaxLength(200)
   title: string;
 
+  // Không bắt buộc — khách báo 16/9 "ghi nguồn không hiển thị": nhiều nguồn thực tế chỉ là
+  // tên (vd "Theo Sở Xây dựng"), không có link. Bản cũ bắt buộc URL hợp lệ khiến
+  // `NewsForm.tsx` tự lọc bỏ NGAY những dòng chỉ có tên trước khi gửi lên, không báo lỗi gì —
+  // admin tưởng đã lưu, mở lại bài thì mất trắng.
+  @IsOptional()
+  @ValidateIf((o) => o.url)
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true }, { message: 'Đường dẫn nguồn tham khảo không hợp lệ' })
-  url: string;
+  url?: string;
 }
 
 /**

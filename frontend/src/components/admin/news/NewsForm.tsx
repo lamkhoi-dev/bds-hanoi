@@ -112,7 +112,11 @@ export function newsFormValueToPayload(v: NewsFormValue) {
     publishedAt: localInputToIso(v.publishedAt),
     authorName: v.authorName.trim() || undefined,
     categoryId: v.categoryId || '',
-    sources: v.sources.filter((s) => s.title.trim() && s.url.trim()),
+    // Chỉ cần TÊN nguồn — URL không bắt buộc (khách báo 16/9: nhiều nguồn chỉ có tên,
+    // không có link; trước đây bắt buộc cả hai nên lọc mất dòng chỉ điền tên, không báo lỗi).
+    sources: v.sources
+      .filter((s) => s.title.trim())
+      .map((s) => ({ title: s.title.trim(), url: s.url.trim() })),
     seoTitle: v.seoTitle.trim() || undefined,
     metaDescription: v.metaDescription.trim() || undefined,
     canonicalUrl: v.canonicalUrl.trim() || undefined,
@@ -358,7 +362,7 @@ export default function NewsForm({
         {v.sources.map((s, i) => (
           <div key={i} className="flex gap-2">
             <input value={s.title} onChange={(e) => updateSource(i, { title: e.target.value })} className={`${field} flex-1`} placeholder="Tên nguồn" />
-            <input value={s.url} onChange={(e) => updateSource(i, { url: e.target.value })} className={`${field} flex-1`} placeholder="https://..." />
+            <input value={s.url} onChange={(e) => updateSource(i, { url: e.target.value })} className={`${field} flex-1`} placeholder="https://... (không bắt buộc)" />
             <button type="button" onClick={() => removeSource(i)} className="px-3 text-gray-400 hover:text-red-600"><X size={16} /></button>
           </div>
         ))}

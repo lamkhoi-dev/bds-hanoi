@@ -278,7 +278,7 @@ export default async function SearchPage({
               <section className="mb-12">
                 <div className="flex items-center gap-3 mb-6">
                   <Rocket className="w-7 h-7 text-primary" />
-                  <h2 className="text-xl font-extrabold text-primary">Tin Được Đẩy Lên</h2>
+                  <h2 className="text-xl font-extrabold text-primary">BĐS Được Quan Tâm Nhiều</h2>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {ups.map((item: any) => (

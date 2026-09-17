@@ -29,9 +29,22 @@ const ALLOWED_TAGS = [
 const HEX_OR_RGB_COLOR = /^(#[0-9a-f]{3}|#[0-9a-f]{6}|#[0-9a-f]{4}|#[0-9a-f]{8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*[\d.]+\s*)?\))$/i;
 const TEXT_ALIGN_VALUE = /^(left|right|center|justify)$/;
 
+// Đúng đoạn Caddy đang định tuyến tới MinIO (`handle /bds-uploads/* { reverse_proxy
+// minio:9000 }`) — cố định cho mọi site/mọi domain, không đọc từ env.
+const UPLOAD_PATH_MARKER = '/bds-uploads/';
+
+/**
+ * Rút gọn URL ảnh của CHÍNH SITE về dạng tương đối, nhưng phải GIỮ NGUYÊN `/bds-uploads/` —
+ * đây là đoạn Caddy dùng để biết chuyển tiếp sang MinIO, bỏ mất nó thì trình duyệt gọi
+ * `{domain}/optimized-....webp` (thiếu tầng thư mục) và luôn 404. Lỗi thật đã xảy ra: khách
+ * báo 16/9 "ảnh add thêm trong bài không hiển thị" — bản cũ cắt theo `mediaBaseUrls[i].length`
+ * (chính là `.../bds-uploads`), xoá theo đúng độ dài đó nên nuốt luôn đoạn `/bds-uploads`.
+ */
 function isOwnMediaUrl(src: string, mediaBaseUrls: string[]): string | null {
   for (const base of mediaBaseUrls) {
     if (base && src.startsWith(base)) {
+      const markerIndex = src.indexOf(UPLOAD_PATH_MARKER);
+      if (markerIndex >= 0) return src.slice(markerIndex);
       const rest = src.slice(base.length);
       return rest.startsWith('/') ? rest : `/${rest}`;
     }

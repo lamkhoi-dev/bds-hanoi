@@ -176,11 +176,11 @@ describe('sanitizeNewsHtml — figure/ảnh có chú thích', () => {
 });
 
 describe('sanitizeNewsHtml — ảnh của chính site rút gọn về đường dẫn tương đối', () => {
-  it('URL tuyệt đối trùng mediaBaseUrls -> tương đối, để đổi domain không gãy ảnh', () => {
+  it('URL tuyệt đối trùng mediaBaseUrls -> tương đối NHƯNG GIỮ /bds-uploads/, để đổi domain không gãy ảnh mà Caddy vẫn định tuyến được tới MinIO', () => {
     const out = sanitizeNewsHtml('<img src="https://nhadatxunghe.vn/bds-uploads/a.webp">', {
       mediaBaseUrls: ['https://nhadatxunghe.vn/bds-uploads'],
     });
-    expect(out).toContain('src="/a.webp"');
+    expect(out).toContain('src="/bds-uploads/a.webp"');
   });
 
   it('ảnh không thuộc site (host khác) giữ nguyên URL tuyệt đối', () => {

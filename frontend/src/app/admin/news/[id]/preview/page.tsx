@@ -92,11 +92,15 @@ export default function PreviewNews({ params }: { params: Promise<{ id: string }
           <div className="mt-10 pt-6 border-t border-gray-100">
             <h2 className="text-sm font-bold text-gray-700 mb-2">Nguồn tham khảo</h2>
             <ul className="space-y-1">
-              {news.sources.map((s: { title: string; url: string }, i: number) => (
+              {news.sources.map((s: { title: string; url?: string }, i: number) => (
                 <li key={i} className="text-sm">
-                  <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                    {s.title}
-                  </a>
+                  {s.url ? (
+                    <a href={s.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                      {s.title}
+                    </a>
+                  ) : (
+                    <span className="text-gray-600">{s.title}</span>
+                  )}
                 </li>
               ))}
             </ul>
