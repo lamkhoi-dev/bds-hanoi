@@ -101,8 +101,62 @@ export class PaymentService {
     });
   }
 
-  async processSePayWebhook(authHeader: string, payload: any) {
-    this.logger.log(`Received SePay webhook reference=${payload?.id || payload?.referenceCode || payload?.code || 'unknown'} amount=${payload?.transferAmount || 'unknown'}`);
+  /**
+   * Ghi lại một webhook bị TỪ CHỐI xác thực — trước đây chỉ `logger.warn` ra stdout, mà
+   * stdout mất sạch mỗi lần deploy (container tạo lại). Hệ quả thật (khách báo 15-18/9
+   * "quét QR chuyển khoản được nhưng không cộng tiền"): `PaymentWebhookLog` trống trơn từ
+   * 10/7, nên không thể phân biệt "SePay không hề gọi tới" với "SePay gọi nhưng token lệch"
+   * — hai nguyên nhân cần hai cách xử lý hoàn toàn khác nhau.
+   *
+   * Chỉ ghi ĐỘ DÀI/hình dạng token nhận được, tuyệt đối không ghi giá trị token. Tối đa 1
+   * dòng mỗi 5 phút (upsert theo khoá thời gian) và cắt payload còn 4KB: route này công
+   * khai, không cho kẻ lạ nhồi đầy bảng bằng cách gọi liên tục.
+   */
+  private async recordRejectedWebhook(
+    authHeader: string | undefined,
+    payload: any,
+    expectedTokenLength: number,
+    meta: { ip?: string; userAgent?: string },
+  ) {
+    try {
+      const header = String(authHeader ?? '');
+      const scheme = header ? header.split(/\s+/)[0].toLowerCase().slice(0, 20) : 'none';
+      const providedLength = header.includes(' ') ? header.substring(header.indexOf(' ') + 1).trim().length : 0;
+      const bucket = Math.floor(Date.now() / (5 * 60 * 1000));
+      const referenceId = `UNAUTH-${bucket}`;
+      const reason =
+        `Xác thực thất bại: header=${header ? 'có' : 'KHÔNG CÓ'}, kiểu=${scheme}, ` +
+        `độ dài token nhận=${providedLength}, khớp độ dài token cấu hình=${providedLength === expectedTokenLength}, ` +
+        `ip=${meta.ip ?? '?'}, ua=${(meta.userAgent ?? '?').slice(0, 80)}`;
+      const payloadText = JSON.stringify(payload ?? {}).slice(0, 4096);
+      const transferAmount = Number(payload?.transferAmount);
+
+      await this.prisma.paymentWebhookLog.upsert({
+        where: { referenceId },
+        update: { reason, payload: payloadText, retryCount: { increment: 1 } },
+        create: {
+          referenceId,
+          payload: payloadText,
+          transferAmount: Number.isFinite(transferAmount) ? transferAmount : null,
+          transferType: payload?.transferType ? String(payload.transferType).slice(0, 20) : null,
+          content: payload?.content ? String(payload.content).slice(0, 200) : null,
+          status: 'UNAUTHORIZED',
+          reason,
+          retryCount: 1,
+        },
+      });
+    } catch (err) {
+      // Ghi log chẩn đoán KHÔNG được làm hỏng phản hồi webhook.
+      this.logger.warn(`Không ghi được nhật ký webhook bị từ chối: ${(err as Error)?.message}`);
+    }
+  }
+
+  async processSePayWebhook(
+    authHeader: string,
+    payload: any,
+    meta: { ip?: string; userAgent?: string } = {},
+  ) {
+    this.logger.log(`Received SePay webhook reference=${payload?.id || payload?.referenceCode || payload?.code || 'unknown'} amount=${payload?.transferAmount || 'unknown'} ip=${meta.ip ?? '?'}`);
 
     // 1. Check Authentication
     const settings = await this.prisma.systemSettings.findUnique({
@@ -115,7 +169,8 @@ export class PaymentService {
 
     const decryptedToken = this.crypto.decrypt(settings.sepayWebhookToken);
     if (!authHeader || !authHeader.toLowerCase().startsWith('apikey ') || authHeader.substring(7).trim() !== decryptedToken) {
-      this.logger.warn(`SePay webhook invalid token reference=${payload?.id}`);
+      this.logger.warn(`SePay webhook invalid token reference=${payload?.id} ip=${meta.ip ?? '?'}`);
+      await this.recordRejectedWebhook(authHeader, payload, decryptedToken.length, meta);
       return { success: false, message: 'Token không hợp lệ' };
     }
 

@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Req, Headers, UnauthorizedException, HttpException, HttpStatus, UseGuards, Request, Logger, HttpCode } from '@nestjs/common';
-import { SkipThrottle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma/prisma.service';
 import { CryptoService } from '../shared/crypto.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -48,27 +48,30 @@ export class PaymentController {
     };
   }
 
-  // Nhờ nạp tiền khách báo 15/9 "quét QR nộp được tiền nhưng không cộng tài khoản": rà log
-  // cho thấy `PaymentWebhookLog` không có dòng nào (kể cả loại lỗi) từ 6/7 tới nay — nghĩa
-  // là webhook có thể đang bị chặn TRƯỚC KHI vào tới handler. `ThrottlerGuard` mặc định
-  // (100 req/phút) áp cho route này dù SePay xác thực bằng token riêng trong header — một
-  // webhook bị 429 sẽ KHÔNG có dấu vết gì trong DB (giống hệt triệu chứng quan sát được).
-  // Bỏ giới hạn ở đây: xác thực đã có (kiểm token trong `processSePayWebhook`), rate-limit
-  // một webhook thanh toán chỉ có hại (mất giao dịch thật), không có gì để phòng lạm dụng.
+  // Khách báo 15-18/9 "quét QR chuyển khoản được nhưng không cộng tiền": `PaymentWebhookLog`
+  // trống trơn từ 10/7. `ThrottlerGuard` mặc định (100 req/phút) áp cho route này dù SePay đã
+  // xác thực bằng token riêng — một webhook bị 429 không để lại dấu vết nào trong DB (đúng
+  // triệu chứng quan sát được). Nâng lên mức RẤT rộng (600/phút mỗi IP, hơn 100 lần lưu
+  // lượng thật của một site nhỏ) thay vì bỏ hẳn: token cấu hình đã chặn kẻ lạ ở tầng xác
+  // thực, giới hạn này chỉ còn để một luồng gọi dồn dập không nuốt hết CPU/DB.
   @SkipThrottle()
   @Get('webhook/sepay')
   async verifySepayWebhook() {
     return { success: true, message: 'Webhook is active' };
   }
 
-  @SkipThrottle()
+  @Throttle({ default: { limit: 600, ttl: 60000 } })
   @Post('webhook/sepay')
   @HttpCode(HttpStatus.OK)
   async sepayWebhook(
     @Headers('authorization') authHeader: string,
-    @Body() payload: any
+    @Body() payload: any,
+    @Req() req: any,
   ) {
-    return this.paymentService.processSePayWebhook(authHeader, payload);
+    return this.paymentService.processSePayWebhook(authHeader, payload, {
+      ip: req?.ip,
+      userAgent: req?.headers?.['user-agent'],
+    });
   }
 
   @Post('webhook/sepay/mock')
