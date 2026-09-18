@@ -62,8 +62,14 @@ hơn) — chưa có bằng chứng khách gặp lỗi này ở `/search`.
 hình decorator, không phải logic nghiệp vụ; kiểm chứng bằng tái hiện lỗi thật trên VPS
 trước/sau khi sửa mới là bằng chứng đáng tin ở đây).
 
-## Kiểm chứng trước/sau khi deploy
-- Trước: gọi 130 lần liên tiếp `/properties/seo` qua mạng nội bộ → dính 429 ở lần thứ ~101.
-- Sau: gọi lại đúng số lần đó → không còn 429 nào.
-- Nạp tiền: chưa có cách tự kiểm (cần giao dịch ngân hàng thật) — nhờ khách test lại 1 lần
-  sau khi deploy.
+## Kiểm chứng trước/sau khi deploy — 18/09/2026, đã deploy cả 2 site
+
+- **Trước** (Nghệ An, trước khi sửa): gọi 130 lần liên tiếp `/properties/seo` qua mạng nội bộ
+  container → dính `429` bắt đầu từ lần thứ ~101 (đo được bằng 1 request đơn lẻ ngay sau đợt
+  test 60 request trước đó cũng đã đủ trigger).
+- **Sau** (Nghệ An, sau khi deploy commit `044ad01`): lặp lại ĐÚNG bài test 130 lần liên tiếp
+  → **130/130 trả 200, 0 lần 429**. Xác nhận sửa dứt điểm.
+- Hà Nội: build + deploy thành công, container healthy, trang chủ 200 (site chưa có traffic
+  thật để tái hiện 429 nhưng cùng 1 codebase nên đã được vá y hệt).
+- Nạp tiền (webhook SePay): chưa có cách tự kiểm bằng giao dịch ngân hàng thật — nhờ khách
+  test lại 1 lần, có khả năng đã tự khỏi vì cùng nguyên nhân giới hạn tần suất.
