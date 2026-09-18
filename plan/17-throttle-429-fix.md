@@ -73,3 +73,41 @@ trước/sau khi sửa mới là bằng chứng đáng tin ở đây).
   thật để tái hiện 429 nhưng cùng 1 codebase nên đã được vá y hệt).
 - Nạp tiền (webhook SePay): chưa có cách tự kiểm bằng giao dịch ngân hàng thật — nhờ khách
   test lại 1 lần, có khả năng đã tự khỏi vì cùng nguyên nhân giới hạn tần suất.
+
+---
+
+## Nạp tiền quét QR không cộng tiền — điều tra tiếp 18/9 (khách xác nhận web khu vực đã ổn)
+
+Khách báo web Nghệ An đã ổn (xác nhận sửa 429 đúng), còn lại lỗi nạp tiền, kèm email SePay
+thông báo bổ sung IP webhook `45.57.137.67` từ 22/9/2026.
+
+### Đã kiểm chứng & loại trừ
+- Webhook công khai thông từ internet: `GET` → 200; `POST` token giả → 200 `{success:false}`
+  đúng thiết kế; cả đường `/api/payment/...` (không `v1`) cũng chạy.
+- **Không có whitelist IP ở đâu cả** (Caddy không lọc IP, backend không lọc IP, VPS: `iptables
+  INPUT ACCEPT`, không ufw, không fail2ban) → email đổi IP của SePay **không liên quan**, không
+  cần làm gì ở phía server.
+- Token cấu hình: giải mã được, dạng chuỗi ngẫu nhiên 38 ký tự (hoa/thường/số) — không phải mặt
+  nạ `****`, không có tiền tố `Apikey`. Lưu lại cài đặt không làm hỏng token (mã đã chặn mặt nạ).
+- `PaymentWebhookLog` dừng ở 10/7; chỉ có đúng 3 giao dịch nạp thành công (1/7, 4/7, 6/7). Backend
+  không nhận webhook nào từ SePay kể từ lần deploy gần nhất.
+- Gọi qua `http://` hoặc `www.` bị Caddy **chuyển hướng 308/301** — nếu URL trong SePay đang ghi
+  một trong hai dạng này thì webhook (POST) thường không đi theo redirect → thất bại im lặng.
+
+### Lỗ hổng quan sát đã vá (commit `14e8693`)
+Webhook bị từ chối xác thực trước đây chỉ `logger.warn` ra stdout — mất sạch mỗi lần deploy, và
+KHÔNG có dòng nào trong DB. Nên không thể phân biệt "SePay không gọi tới" với "SePay gọi nhưng
+token lệch". Nay ghi bền vững 1 dòng `UNAUTHORIZED` / 5 phút (upsert, cắt payload 4KB) gồm: có/không
+header, kiểu chứng thực, độ dài token nhận, khớp độ dài hay không, IP nguồn, user-agent — **không
+bao giờ ghi giá trị token**. Kiểm chứng trên site thật: gọi thử token giả → có dòng, ghi đúng IP thật
+`58.187.190.0`, 0 dòng chứa chuỗi token giả. Đã xoá dòng test. POST webhook đổi từ bỏ hẳn giới hạn
+sang `@Throttle 600/phút/IP` (vẫn rộng gấp trăm lần lưu lượng thật).
+
+### Cần khách làm (quyết định được nguyên nhân)
+Chụp **nhật ký gọi webhook trên my.sepay.vn** (Tích hợp Webhooks → webhook đang dùng → nhật ký) cho lần
+nạp thử gần nhất + kiểm tra 3 điểm: URL đúng `https://nhadatxunghe.vn/api/v1/payment/webhook/sepay`
+(https, không `www`, không `http`); kiểu chứng thực = API Key; API Key trùng ô "SePay Webhook Token"
+trong Cài đặt hệ thống. Sau đó nạp thử 1 lần nữa: nếu SePay có gọi mà lệch cấu hình thì sẽ có dòng
+`UNAUTHORIZED` trong `PaymentWebhookLog` cho biết chính xác lệch chỗ nào; nếu vẫn không có dòng nào
+thì SePay không gọi tới (xem nhật ký phía SePay: chưa gửi / gửi tới URL khác / bị đánh dấu bỏ qua vì
+"không có mã thanh toán").
