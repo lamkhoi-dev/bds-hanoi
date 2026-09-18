@@ -12,6 +12,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { NewsService } from './news.service';
 import { NewsRelatedService } from './news-related.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -73,6 +74,11 @@ export class NewsController {
     return this.newsService.create(data);
   }
 
+  // 3 route công khai dưới đây đều được trang tin tức gọi lúc dựng trang PHÍA SERVER — cùng
+  // gốc lỗi "429 chung IP nội bộ" đã sửa ở `property.controller.ts getSeoProperties` (khách
+  // báo 18/9). Route quản trị phía trên KHÔNG cần (gọi từ trình duyệt admin qua HTTPS công
+  // khai, mỗi admin một IP thật, không đi qua đường nội bộ này).
+  @SkipThrottle()
   @Get()
   findAll(
     @Query('page') page: string = '1',
@@ -82,6 +88,7 @@ export class NewsController {
     return this.newsService.findPublicList(Number(page), Number(limit), category);
   }
 
+  @SkipThrottle()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const news = await this.newsService.findPublicOne(id);
@@ -91,6 +98,7 @@ export class NewsController {
     return news;
   }
 
+  @SkipThrottle()
   @Get(':id/related')
   getRelated(@Param('id') id: string) {
     return this.newsRelatedService.findRelated(id);

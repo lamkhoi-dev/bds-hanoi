@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, Request, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { NewsCategoryService } from './news-category.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -16,6 +17,9 @@ function checkAdmin(req: any) {
 export class NewsCategoryController {
   constructor(private readonly service: NewsCategoryService) {}
 
+  // Cùng lý do "429 chung IP nội bộ" khi Next.js gọi lúc dựng trang phía server — xem chú
+  // thích ở `property.controller.ts getSeoProperties` (khách báo 18/9).
+  @SkipThrottle()
   @Get()
   findAllPublic() {
     return this.service.findAllPublic();
@@ -30,6 +34,7 @@ export class NewsCategoryController {
 
   // Đặt SAU 'admin/all' — route tĩnh phải khớp trước route động ':slug', cùng lý do đã
   // tách hẳn controller này ra khỏi '/news/:id' (xem chú thích đầu file).
+  @SkipThrottle()
   @Get(':slug')
   async findOneBySlug(@Param('slug') slug: string) {
     const category = await this.service.findBySlug(slug);

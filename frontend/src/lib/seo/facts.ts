@@ -43,34 +43,39 @@ export interface SeoListingData {
  * `total: 0`, nên trang phân biệt được "lỗi tải" với "chưa có tin" — hai trạng thái đó hiển
  * thị khác nhau.
  *
- * Thử lại: khách báo 25/08 "link khu vực nhiều lúc không tải được tin, F5 hoặc vào lại vài
- * lần thì mới hiện". Đo lại 10 lần liên tiếp đều 200 trong ~0,2s nên đây là lỗi chớp nhoáng
- * chứ không phải hỏng thường trực — nhiều khả năng rơi đúng lúc backend khởi động lại sau
- * một lần deploy. Khách báo lại 15/9 vẫn còn gặp (đúng khung giờ deploy Phần B) — nâng từ 1
- * lên 3 lần thử, giãn cách dài hơn (300ms rồi 800ms), nuốt được nhiều cửa sổ khởi động lại
- * hơn mà tổng thời gian chờ vẫn dưới 1,2 giây.
- *
- * Vẫn có giới hạn: đây là render phía máy chủ, thử lại nhiều lần chỉ làm người dùng ngồi
- * nhìn trang trắng lâu hơn rồi vẫn lỗi. Backend restart mất khoảng 20-40 giây — quá lâu để
- * đợi trong một request, nên ca trúng đúng lúc đó vẫn sẽ hiện thông báo lỗi, đúng như thiết kế.
+ * Thử lại: khách báo 25/08 rồi lại 15/9 và 18/9 "link khu vực (và giờ cả link loại BĐS)
+ * nhiều lúc không tải được tin, F5 lại thì mới đúng". GỐC LỖI TÌM RA 18/9: mọi fetch này
+ * chạy PHÍA SERVER, gọi thẳng `http://backend:4000` qua mạng nội bộ Docker (không qua
+ * Caddy) — nên request của MỌI khách ghé site cùng lúc đều chung MỘT địa chỉ IP nguồn (IP
+ * container frontend). `ThrottlerGuard` mặc định (100 req/phút) tính theo IP đó, bị tính
+ * DỒN cho cả site chứ không phải riêng từng khách — gọi thử 130 lần liên tiếp là dính
+ * `429` ngay. Đã sửa tận gốc: bỏ giới hạn tần suất ở các route đọc công khai
+ * (`property.controller.ts`, `location.controller.ts`, `news.controller.ts`...). Giữ
+ * nguyên cơ chế thử lại + log ở đây làm lưới an toàn thứ hai, và để BIẾT NGAY nếu còn kiểu
+ * lỗi nào khác xảy ra sau này thay vì lại phải suy đoán từ đầu.
  */
 const RETRY_DELAYS_MS = [300, 800];
 
 const fetchSeoListing = cache(async (queryString: string): Promise<SeoListingData | null> => {
   const url = serverApiUrl(`/properties/seo?${queryString}`);
+  let lastReason = '';
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
     try {
       const res = await fetch(url, { cache: 'no-store' });
-      // 4xx là câu trả lời dứt khoát của backend (truy vấn sai) — thử lại cũng thế.
-      // Chỉ thử lại với 5xx và lỗi mạng, là những thứ có thể tự khỏi.
       if (res.ok) return (await res.json()) as SeoListingData;
-      if (res.status < 500) return null;
-    } catch {
-      /* lỗi mạng — rơi xuống nhánh thử lại bên dưới */
+      // 4xx thường là câu trả lời dứt khoát (truy vấn sai) — NGOẠI TRỪ 429 (quá tải tạm
+      // thời, đúng thứ cơ chế thử lại này sinh ra để nuốt).
+      lastReason = `HTTP ${res.status}`;
+      if (res.status < 500 && res.status !== 429) return null;
+    } catch (err) {
+      lastReason = err instanceof Error ? err.message : String(err);
     }
     if (attempt < RETRY_DELAYS_MS.length) await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt]));
   }
+  // Hết cả 3 lần thử vẫn lỗi — ghi log để lần sau (nếu còn xảy ra) có bằng chứng thật thay
+  // vì phải đoán mò như đợt 18/9 vừa rồi. Vào `docker logs bds-frontend-prod`.
+  console.error(`[fetchSeoListing] Hết ${RETRY_DELAYS_MS.length + 1} lần thử, vẫn lỗi: ${lastReason}. url=${url}`);
   return null;
 });
 

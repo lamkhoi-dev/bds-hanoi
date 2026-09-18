@@ -8,7 +8,7 @@ import { ViewedPropertyService } from '../user/viewed-property.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../prisma/prisma.service';
-import { Throttle } from '@nestjs/throttler';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import sharp from 'sharp';
 import { UploadService } from '../upload/upload.service';
 import { buildMeiliFilters, buildMeiliSort, buildPrismaWhere, normalizeSearchFilters } from './property-utils';
@@ -73,36 +73,57 @@ export class PropertyController {
     return this.propertyService.create(req.user.id, data);
   }
 
+  // Khách báo 18/9: trang khu vực (VÀ giờ cả trang loại BĐS) "thỉnh thoảng lấy tin sai".
+  // Gốc lỗi tìm ra: các route GET công khai này được Next.js gọi từ SERVER (render trang),
+  // đi THẲNG qua mạng nội bộ Docker (`http://backend:4000`, xem `server-api.ts`) — KHÔNG
+  // qua Caddy — nên request của MỌI khách truy cập cùng lúc đều mang chung một IP nguồn
+  // (IP của container frontend), thay vì IP thật của từng người. `ThrottlerModule` mặc định
+  // (100 request/phút) tính theo IP đó — bị TÍNH CHUNG cho toàn bộ khách của cả site, một
+  // trang vừa tải xong bởi vài người dùng khác đã đủ chạm mốc. Đã tái hiện được: gọi thử
+  // 130 lần liên tiếp là dính `429 Too Many Requests` ngay — khớp đúng triệu chứng "không
+  // phải lúc nào cũng bị, F5 lại thì đúng" (chờ qua cửa sổ 60 giây là lại được).
+  //
+  // Đây là những route ĐỌC THUẦN TUÝ, không sửa dữ liệu, không có gì để giới hạn chống lạm
+  // dụng — bỏ giới hạn cho chúng. Vẫn giữ nguyên `@Throttle` ở các route có sửa dữ liệu
+  // (đăng tin, bình luận, nạp tiền...) và ở `/search` (có sẵn giới hạn riêng, gọi Meilisearch
+  // tốn hơn).
+  @SkipThrottle()
   @Get('stats')
   async getStats() {
     return this.propertyService.getStats();
   }
 
+  @SkipThrottle()
   @Get('homepage')
   async getHomepage() {
     return this.propertyService.getHomepageProperties();
   }
 
+  @SkipThrottle()
   @Get('hot-locations')
   async getHotLocations() {
     return this.propertyService.getHotLocations();
   }
 
+  @SkipThrottle()
   @Get('map')
   async getMapProperties(@Query() query: any) {
     return this.propertyService.getMapProperties(query);
   }
 
+  @SkipThrottle()
   @Get()
   async findAll(@Query() query: any) {
     return this.propertyService.findAll(query);
   }
 
+  @SkipThrottle()
   @Get('sitemap')
   async getSitemap() {
     return this.propertyService.getSitemap();
   }
 
+  @SkipThrottle()
   @Get('seo')
   async getSeoProperties(
     @Query('loaiBds') loaiBds: string,
@@ -199,6 +220,7 @@ export class PropertyController {
     return this.propertyService.createDraft(req.user.id, data);
   }
 
+  @SkipThrottle()
   @Get('compare')
   async compare(@Query('ids') ids: string) {
     const idArray = ids ? ids.split(',') : [];
@@ -206,11 +228,13 @@ export class PropertyController {
   }
 
 
+  @SkipThrottle()
   @Get(':id/related')
   async findRelated(@Param('id') id: string) {
     return this.propertyService.findRelated(id);
   }
 
+  @SkipThrottle()
   @UseGuards(OptionalJwtAuthGuard)
   @Get(':id')
   async findOne(@Request() req, @Param('id') id: string) {

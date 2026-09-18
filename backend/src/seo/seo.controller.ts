@@ -1,4 +1,5 @@
 import { Controller, Get, Header, Param, ParseIntPipe } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { SeoService } from './seo.service';
 
 /**
@@ -13,6 +14,9 @@ import { SeoService } from './seo.service';
  * Caddy map /sitemap.xml và /sitemaps/* sang đây nên URL công khai không đổi —
  * không phải đăng ký lại trong Search Console.
  */
+// Toàn bộ chỉ đọc (sitemap, số liệu đối chiếu) — Googlebot/Bing có thể dồn dập gọi nhiều
+// chunk sitemap liên tiếp, không có lý do gì để giới hạn tần suất ở đây.
+@SkipThrottle()
 @Controller('seo')
 export class SeoController {
   constructor(private readonly seoService: SeoService) {}

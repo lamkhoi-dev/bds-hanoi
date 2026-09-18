@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Req, Headers, UnauthorizedException, HttpException, HttpStatus, UseGuards, Request, Logger, HttpCode } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { PrismaService } from '../prisma/prisma.service';
 import { CryptoService } from '../shared/crypto.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -47,11 +48,20 @@ export class PaymentController {
     };
   }
 
+  // Nhờ nạp tiền khách báo 15/9 "quét QR nộp được tiền nhưng không cộng tài khoản": rà log
+  // cho thấy `PaymentWebhookLog` không có dòng nào (kể cả loại lỗi) từ 6/7 tới nay — nghĩa
+  // là webhook có thể đang bị chặn TRƯỚC KHI vào tới handler. `ThrottlerGuard` mặc định
+  // (100 req/phút) áp cho route này dù SePay xác thực bằng token riêng trong header — một
+  // webhook bị 429 sẽ KHÔNG có dấu vết gì trong DB (giống hệt triệu chứng quan sát được).
+  // Bỏ giới hạn ở đây: xác thực đã có (kiểm token trong `processSePayWebhook`), rate-limit
+  // một webhook thanh toán chỉ có hại (mất giao dịch thật), không có gì để phòng lạm dụng.
+  @SkipThrottle()
   @Get('webhook/sepay')
   async verifySepayWebhook() {
     return { success: true, message: 'Webhook is active' };
   }
 
+  @SkipThrottle()
   @Post('webhook/sepay')
   @HttpCode(HttpStatus.OK)
   async sepayWebhook(

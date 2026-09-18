@@ -1,7 +1,16 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { LocationType } from '@prisma/client';
 import { LocationService } from './location.service';
 
+/**
+ * Toàn bộ controller chỉ ĐỌC, không có route nào sửa dữ liệu — bỏ giới hạn tần suất ở
+ * mức CẢ CONTROLLER. Mọi trang khu vực/form đăng tin đều gọi các route này lúc dựng trang
+ * phía server, đi thẳng qua mạng nội bộ Docker (không qua Caddy) nên chung một IP nguồn
+ * cho MỌI khách — dễ chạm giới hạn 100 req/phút mặc định dù không ai lạm dụng gì (xem chú
+ * thích chi tiết ở `property.controller.ts getSeoProperties`, cùng gốc lỗi khách báo 18/9).
+ */
+@SkipThrottle()
 @Controller('locations')
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
