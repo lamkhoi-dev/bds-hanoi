@@ -1,4 +1,26 @@
+(payment_access_log) {
+	# Nhật ký truy cập CHỈ cho đường thanh toán (webhook SePay) — khách báo 15-19/9 "quét QR
+	# chuyển khoản được nhưng không cộng tiền" và backend không nhận được webhook nào: không có
+	# nhật ký ở cổng vào (Caddy) thì không thể phân biệt "SePay không gọi tới" với "SePay gọi
+	# tới nhưng bị chuyển hướng/từ chối trước khi vào ứng dụng". Các đường khác bỏ qua để
+	# không nhân đôi khối lượng log. Xoá Authorization/Cookie khỏi log: token webhook là bí mật.
+	log {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request>headers>Authorization delete
+				request>headers>Cookie delete
+			}
+		}
+	}
+	@not_payment not path /api/v1/payment/* /api/payment/*
+	log_skip @not_payment
+}
+
 {$SITE_DOMAIN} {
+	import payment_access_log
+
 	handle /bds-uploads/* {
 		reverse_proxy minio:9000
 	}
@@ -33,5 +55,6 @@
 # www trả 502 là một mục trong danh sách fix SEO. Chuyển hướng 301 về apex.
 # Cần bản ghi DNS A cho www trỏ về cùng IP thì Caddy mới cấp được chứng chỉ.
 www.{$SITE_DOMAIN} {
+	import payment_access_log
 	redir https://{$SITE_DOMAIN}{uri} permanent
 }
