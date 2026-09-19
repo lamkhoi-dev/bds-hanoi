@@ -111,3 +111,30 @@ trong Cài đặt hệ thống. Sau đó nạp thử 1 lần nữa: nếu SePay 
 `UNAUTHORIZED` trong `PaymentWebhookLog` cho biết chính xác lệch chỗ nào; nếu vẫn không có dòng nào
 thì SePay không gọi tới (xem nhật ký phía SePay: chưa gửi / gửi tới URL khác / bị đánh dấu bỏ qua vì
 "không có mã thanh toán").
+
+---
+
+## 19/9 — vẫn 0 webhook sau lần nạp thử; bật nhật ký truy cập ở cổng vào (Caddy)
+
+Khách nạp thử lại, vẫn không cộng tiền. Kiểm tra: `PaymentWebhookLog` 0 dòng mới, log backend không có
+lần nhận webhook nào ngoài lệnh test của em → SePay không gọi tới, HOẶC gọi tới nhưng bị chặn trước
+khi vào ứng dụng (Caddy trước đây không ghi nhật ký truy cập nên không nhìn thấy được).
+
+Đã bật nhật ký truy cập **chỉ cho `/api/v1/payment/*` và `/api/payment/*`** (commit `e141b77`, cả
+Nghệ An lẫn Hà Nội, cả `apex` lẫn `www`), `log_skip` mọi đường khác để không nhân đôi khối lượng log,
+xoá `Authorization`/`Cookie` khỏi log. Kiểm chứng: gọi thử → ghi đúng `200 POST nhadatxunghe.vn`,
+và `301 POST www.nhadatxunghe.vn`; danh sách header ghi lại không có Authorization; 0 lần xuất hiện
+chuỗi token thử; 0 dòng log cho đường không phải thanh toán. Nạp lại cấu hình bằng `caddy reload`
+(graceful, không gián đoạn); lưu ý `git pull` đổi inode file Caddyfile nên container vẫn thấy file cũ
+— phải ghi đè tại chỗ rồi mới reload (đã xử lý; lần deploy sau nhớ bước này).
+
+### Cách đọc kết quả sau khi khách nạp thử / bấm "Gọi lại webhook" ở SePay
+`docker logs bds-caddy --since 10m | grep 'http.log.access'` (trên VPS Nghệ An):
+- **Có dòng `POST .../payment/webhook/sepay` status 200** rồi backend có dòng `UNAUTHORIZED` trong
+  `PaymentWebhookLog` → SePay có gọi, token/kiểu chứng thực lệch (dòng đó ghi rõ lệch chỗ nào).
+- **Status 301/308** (host `www` hoặc `http`) → URL trong SePay sai dạng, phải đổi sang đúng
+  `https://nhadatxunghe.vn/api/v1/payment/webhook/sepay`.
+- **Status 404/502** → sai đường dẫn hoặc backend không nhận (kiểm tra tiếp).
+- **Không có dòng nào** dù đã kích hoạt gửi → SePay không gửi tới server này: kiểm tra phía SePay
+  (giao dịch có hiện trong "Giao dịch" không, webhook có đang bật không, URL đang trỏ đâu, liên kết
+  ngân hàng VPBank còn hạn không).
