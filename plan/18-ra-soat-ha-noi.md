@@ -66,11 +66,19 @@ cho khách, nhắc đổi sau lần đăng nhập đầu.
    và cụm "Ngoại thành" sát mép phải bị tràn ra ngoài màn ở 1280px. Sửa: nav luôn
    `overflow-x-auto`; dropdown vẽ qua portal `position: fixed`, kẹp trong màn hình, đóng khi
    cuộn/đổi cỡ cửa sổ/Escape/bấm ra ngoài. (`frontend/src/components/DesktopNav.tsx`)
-   Kiểm chứng: lần 1 đã đo (Playwright 1920/1440/1280, cả 2 site) — 0 phần tử đè lên thanh
-   menu khi đóng; đo lần 2 (mở từng dropdown, 4 góc phải nhìn thấy, không tràn màn) làm sau
-   khi deploy bản portal.
+3. Lần 3 (đo lại sau deploy lần 2): bấm nút dropdown đang lấp ló ở mép nav làm nav cuộn TRƯỚC
+   khi menu mở, sự kiện `scroll` tới trễ nên đóng luôn menu vừa mở (2/3 dropdown ở 1280px mở rồi
+   tắt). Sửa: chỉ đóng khi nút thực sự xê dịch so với lúc mở (`anchorRef`).
+   Kiểm chứng (Playwright, 1920/1440/1280): cả 2 site 0 phần tử đè lên thanh menu; Hà Nội cả 3
+   dropdown mở được, `overflow-x` của nav vẫn `auto` khi đang mở, 4 góc menu nhìn thấy, không
+   tràn khỏi màn; Escape, bấm ra ngoài đều đóng; bấm mục đầu → điều hướng `/ban/cau-giay`, menu
+   tự đóng. Đã deploy cả 2 site (commit `94d70e9`).
    Lưu ý còn lại: ở 1280–1440px thanh menu Hà Nội phải cuộn ngang (11 mục) — đúng cách Nghệ
    An đang chạy ở 1440px; không đè chữ. Muốn hiện đủ cần đổi thiết kế (gộp 3 cụm thành 1).
+
+### Tài liệu gửi khách
+`huong-dan-cung-cap-thong-tin-ha-noi-20-9.docx` (5 trang, ở thư mục cha `web_bds_hanoi/`, không
+đưa vào git) — 7 việc khách cần làm, từng bước, kèm "gửi lại cho bên em". Không chứa mật khẩu nào.
 
 ### Meta Pixel
 Hà Nội đã có Pixel riêng trong Cài đặt hệ thống (khác Nghệ An), trang chủ có nạp `fbq('init')`.
