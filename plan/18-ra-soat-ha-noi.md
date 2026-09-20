@@ -57,3 +57,32 @@ so sánh, các trang hỗ trợ, trang quản trị, sitemap (75 landing + 18 ti
 `test@sanbdshanoi.vn` (USER, số dư 500 điểm để thử trừ tiền) và đặt lại mật khẩu cho
 `admin@sanbdshanoi.vn` (ADMIN). Cả hai đã kiểm chứng đăng nhập được qua API. Mật khẩu gửi riêng
 cho khách, nhắc đổi sau lần đăng nhập đầu.
+
+## Cập nhật 20/09 (chiều): sửa menu + hướng dẫn lấy key còn lại
+
+### Menu ngang (header) — sửa 2 lần
+1. Lần 1: bỏ `overflow` cố định → nav không còn tràn đè nút "Cần mua"/"Đăng bán" khi ĐÓNG.
+2. Lần 2 (phát hiện khi đo lại): khi MỞ dropdown, nav bật `overflow-visible` nên vẫn tràn đè nút,
+   và cụm "Ngoại thành" sát mép phải bị tràn ra ngoài màn ở 1280px. Sửa: nav luôn
+   `overflow-x-auto`; dropdown vẽ qua portal `position: fixed`, kẹp trong màn hình, đóng khi
+   cuộn/đổi cỡ cửa sổ/Escape/bấm ra ngoài. (`frontend/src/components/DesktopNav.tsx`)
+   Kiểm chứng: lần 1 đã đo (Playwright 1920/1440/1280, cả 2 site) — 0 phần tử đè lên thanh
+   menu khi đóng; đo lần 2 (mở từng dropdown, 4 góc phải nhìn thấy, không tràn màn) làm sau
+   khi deploy bản portal.
+   Lưu ý còn lại: ở 1280–1440px thanh menu Hà Nội phải cuộn ngang (11 mục) — đúng cách Nghệ
+   An đang chạy ở 1440px; không đè chữ. Muốn hiện đủ cần đổi thiết kế (gộp 3 cụm thành 1).
+
+### Meta Pixel
+Hà Nội đã có Pixel riêng trong Cài đặt hệ thống (khác Nghệ An), trang chủ có nạp `fbq('init')`.
+
+### Thứ tự lấy key (khách làm → gửi lại → dev cấu hình)
+| # | Hạng mục | Khách làm | Gửi lại | Cần build lại? | Kiểm chứng |
+|---|---|---|---|---|---|
+| 1 | DNS | Bản ghi A `@` và `www` → `222.255.214.136` (làm trước: chờ lan truyền, các mục sau cần tên miền thật) | báo đã trỏ | Có (đổi `SITE_DOMAIN`, `APP_ENV`) | `https://sanbdshanoi.vn` 200, robots hết chặn |
+| 2 | SMTP | Gmail riêng → bật xác minh 2 bước → Mật khẩu ứng dụng | email + mật khẩu ứng dụng 16 ký tự | Không (restart backend) | Đăng ký tài khoản mới nhận được OTP |
+| 3 | SePay | Thêm webhook thứ 2 → URL Hà Nội, API Key ngẫu nhiên ≥32 ký tự | API Key | Không (nhập ở Cài đặt hệ thống) | Nạp thử → số dư cộng; log không có UNAUTHORIZED |
+| 4 | Firebase | Tạo project mới, bật Phone auth, thêm domain | 7 giá trị web + file service account | **Có** (frontend) | Tab OTP hiện, gửi SMS thật 1 lần |
+| 5 | Google OAuth | Tạo OAuth Client, callback đúng domain | Client ID + Secret | Không | Nút Google tự hiện, đăng nhập được |
+| 6 | Google Analytics | Tạo property GA4 | Measurement ID `G-...` | **Có** | Realtime thấy lượt truy cập |
+| 7 | Thương hiệu | Chốt email hỗ trợ, fanpage, tên ngắn | 3–5 giá trị | **Có** | Footer/logo hiển thị đúng |
+| 8 | Facebook OAuth | Tuỳ chọn — trang đăng nhập không có nút Facebook | — | — | — |
