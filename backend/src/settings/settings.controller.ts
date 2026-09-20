@@ -78,6 +78,25 @@ export class SettingsController {
     return settings?.vipPackages || [];
   }
 
+  /**
+   * Các tính năng phụ thuộc khoá bên ngoài: bật hay không do BIẾN MÔI TRƯỜNG quyết định,
+   * mà frontend không đọc được biến của backend. Trả cờ ra đây để trang đăng nhập ẩn nút
+   * chưa dùng được, thay vì đẩy người dùng sang trang lỗi của Google/Facebook.
+   *
+   * Lỗi thật đã gặp (site Hà Nội 20/9): chưa có `GOOGLE_CLIENT_ID` nên `google.strategy.ts`
+   * rơi về chuỗi giữ chỗ `google_oauth_disabled`, bấm "Đăng nhập bằng Google" là ra thẳng
+   * màn hình lỗi `invalid_client` của Google. Cùng kiểu với cách tab OTP tự ẩn khi thiếu
+   * cấu hình Firebase (`isFirebaseConfigured`), chỉ khác là khoá Firebase nằm ở frontend
+   * nên đọc trực tiếp được, còn khoá OAuth nằm ở backend.
+   */
+  private authProviderFlags() {
+    return {
+      googleLoginEnabled: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+      facebookLoginEnabled: Boolean(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
+      emailEnabled: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER),
+    };
+  }
+
   @Get('public')
   async getPublicSettings() {
     const settings = await this.prisma.systemSettings.findUnique({
@@ -87,11 +106,12 @@ export class SettingsController {
       const created = await this.prisma.systemSettings.create({
         data: { id: 'default_settings' },
       });
-      return created;
+      return { ...created, ...this.authProviderFlags() };
     }
     const { sepayWebhookToken, ...publicSettings } = settings;
     return {
       ...publicSettings,
+      ...this.authProviderFlags(),
       propertyAds: publicSettings.propertyAds && typeof publicSettings.propertyAds === 'string' 
         ? JSON.parse(publicSettings.propertyAds) 
         : (publicSettings.propertyAds || []),

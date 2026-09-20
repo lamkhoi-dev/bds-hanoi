@@ -33,6 +33,22 @@ export default function Login() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  // Khoá OAuth nằm ở BACKEND nên frontend không tự biết đã cấu hình hay chưa — hỏi qua
+  // `/settings/public`. Mặc định `true` để site đã chạy thật (Nghệ An) không bị nháy mất
+  // nút trong lúc chờ phản hồi; chỉ ẩn khi backend trả lời rõ ràng là chưa cấu hình.
+  // Site Hà Nội chưa có GOOGLE_CLIENT_ID: trước đây bấm nút là ra màn hình lỗi
+  // `invalid_client` của Google (xem chú thích ở `settings.controller.ts`).
+  const [googleLoginEnabled, setGoogleLoginEnabled] = useState(true);
+
+  useEffect(() => {
+    api
+      .get('/settings/public')
+      .then((res) => {
+        if (res.data?.googleLoginEnabled === false) setGoogleLoginEnabled(false);
+      })
+      .catch(() => undefined);
+  }, []);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (resendCooldown > 0) {
@@ -555,13 +571,16 @@ export default function Login() {
               </form>
             )}
 
-            {/* Divider */}
+            {/* Divider — ẩn cùng nút mạng xã hội, để không còn chữ "Hoặc" trơ trọi. */}
+            {googleLoginEnabled && (
             <div className="relative my-4 sm:my-5 z-10">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
               <div className="relative flex justify-center text-xs"><span className="px-4 bg-white text-gray-400 uppercase tracking-wider">Hoặc</span></div>
             </div>
+            )}
 
             {/* Social Login Buttons */}
+            {googleLoginEnabled && (
             <div className="relative z-10">
               <button onClick={() => window.location.href = '/api/auth/google?v=1'} type="button" className="w-full flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-white border-2 border-gray-100 rounded-xl hover:border-gray-200 hover:shadow-md transition-all duration-200 group/social active:scale-[0.98]">
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -573,6 +592,7 @@ export default function Login() {
                 <span className="text-sm font-medium text-gray-600 group-hover/social:text-gray-800 transition">Đăng nhập bằng Google</span>
               </button>
             </div>
+            )}
 
             {/* Register Link */}
             <div className="mt-4 sm:mt-6 text-center text-sm text-gray-400 relative z-10">
