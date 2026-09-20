@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { listingPath } from '@/lib/seo/canonical';
 import { propertyTypesByEnum } from '@/lib/seo/taxonomy';
@@ -21,8 +22,7 @@ export default function DesktopNav({
 }: {
   groups: { label: string; items: LocationNode[] }[];
 }) {
-  // Có dropdown nào đang mở không — quyết định `overflow` của thanh nav, xem chú thích
-  // ở chỗ dùng bên dưới.
+  // Cụm nào đang mở dropdown (tối đa 1 cụm một lúc).
   const [openLabel, setOpenLabel] = useState<string | null>(null);
 
   const items = [
@@ -46,15 +46,12 @@ export default function DesktopNav({
 
   return (
     <nav
-      className={`hidden xl:flex flex-1 min-w-0 gap-x-3 xl:gap-x-5 px-2 mx-auto items-center flex-nowrap whitespace-nowrap ${
-        // `overflow-x-auto` giữ thanh menu nằm gọn trong phần của nó: thừa mục thì cuộn
-        // ngang, KHÔNG tràn đè lên nút "Cần mua"/"Đăng bán" bên phải. Trước đây nhánh có
-        // dropdown (Hà Nội) cố tình bỏ overflow vì nó cắt mất dropdown khi mở — hệ quả là
-        // ở màn hình ~1280px menu Hà Nội đè chồng lên các nút, chữ chồng chữ (khách rà
-        // soát 20/9). Nay chỉ bỏ overflow ĐÚNG LÚC có dropdown đang mở, nên vừa không đè
-        // vừa không cắt.
-        openLabel ? 'overflow-visible' : 'overflow-x-auto scrollbar-hide'
-      }`}
+      // `overflow-x-auto` giữ thanh menu nằm gọn trong phần của nó: thừa mục thì cuộn
+      // ngang, KHÔNG tràn đè lên nút "Cần mua"/"Đăng bán" bên phải. Dropdown khu vực được
+      // vẽ qua portal (xem `NavDropdown`) nên không bị overflow này cắt — không cần bật/tắt
+      // overflow theo trạng thái mở như trước (cách cũ khiến menu Hà Nội đè chồng lên các
+      // nút ở màn ~1280px, và khi mở dropdown thì cả thanh tràn ra đè tiếp).
+      className="hidden xl:flex flex-1 min-w-0 gap-x-3 xl:gap-x-5 px-2 mx-auto items-center flex-nowrap whitespace-nowrap overflow-x-auto scrollbar-hide"
     >
       {items.map((item) => (
         <NavLink key={item.label} {...item} />
@@ -93,12 +90,20 @@ function NavLink({ label, href }: { label: string; href: string }) {
   );
 }
 
+/** Bề rộng dropdown (`w-72` = 18rem = 288px) — dùng để kẹp vị trí không tràn màn hình. */
+const DROPDOWN_WIDTH = 288;
+
 /**
  * Dropdown 1 cụm quận/huyện (Trung tâm / Cận trung tâm / Ngoại thành).
  *
- * Trạng thái đóng/mở do `DesktopNav` giữ (không tự giữ trong này) vì thanh nav cần biết
- * có dropdown nào đang mở để đổi `overflow` — xem chú thích ở `<nav>`. Tiện thể: mở cụm
- * này thì cụm kia tự đóng, trước đây mở được cả ba cùng lúc.
+ * Trạng thái đóng/mở do `DesktopNav` giữ để mở cụm này thì cụm kia tự đóng (trước đây mở
+ * được cả ba cùng lúc).
+ *
+ * Menu được vẽ qua PORTAL ra `document.body` với `position: fixed`, không nằm trong `<nav>`:
+ * `<nav>` phải để `overflow-x-auto` (chống tràn đè nút bên phải) mà overflow như vậy sẽ cắt
+ * mọi con `absolute`; còn `<header>` có `backdrop-filter` nên `fixed` bên trong nó bị tính
+ * theo header chứ không theo màn hình. Vị trí tính từ nút lúc bấm và kẹp trong màn hình —
+ * cụm "Ngoại thành" nằm sát mép phải ở màn ~1280px, trước đây menu bị tràn ra ngoài.
  */
 function NavDropdown({
   label,
@@ -111,29 +116,49 @@ function NavDropdown({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
+  const toggle = () => {
+    if (!open && wrapRef.current) {
+      const r = wrapRef.current.getBoundingClientRect();
+      const maxLeft = Math.max(8, window.innerWidth - DROPDOWN_WIDTH - 8);
+      setPos({ top: r.bottom + 8, left: Math.min(Math.max(8, r.left), maxLeft) });
+    }
+    onOpenChange(!open);
+  };
 
   useEffect(() => {
     if (!open) return;
+    const close = () => onOpenChange(false);
     const onClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onOpenChange(false);
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      close();
     };
     const onEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onOpenChange(false);
+      if (e.key === 'Escape') close();
     };
     document.addEventListener('mousedown', onClickOutside);
     document.addEventListener('keydown', onEscape);
+    // Menu neo theo vị trí lúc mở nên cuộn (cả thanh nav cuộn ngang) hay đổi cỡ cửa sổ
+    // đều đóng lại thay vì để nó lệch khỏi nút.
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
     return () => {
       document.removeEventListener('mousedown', onClickOutside);
       document.removeEventListener('keydown', onEscape);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
     };
   }, [open, onOpenChange]);
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={wrapRef} className="relative shrink-0">
       <button
         type="button"
-        onClick={() => onOpenChange(!open)}
+        onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
         className="nav-link flex items-center gap-1 text-[13px] xl:text-[14px] font-semibold text-gray-700 hover:text-primary transition-colors duration-200 whitespace-nowrap"
@@ -143,23 +168,27 @@ function NavDropdown({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && (
-        <div
-          role="menu"
-          className="absolute left-0 top-full mt-2 z-50 w-72 bg-white rounded-xl shadow-xl border border-borderLight p-3 grid grid-cols-2 gap-1"
-        >
-          {items.map((loc) => (
-            <Link
-              key={loc.id}
-              href={listingPath({ locationSlug: loc.slug ?? '' })}
-              onClick={() => onOpenChange(false)}
-              className="px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors whitespace-nowrap"
-            >
-              {loc.shortName || loc.name}
-            </Link>
-          ))}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={{ top: pos.top, left: pos.left, width: DROPDOWN_WIDTH }}
+            className="fixed z-[60] bg-white rounded-xl shadow-xl border border-borderLight p-3 grid grid-cols-2 gap-1"
+          >
+            {items.map((loc) => (
+              <Link
+                key={loc.id}
+                href={listingPath({ locationSlug: loc.slug ?? '' })}
+                onClick={() => onOpenChange(false)}
+                className="px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors whitespace-nowrap"
+              >
+                {loc.shortName || loc.name}
+              </Link>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
