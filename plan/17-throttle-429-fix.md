@@ -138,3 +138,41 @@ chuỗi token thử; 0 dòng log cho đường không phải thanh toán. Nạp 
 - **Không có dòng nào** dù đã kích hoạt gửi → SePay không gửi tới server này: kiểm tra phía SePay
   (giao dịch có hiện trong "Giao dịch" không, webhook có đang bật không, URL đang trỏ đâu, liên kết
   ngân hàng VPBank còn hạn không).
+
+---
+
+## 20/9 — TÌM RA NGUYÊN NHÂN "nạp tiền không cộng": URL webhook trong SePay trỏ vào cổng đã đóng
+
+Khách chụp giúp **Lịch sử gửi webhook trên SePay**: mọi lần gửi từ 14/9 đến nay đều `503` (8-146ms), và
+cấu hình webhook (#42170 "Nạp tiền Website BDS") đang gửi tới:
+
+    POST http://14.225.255.128:4000/api/v1/payment/webhook/sepay      <- IP thô + cổng 4000, http thường
+
+2 lần thành công hồi 4/7 và 6/7 (`200 OK`) gửi tới IP khác (`103.163.215.39` — máy chủ cũ, nơi cổng
+4000 còn mở). Sau khi chuyển site sang VPS mới, URL bị sửa thành IP mới nhưng vẫn giữ `:4000`, trong khi
+`docker-compose.vps.yml` **cố ý** chỉ bind `127.0.0.1:4000` (chặn API truy cập thẳng qua HTTP không mã
+hoá, bỏ qua Caddy/TLS). Kết quả: SePay không kết nối được vào cổng → báo `503`, webhook không bao giờ tới
+ứng dụng — đúng khớp mọi quan sát: bảng `PaymentWebhookLog` trống, backend 0 dòng log, Caddy 0 dòng.
+
+Kiểm chứng: `curl http://14.225.255.128:4000/...` từ ngoài → `Failed to connect` (cổng đóng, đúng thiết kế).
+
+### Phần code/cấu hình phía mình: ĐÚNG, không phải sửa
+- Token trong Cài đặt khớp key SePay đang gửi (gọi thử qua HTTPS, `transferType=out` để không cộng tiền:
+  `{"success":true,"message":"Bỏ qua giao dịch rút tiền"}` = qua xác thực).
+- Nội dung giao dịch thật do SePay gửi (`... NAP f6743fae...db7030d7.CT tu ...`) tách đúng mã, khôi phục
+  đúng UUID, tìm được tài khoản người dùng. Chuyển hướng/redirect không liên quan.
+- KHÔNG mở lại cổng 4000 ra ngoài — đó là lỗ hổng bảo mật đã cố ý vá.
+
+### Việc phải làm ở phía SePay (khách tự làm, em không có quyền vào)
+1. Sửa URL webhook thành `https://nhadatxunghe.vn/api/v1/payment/webhook/sepay` (https + tên miền, không IP,
+   không cổng, không `www`). Giữ nguyên kiểu chứng thực API Key + key hiện tại.
+2. Vào Lịch sử gửi, bấm "Gọi lại" (nút xoay xanh) cho các giao dịch đã thất bại để cộng bù — mỗi 20.000đ =
+   20 điểm; SePay tự bỏ retry sau ~5 giờ nên phải gọi tay. Chống cộng đôi: mỗi giao dịch có `id` SePay riêng
+   (`referenceId`), server bỏ qua nếu đã xử lý.
+3. Sau khi chạy ổn: ĐỔI API key sang chuỗi ngẫu nhiên dài (key hiện tại dạng "…Token12345678" dễ đoán
+   và đã bị dán vào tin nhắn/ảnh chụp) — đổi đồng thời ở SePay và ô "SePay Webhook Token" trong Cài đặt hệ
+   thống. Nếu lệch, dòng `UNAUTHORIZED` trong `PaymentWebhookLog` sẽ chỉ ra ngay.
+
+### Bài học ghi lại
+Webhook thanh toán là đường vào công khai — LUÔN dùng `https://{tên miền}`; sau mỗi lần đổi máy chủ/tên miền
+phải kiểm lại URL webhook trong SePay (mất ~2,5 tháng mới phát hiện vì không có ai nhìn vào lịch sử gửi).
