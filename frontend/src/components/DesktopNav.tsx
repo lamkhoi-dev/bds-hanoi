@@ -118,11 +118,14 @@ function NavDropdown({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  // Vị trí nút lúc mở menu — dùng để biết sau đó nút có bị xê dịch (cuộn nav / cuộn trang) không.
+  const anchorRef = useRef({ left: 0, bottom: 0 });
   const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   const toggle = () => {
     if (!open && wrapRef.current) {
       const r = wrapRef.current.getBoundingClientRect();
+      anchorRef.current = { left: r.left, bottom: r.bottom };
       const maxLeft = Math.max(8, window.innerWidth - DROPDOWN_WIDTH - 8);
       setPos({ top: r.bottom + 8, left: Math.min(Math.max(8, r.left), maxLeft) });
     }
@@ -142,15 +145,22 @@ function NavDropdown({
     };
     document.addEventListener('mousedown', onClickOutside);
     document.addEventListener('keydown', onEscape);
-    // Menu neo theo vị trí lúc mở nên cuộn (cả thanh nav cuộn ngang) hay đổi cỡ cửa sổ
-    // đều đóng lại thay vì để nó lệch khỏi nút.
+    // Menu neo theo vị trí lúc mở nên đổi cỡ cửa sổ, hoặc cuộn làm NÚT xê dịch (thanh nav cuộn
+    // ngang, trang cuộn) thì đóng lại thay vì để nó lệch khỏi nút. Không đóng theo mọi sự kiện
+    // cuộn: click vào nút đang lấp ló ở mép nav làm trình duyệt/Playwright cuộn nav TRƯỚC khi
+    // menu mở, nhưng sự kiện `scroll` tới trễ hơn — đóng theo nó thì menu vừa mở đã tắt.
+    const onScroll = () => {
+      const r = wrapRef.current?.getBoundingClientRect();
+      if (!r) return;
+      if (Math.abs(r.left - anchorRef.current.left) > 1 || Math.abs(r.bottom - anchorRef.current.bottom) > 1) close();
+    };
     window.addEventListener('resize', close);
-    window.addEventListener('scroll', close, true);
+    window.addEventListener('scroll', onScroll, true);
     return () => {
       document.removeEventListener('mousedown', onClickOutside);
       document.removeEventListener('keydown', onEscape);
       window.removeEventListener('resize', close);
-      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('scroll', onScroll, true);
     };
   }, [open, onOpenChange]);
 
