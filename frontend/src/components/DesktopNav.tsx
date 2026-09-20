@@ -21,6 +21,10 @@ export default function DesktopNav({
 }: {
   groups: { label: string; items: LocationNode[] }[];
 }) {
+  // Có dropdown nào đang mở không — quyết định `overflow` của thanh nav, xem chú thích
+  // ở chỗ dùng bên dưới.
+  const [openLabel, setOpenLabel] = useState<string | null>(null);
+
   const items = [
     // Đường dẫn dựng qua listingPath để đổi dạng URL chỉ cần đổi một cờ, và link nội
     // bộ không bao giờ trỏ vào một 301.
@@ -43,7 +47,13 @@ export default function DesktopNav({
   return (
     <nav
       className={`hidden xl:flex flex-1 min-w-0 gap-x-3 xl:gap-x-5 px-2 mx-auto items-center flex-nowrap whitespace-nowrap ${
-        groups.length > 0 ? '' : 'overflow-x-auto scrollbar-hide'
+        // `overflow-x-auto` giữ thanh menu nằm gọn trong phần của nó: thừa mục thì cuộn
+        // ngang, KHÔNG tràn đè lên nút "Cần mua"/"Đăng bán" bên phải. Trước đây nhánh có
+        // dropdown (Hà Nội) cố tình bỏ overflow vì nó cắt mất dropdown khi mở — hệ quả là
+        // ở màn hình ~1280px menu Hà Nội đè chồng lên các nút, chữ chồng chữ (khách rà
+        // soát 20/9). Nay chỉ bỏ overflow ĐÚNG LÚC có dropdown đang mở, nên vừa không đè
+        // vừa không cắt.
+        openLabel ? 'overflow-visible' : 'overflow-x-auto scrollbar-hide'
       }`}
     >
       {items.map((item) => (
@@ -54,7 +64,15 @@ export default function DesktopNav({
         // Nhánh mặc định: Nghệ An (Location.group = NULL toàn bộ) hoặc fetch lỗi.
         <NavLink label={`BĐS ${siteConfig.province.name}`} href={listingPath({ locationSlug: siteConfig.province.slug })} />
       ) : (
-        groups.map((g) => <NavDropdown key={g.label} label={g.label} items={g.items} />)
+        groups.map((g) => (
+          <NavDropdown
+            key={g.label}
+            label={g.label}
+            items={g.items}
+            open={openLabel === g.label}
+            onOpenChange={(v) => setOpenLabel(v ? g.label : null)}
+          />
+        ))
       )}
 
       {tailItems.map((item) => (
@@ -75,18 +93,33 @@ function NavLink({ label, href }: { label: string; href: string }) {
   );
 }
 
-/** Dropdown 1 cụm quận/huyện (Trung tâm / Cận trung tâm / Ngoại thành). */
-function NavDropdown({ label, items }: { label: string; items: LocationNode[] }) {
-  const [open, setOpen] = useState(false);
+/**
+ * Dropdown 1 cụm quận/huyện (Trung tâm / Cận trung tâm / Ngoại thành).
+ *
+ * Trạng thái đóng/mở do `DesktopNav` giữ (không tự giữ trong này) vì thanh nav cần biết
+ * có dropdown nào đang mở để đổi `overflow` — xem chú thích ở `<nav>`. Tiện thể: mở cụm
+ * này thì cụm kia tự đóng, trước đây mở được cả ba cùng lúc.
+ */
+function NavDropdown({
+  label,
+  items,
+  open,
+  onOpenChange,
+}: {
+  label: string;
+  items: LocationNode[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) onOpenChange(false);
     };
     const onEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') onOpenChange(false);
     };
     document.addEventListener('mousedown', onClickOutside);
     document.addEventListener('keydown', onEscape);
@@ -94,13 +127,13 @@ function NavDropdown({ label, items }: { label: string; items: LocationNode[] })
       document.removeEventListener('mousedown', onClickOutside);
       document.removeEventListener('keydown', onEscape);
     };
-  }, [open]);
+  }, [open, onOpenChange]);
 
   return (
     <div ref={ref} className="relative shrink-0">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => onOpenChange(!open)}
         aria-haspopup="menu"
         aria-expanded={open}
         className="nav-link flex items-center gap-1 text-[13px] xl:text-[14px] font-semibold text-gray-700 hover:text-primary transition-colors duration-200 whitespace-nowrap"
@@ -119,7 +152,7 @@ function NavDropdown({ label, items }: { label: string; items: LocationNode[] })
             <Link
               key={loc.id}
               href={listingPath({ locationSlug: loc.slug ?? '' })}
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
               className="px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors whitespace-nowrap"
             >
               {loc.shortName || loc.name}
