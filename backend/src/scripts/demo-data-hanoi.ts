@@ -225,33 +225,34 @@ export interface DemoProject {
 }
 
 const p = (s: string) => `<p>${s}</p>`;
-const li = (items: string[]) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
+// Trang dự án hiển thị mô tả trong khung không có định dạng tiêu đề/danh sách (Tailwind preflight), nên dùng đoạn văn + dấu • cho dễ đọc.
+const li = (items: string[]) => `<p>${items.map((i) => `• ${i}`).join('<br>')}</p>`;
 const NOTE = p('<em>Nội dung dự án dưới đây là dữ liệu mẫu phục vụ thử nghiệm giao diện, không phải thông tin chào bán chính thức.</em>');
 
 export const PROJECTS: DemoProject[] = [
   {
     key: 'ocean', name: 'Vinhomes Ocean Park Mẫu', district: 'Huyện Gia Lâm', ward: 'Gia Lâm', thumb: ['c42', 'i26'],
-    html: `<h2>Tổng quan</h2>${p('Đại đô thị ven đô phía Đông Hà Nội với hồ nước lớn, công viên và chuỗi tiện ích nội khu, phù hợp cả nhu cầu an cư lẫn cho thuê.')}<h2>Tiện ích nổi bật</h2>${li(['Hồ điều hòa và công viên ven hồ', 'Trường học liên cấp, bệnh viện trong khu', 'Trung tâm thương mại, khu vui chơi giải trí', 'Bãi đỗ xe rộng, hệ thống xe buýt nội khu'])}<h2>Sản phẩm</h2>${p('Căn hộ từ studio đến 3 phòng ngủ, nhà phố thương mại (shophouse) và biệt thự.')}${NOTE}`,
+    html: `<p><strong>Tổng quan</strong></p>${p('Đại đô thị ven đô phía Đông Hà Nội với hồ nước lớn, công viên và chuỗi tiện ích nội khu, phù hợp cả nhu cầu an cư lẫn cho thuê.')}<p><strong>Tiện ích nổi bật</strong></p>${li(['Hồ điều hòa và công viên ven hồ', 'Trường học liên cấp, bệnh viện trong khu', 'Trung tâm thương mại, khu vui chơi giải trí', 'Bãi đỗ xe rộng, hệ thống xe buýt nội khu'])}<p><strong>Sản phẩm</strong></p>${p('Căn hộ từ studio đến 3 phòng ngủ, nhà phố thương mại (shophouse) và biệt thự.')}${NOTE}`,
   },
   {
     key: 'times', name: 'Times City Mẫu', district: 'Quận Hoàng Mai', ward: 'Phường Vĩnh Hưng', oldWard: 'Vĩnh Hưng', thumb: ['c22', 'c26'],
-    html: `<h2>Tổng quan</h2>${p('Khu đô thị phức hợp lâu năm với mật độ dân cư ổn định, tiện ích thương mại và giáo dục đầy đủ ngay dưới chân tòa nhà.')}<h2>Tiện ích nổi bật</h2>${li(['Trung tâm thương mại và khu vui chơi trong nhà', 'Trường học các cấp, bệnh viện quốc tế', 'Công viên, đường dạo và bể bơi nội khu', 'Kết nối nhanh với đường Minh Khai, Vành đai 2,5'])}<h2>Sản phẩm</h2>${p('Căn hộ 1–3 phòng ngủ, nhiều phân khu với mức giá và phong cách khác nhau.')}${NOTE}`,
+    html: `<p><strong>Tổng quan</strong></p>${p('Khu đô thị phức hợp lâu năm với mật độ dân cư ổn định, tiện ích thương mại và giáo dục đầy đủ ngay dưới chân tòa nhà.')}<p><strong>Tiện ích nổi bật</strong></p>${li(['Trung tâm thương mại và khu vui chơi trong nhà', 'Trường học các cấp, bệnh viện quốc tế', 'Công viên, đường dạo và bể bơi nội khu', 'Kết nối nhanh với đường Minh Khai, Vành đai 2,5'])}<p><strong>Sản phẩm</strong></p>${p('Căn hộ 1–3 phòng ngủ, nhiều phân khu với mức giá và phong cách khác nhau.')}${NOTE}`,
   },
   {
     key: 'smart', name: 'Vinhomes Smart City Mẫu', district: 'Quận Nam Từ Liêm', ward: 'Phường Tây Mỗ', thumb: ['i26', 'i25'],
-    html: `<h2>Tổng quan</h2>${p('Đô thị thông minh phía Tây Hà Nội, quy hoạch đồng bộ với công viên, hồ điều hòa và hệ thống giao thông nội khu.')}<h2>Tiện ích nổi bật</h2>${li(['Công viên trung tâm và hồ điều hòa', 'Trường mầm non đến trung học', 'Khu thương mại, ẩm thực, phòng tập', 'Ứng dụng quản lý cư dân trên điện thoại'])}<h2>Sản phẩm</h2>${p('Căn hộ từ 1 đến 3 phòng ngủ, nhà liền kề và shophouse.')}${NOTE}`,
+    html: `<p><strong>Tổng quan</strong></p>${p('Đô thị thông minh phía Tây Hà Nội, quy hoạch đồng bộ với công viên, hồ điều hòa và hệ thống giao thông nội khu.')}<p><strong>Tiện ích nổi bật</strong></p>${li(['Công viên trung tâm và hồ điều hòa', 'Trường mầm non đến trung học', 'Khu thương mại, ẩm thực, phòng tập', 'Ứng dụng quản lý cư dân trên điện thoại'])}<p><strong>Sản phẩm</strong></p>${p('Căn hộ từ 1 đến 3 phòng ngủ, nhà liền kề và shophouse.')}${NOTE}`,
   },
   {
     key: 'eco', name: 'Ecopark Mẫu', district: 'Quận Long Biên', ward: 'Phường Việt Hưng', thumb: ['c46', 'i42'],
-    html: `<h2>Tổng quan</h2>${p('Khu đô thị sinh thái với mật độ cây xanh lớn, phù hợp gia đình muốn không gian sống yên tĩnh cách trung tâm một quãng ngắn.')}<h2>Tiện ích nổi bật</h2>${li(['Hồ nước, công viên và đường đi bộ ven hồ', 'Trường học, phòng khám, siêu thị nội khu', 'Sân thể thao, câu lạc bộ', 'Môi trường trong lành, ít khói bụi'])}<h2>Sản phẩm</h2>${p('Biệt thự, liền kề, nhà phố thương mại và căn hộ.')}${NOTE}`,
+    html: `<p><strong>Tổng quan</strong></p>${p('Khu đô thị sinh thái với mật độ cây xanh lớn, phù hợp gia đình muốn không gian sống yên tĩnh cách trung tâm một quãng ngắn.')}<p><strong>Tiện ích nổi bật</strong></p>${li(['Hồ nước, công viên và đường đi bộ ven hồ', 'Trường học, phòng khám, siêu thị nội khu', 'Sân thể thao, câu lạc bộ', 'Môi trường trong lành, ít khói bụi'])}<p><strong>Sản phẩm</strong></p>${p('Biệt thự, liền kề, nhà phố thương mại và căn hộ.')}${NOTE}`,
   },
   {
     key: 'royal', name: 'Royal City Mẫu', district: 'Quận Thanh Xuân', ward: 'Phường Thanh Xuân', oldWard: 'Thanh Xuân Trung', thumb: ['c14', 'c13'],
-    html: `<h2>Tổng quan</h2>${p('Tổ hợp căn hộ – thương mại nằm trên trục Nguyễn Trãi, khu vực giao thoa giữa Thanh Xuân, Đống Đa và Cầu Giấy.')}<h2>Tiện ích nổi bật</h2>${li(['Trung tâm thương mại, rạp chiếu phim, sân băng', 'Trường học và bệnh viện trong bán kính ngắn', 'Bể bơi, phòng tập, khuôn viên xanh', 'Nhiều tuyến buýt và metro kết nối'])}<h2>Sản phẩm</h2>${p('Căn hộ 2–4 phòng ngủ, một số căn có view công viên, nội thất đầy đủ.')}${NOTE}`,
+    html: `<p><strong>Tổng quan</strong></p>${p('Tổ hợp căn hộ – thương mại nằm trên trục Nguyễn Trãi, khu vực giao thoa giữa Thanh Xuân, Đống Đa và Cầu Giấy.')}<p><strong>Tiện ích nổi bật</strong></p>${li(['Trung tâm thương mại, rạp chiếu phim, sân băng', 'Trường học và bệnh viện trong bán kính ngắn', 'Bể bơi, phòng tập, khuôn viên xanh', 'Nhiều tuyến buýt và metro kết nối'])}<p><strong>Sản phẩm</strong></p>${p('Căn hộ 2–4 phòng ngủ, một số căn có view công viên, nội thất đầy đủ.')}${NOTE}`,
   },
   {
     key: 'gamuda', name: 'Gamuda Gardens Mẫu', district: 'Quận Hoàng Mai', ward: 'Phường Yên Sở', thumb: ['i23', 'i8'],
-    html: `<h2>Tổng quan</h2>${p('Khu đô thị thấp tầng nằm ven sông phía Nam Hà Nội, quy hoạch nhiều mảng xanh và đường dạo bộ.')}<h2>Tiện ích nổi bật</h2>${li(['Công viên và đường dạo ven kênh', 'Trường học, câu lạc bộ, khu thể thao', 'Cổng kiểm soát ra vào, bảo vệ 24/7'])}<h2>Sản phẩm</h2>${p('Nhà phố, biệt thự song lập – đơn lập và một số căn hộ dịch vụ.')}${NOTE}`,
+    html: `<p><strong>Tổng quan</strong></p>${p('Khu đô thị thấp tầng nằm ven sông phía Nam Hà Nội, quy hoạch nhiều mảng xanh và đường dạo bộ.')}<p><strong>Tiện ích nổi bật</strong></p>${li(['Công viên và đường dạo ven kênh', 'Trường học, câu lạc bộ, khu thể thao', 'Cổng kiểm soát ra vào, bảo vệ 24/7'])}<p><strong>Sản phẩm</strong></p>${p('Nhà phố, biệt thự song lập – đơn lập và một số căn hộ dịch vụ.')}${NOTE}`,
   },
 ];
 
