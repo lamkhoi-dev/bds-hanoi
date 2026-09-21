@@ -111,7 +111,7 @@ export default async function Home() {
         <h1 className="sr-only">
           Đăng bán, tìm mua và cho thuê bất động sản tại {siteConfig.province.name}
         </h1>
-        <div className="w-full max-w-2xl px-4 relative">
+        <div className={`w-full px-4 relative ${siteConfig.province.slug === 'nghe-an' ? 'max-w-2xl' : 'max-w-3xl'}`}>
           {siteConfig.province.slug === 'nghe-an' ? (
             <Image
               src="/banner.svg"
@@ -132,10 +132,10 @@ export default async function Home() {
                 alt=""
                 width={223}
                 height={145}
-                className="h-24 sm:h-32 md:h-36 w-auto object-contain drop-shadow-lg"
+                className="h-24 sm:h-28 md:h-32 w-auto object-contain drop-shadow-lg"
               />
               <div className="text-center sm:text-left">
-                <p className="font-black leading-none tracking-tight text-4xl md:text-6xl">
+                <p className="font-black leading-none tracking-tight whitespace-nowrap text-4xl md:text-5xl">
                   <span className="bg-gradient-to-b from-[#5cc0ff] to-[#1e88e5] bg-clip-text text-transparent">
                     {siteConfig.brand.line1}
                   </span>
@@ -149,7 +149,8 @@ export default async function Home() {
                   )}
                 </p>
                 <div className="mt-2 h-[3px] w-full rounded-full bg-gradient-to-r from-transparent via-[#ff9800] to-transparent shadow-[0_0_14px_rgba(255,152,0,0.8)]" />
-                <p className="mt-3 font-serif text-white text-lg md:text-2xl leading-snug">
+                {/* Không dùng font-serif: Georgia/Times trên một số máy thiếu dấu tiếng Việt xếp chồng, chữ "đất" bị lệch dấu. */}
+                <p className="mt-3 font-semibold text-white text-lg md:text-2xl leading-snug">
                   Đăng bán dễ dàng
                   <br />
                   tìm đất an tâm.
