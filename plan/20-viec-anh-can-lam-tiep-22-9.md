@@ -19,15 +19,24 @@ anh hỏi: **nếu anh tự đăng nhập rồi lấy giá trị đưa em thì c
 
 ## B. Anh tự đăng nhập bằng tài khoản Google `nguyenduy20062025@gmail.com` — cần đưa lại em gì
 
-Tài khoản Google anh gửi dùng chung cho cả 4 việc dưới. Làm xong việc nào gửi luôn việc đó,
-không cần đợi đủ cả 4.
+**Cập nhật 22/9 (anh yêu cầu): 2 web cùng 1 chủ nên dùng CHUNG project Google đang chạy cho Nghệ
+An (`nha-dat-xu-nghe-8504d`) thay vì tạo project mới** — em đã kiểm tra trên máy chủ Nghệ An,
+project này đủ dùng cho cả Firebase lẫn Google đăng nhập. Nhẹ việc hơn hẳn bản cũ: anh chỉ cần
+**thêm tên miền Hà Nội vào danh sách được phép**, KHÔNG cần tạo gì mới, KHÔNG cần gửi lại 7 giá
+trị hay file `.json` hay Client ID/Secret — **em tự copy nguyên từ máy chủ Nghệ An sang**, anh
+không cần đưa lại em gì cho 2 mục này.
 
-| # | Việc | Anh vào đâu | **Đưa lại em đúng những gì** |
-|---|---|---|---|
-| 1 | Firebase (đăng nhập SĐT) | console.firebase.google.com → tạo project mới (không phải project `nhadatxunghe.vn` cũ) | 7 giá trị cấu hình web (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId, measurementId) **+ file `.json`** ở mục Service accounts → Generate new private key |
-| 2 | Google đăng nhập | console.cloud.google.com, chọn đúng project Firebase vừa tạo ở mục 1 | **Client ID** và **Client secret** (mục Credentials → OAuth client ID) |
-| 3 | Google Analytics | analytics.google.com → tạo Property mới tên "Sàn BĐS Hà Nội" | **Measurement ID** dạng `G-XXXXXXXXXX` |
-| 4 | SePay | my.sepay.vn (đăng nhập bằng Google ở trên) → Tích hợp Webhooks → **Thêm webhook mới** (giữ nguyên webhook Nghệ An) | **API Key** anh vừa đặt cho webhook mới. Chi tiết từng ô điền gì có trong `huong-dan-cung-cap-thong-tin-ha-noi-20-9.docx` mục 3, anh đã đọc rồi |
+| # | Việc | Anh vào đâu | Anh bấm gì | Đưa lại em |
+|---|---|---|---|---|
+| 1 | Firebase (đăng nhập SĐT) | console.firebase.google.com → **chọn dự án có sẵn `nha-dat-xu-nghe-8504d`** (đừng tạo mới) | Authentication → Settings → Authorized domains → **Add domain**: `sanbdshanoi.vn` và `www.sanbdshanoi.vn` | Không cần gửi gì — nhắn "xong" là em copy cấu hình sang Hà Nội |
+| 2 | Google đăng nhập | console.cloud.google.com → cùng dự án `nha-dat-xu-nghe-8504d` | (a) APIs & Services → OAuth consent screen → Authorized domains → thêm `sanbdshanoi.vn`.  (b) Credentials → mở OAuth Client đang dùng cho Nghệ An → **Authorized JavaScript origins** thêm `https://sanbdshanoi.vn` + `https://www.sanbdshanoi.vn` → **Authorized redirect URIs** thêm `https://sanbdshanoi.vn/api/v1/auth/google/callback` → Save | Không cần gửi gì — nhắn "xong" là em copy Client ID/Secret sang Hà Nội |
+| 3 | Google Analytics | analytics.google.com → **cùng tài khoản** (Account) đang có của Nghệ An, không tạo Account mới | Admin → **Create Property** (Nghệ An và Hà Nội là 2 Property riêng trong cùng 1 Account, để số liệu không lẫn nhau) — tên "Sàn BĐS Hà Nội" | **Measurement ID** dạng `G-XXXXXXXXXX` (cái này bắt buộc phải gửi, mỗi site cần mã riêng để đếm đúng lượt truy cập của từng site) |
+| 4 | SePay | my.sepay.vn — **đăng nhập đúng tài khoản đang dùng cho Nghệ An** (không phải tài khoản mới) | Tích hợp Webhooks → **Thêm webhook mới** (giữ nguyên webhook Nghệ An, không xoá) | **API Key** anh vừa đặt cho webhook mới (cái này bắt buộc phải gửi — mỗi webhook một khoá riêng, không dùng chung được với Nghệ An) |
+
+Lưu ý mục 2: khi khách Hà Nội bấm "Đăng nhập bằng Google", màn hình xin quyền của Google có thể
+hiện tên ứng dụng đã đặt cho bên Nghệ An (dùng chung project) — hơi lệch thương hiệu một chút
+nhưng đăng nhập vẫn chạy đúng, không cần đợi Google duyệt lại gì thêm. Muốn tên hiện đúng 100%
+thì để sau, đổi "App name" trong OAuth consent screen thành tên chung chung hơn.
 
 **Việc KHÔNG nằm trong 4 mục trên, anh vẫn phải tự làm** (không phải chỉ đăng nhập lấy giá trị):
 
