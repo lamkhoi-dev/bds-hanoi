@@ -59,7 +59,9 @@ Bài tin tức đăng riêng qua API bằng tài khoản admin (đi qua đườn
 - Tin/dự án/người đăng/bình luận/"Cần mua": `docker exec -e APP_ENV=staging bds-backend-prod node dist/scripts/seed-demo-hanoi.js --cleanup --apply`
   (cũng gỡ khỏi Meilisearch). LƯU Ý: 18 tin cũ đã chuyển sang người đăng mẫu nên cũng bị xoá theo.
 - Tin tức: xoá 8 bài + 5 chuyên mục mẫu trong Quản trị (đều có dòng "Bài viết mẫu" cuối bài).
-- **Đổi sang tên miền thật**: URL ảnh tin/dự án/bài đang là tuyệt đối `https://222-255-214-136.nip.io/bds-uploads/...`
-  (ảnh trong nội dung bài tin thì lưu tương đối nên không sao). Phải viết lại: `PropertyImage.url`,
-  `Property.images[]`, `Project.thumbnail`, `News.thumbnail` — hoặc dọn dữ liệu mẫu trước khi đổi.
-  Ảnh do khách tự tải lên trong lúc còn dùng `nip.io` cũng dính vấn đề này.
+- ~~Đổi sang tên miền thật: URL ảnh lưu tuyệt đối `nip.io`, phải viết lại~~ — **SAI, đã kiểm chứng
+  thực tế 22/9 lúc chuyển `SITE_DOMAIN` sang `sanbdshanoi.vn`**: `frontend/src/lib/media.ts`
+  `toMediaUrl()` tự cắt mọi URL ảnh (dù lưu tuyệt đối domain nào) về đường dẫn tương đối
+  `/bds-uploads/...` trước khi render, nên đổi tên miền KHÔNG làm vỡ ảnh cũ — không cần viết lại
+  `PropertyImage.url` hay dọn dữ liệu trước khi đổi domain. Đã đo: ảnh tin/dự án tải đủ trên
+  `sanbdshanoi.vn` ngay sau khi đổi, không phải sửa gì thêm.
