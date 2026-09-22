@@ -54,7 +54,14 @@ export async function generateMetadata(): Promise<Metadata> {
       statusBarStyle: "default",
       title: siteConfig.shortName,
     },
+    // Trước đây chỉ khai `apple` — Next.js coi `icons` được khai tường minh là ĐÃ ĐỦ và
+    // KHÔNG còn tự dò `app/icon.png` theo file convention nữa, nên trang hoàn toàn không có
+    // `<link rel="icon">` chuẩn (khách kiểm tra 22/9: "không có favicon", đúng cả 2 site — xem
+    // `<head>` bên dưới, nơi apple-touch-icon còn bị khai tay trùng thêm 1 lần nữa). Icon
+    // nguồn `app/icon.png` không vuông (892×580) nên trỏ thẳng vào bản đã cắt vuông sẵn
+    // trong `/icons/` — cùng ảnh, chỉ khác đã crop đúng tỉ lệ favicon.
     icons: {
+      icon: "/icons/icon-192x192.png",
       apple: "/icons/icon-192x192.png",
     },
     verification,
@@ -133,7 +140,6 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content={siteConfig.shortName} />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={`${beVietnamPro.className} ${beVietnamPro.variable} bg-background text-textMain antialiased overflow-x-clip`} suppressHydrationWarning>
         {/*
@@ -242,23 +248,32 @@ export default async function RootLayout({
                   </div>
                   {/* Logo */}
                   <Link href="/" className="flex items-center gap-1 sm:gap-3 group min-w-0 pr-0 xl:pr-4">
-                    <img width={223} height={145} src="/logo/ngoi_nha.svg" alt={siteConfig.name} className="h-7 sm:h-12 md:h-14 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
-                    {/*
-                      Wordmark cũ là ảnh /logo/nha_dat_xu_nghe.svg — chữ "NHÀ ĐẤT XỨ NGHỆ"
-                      vẽ cứng trong file SVG nên không dùng lại được cho site Hà Nội.
-                      Tạm render bằng chữ từ siteConfig cho tới khi khách gửi bộ logo mới
-                      (mục C2 trong danh sách câu hỏi).
-                    */}
-                    <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black tracking-tight drop-shadow-sm">
-                      <span className="text-[#1E88E5] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
-                        {siteConfig.brand.line1}
-                      </span>
-                      {siteConfig.brand.line2 && (
-                        <span className="text-[#FFB300] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
-                          {siteConfig.brand.line2}
-                        </span>
-                      )}
-                    </div>
+                    {siteConfig.province.slug === 'nghe-an' ? (
+                      <>
+                        <img width={223} height={145} src="/logo/ngoi_nha.svg" alt={siteConfig.name} className="h-7 sm:h-12 md:h-14 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
+                        {/*
+                          Wordmark cũ là ảnh /logo/nha_dat_xu_nghe.svg — chữ "NHÀ ĐẤT XỨ NGHỆ"
+                          vẽ cứng trong file SVG nên không dùng lại được cho site khác. Site
+                          khác dùng bộ logo riêng (xem nhánh bên dưới) — nhánh này CHỈ còn dùng
+                          cho Nghệ An, giữ nguyên y hệt bản gốc để không đổi hình ảnh site thật.
+                        */}
+                        <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black tracking-tight drop-shadow-sm">
+                          <span className="text-[#1E88E5] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
+                            {siteConfig.brand.line1}
+                          </span>
+                          {siteConfig.brand.line2 && (
+                            <span className="text-[#FFB300] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
+                              {siteConfig.brand.line2}
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      // Bộ logo chính thức khách gửi 22/9 (icon + chữ "Sàn BĐS Hà Nội" vẽ sẵn
+                      // trong 1 file, không dựng chữ rời bằng siteConfig nữa) — thay cho bản tạm
+                      // icon trung tính + chữ dựng bằng code trước đó.
+                      <img src="/logo/hanoi/wordmark.svg" alt={siteConfig.name} className="h-7 sm:h-11 md:h-12 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
+                    )}
                   </Link>
                 </div>
 

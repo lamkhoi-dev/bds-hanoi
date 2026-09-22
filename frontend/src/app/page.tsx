@@ -111,7 +111,7 @@ export default async function Home() {
         <h1 className="sr-only">
           Đăng bán, tìm mua và cho thuê bất động sản tại {siteConfig.province.name}
         </h1>
-        <div className={`w-full px-4 relative ${siteConfig.province.slug === 'nghe-an' ? 'max-w-2xl' : 'max-w-3xl'}`}>
+        <div className="w-full max-w-2xl px-4 relative">
           {siteConfig.province.slug === 'nghe-an' ? (
             <Image
               src="/banner.svg"
@@ -122,41 +122,17 @@ export default async function Home() {
               priority
             />
           ) : (
-            /* banner.svg là bộ logo của Nghệ An: chữ "Nhà đất xứ Nghệ" vẽ cứng thành path nên không
-               dùng lại được — Hà Nội từng hiện đúng dòng chữ đó ngay đầu trang chủ (rà soát 20/9).
-               Site khác dựng lại cùng bố cục bằng chữ lấy từ siteConfig, dùng chung ngôi nhà của header,
-               cho tới khi khách gửi bộ logo/banner riêng. */
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-7 py-1">
-              <img
-                src="/logo/ngoi_nha.svg"
-                alt=""
-                width={223}
-                height={145}
-                className="h-24 sm:h-28 md:h-32 w-auto object-contain drop-shadow-lg"
-              />
-              <div className="text-center sm:text-left">
-                <p className="font-black leading-none tracking-tight whitespace-nowrap text-4xl md:text-5xl">
-                  <span className="bg-gradient-to-b from-[#5cc0ff] to-[#1e88e5] bg-clip-text text-transparent">
-                    {siteConfig.brand.line1}
-                  </span>
-                  {siteConfig.brand.line2 && (
-                    <>
-                      {' '}
-                      <span className="bg-gradient-to-b from-[#ffd54f] to-[#ff9800] bg-clip-text text-transparent">
-                        {siteConfig.brand.line2}
-                      </span>
-                    </>
-                  )}
-                </p>
-                <div className="mt-2 h-[3px] w-full rounded-full bg-gradient-to-r from-transparent via-[#ff9800] to-transparent shadow-[0_0_14px_rgba(255,152,0,0.8)]" />
-                {/* Không dùng font-serif: Georgia/Times trên một số máy thiếu dấu tiếng Việt xếp chồng, chữ "đất" bị lệch dấu. */}
-                <p className="mt-3 font-semibold text-white text-lg md:text-2xl leading-snug">
-                  Đăng bán dễ dàng
-                  <br />
-                  tìm đất an tâm.
-                </p>
-              </div>
-            </div>
+            // Bộ logo chính thức khách gửi 22/9 — file `hero.svg` đã có sẵn icon + wordmark +
+            // khẩu hiệu, cùng khung hình (viewBox 516x145) với banner.svg của Nghệ An nên thay
+            // thẳng vào được, không cần dựng chữ bằng CSS gradient như bản tạm trước đó (20/9)
+            // — bản đó phải đoán màu/kiểu chữ, bản khách gửi là màu/chữ chính thức.
+            <img
+              src="/logo/hanoi/hero.svg"
+              alt={`${siteConfig.name} — Đăng bán dễ dàng, tìm đất an tâm`}
+              width={1033}
+              height={290}
+              className="w-full h-auto block"
+            />
           )}
         </div>
       </section>
