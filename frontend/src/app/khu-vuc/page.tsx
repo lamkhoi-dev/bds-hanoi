@@ -5,6 +5,7 @@ import { groupDistrictsByProvince } from '@/lib/locations/group-by-province';
 import { siteConfig } from '@/lib/site-config';
 import { getLocationDictionary } from '@/lib/seo/locations';
 import { listingPath } from '@/lib/seo/canonical';
+import OldWardJumpSelect from '@/components/OldWardJumpSelect';
 
 // Trước đây trang này là hai mảng cứng 21 huyện Nghệ An + 13 huyện Hà Tĩnh, với slug
 // tự đặt (`huyen-dien-chau`) không khớp urlSegment thật trong CSDL — bấm vào là ra
@@ -83,12 +84,24 @@ export default async function KhuVucPage() {
                 const oldWards = oldWardsByDistrict.get(district.slug) ?? [];
                 return (
                   <div key={district.slug} className="bg-white rounded-xl border p-5">
-                    <Link
-                      href={listingPath({ locationSlug: district.slug })}
-                      className="text-lg font-bold text-gray-800 hover:text-primary"
-                    >
-                      {district.name}
-                    </Link>
+                    <div className="flex items-center justify-between flex-wrap gap-x-4 gap-y-2">
+                      <Link
+                        href={listingPath({ locationSlug: district.slug })}
+                        className="text-lg font-bold text-gray-800 hover:text-primary"
+                      >
+                        {district.name}
+                      </Link>
+                      {/* Danh sách xổ xuống thay cho dãy nút phường/xã CŨ liệt kê hết ra bên
+                          dưới (có huyện tới 25 xã cũ, kéo trang rất dài) — khách yêu cầu 23/9.
+                          Xã MỚI vẫn giữ nguyên dạng nút bấm như cũ, không đổi. */}
+                      <OldWardJumpSelect
+                        options={oldWards.map((ward) => ({
+                          slug: ward.slug,
+                          name: ward.name,
+                          href: listingPath({ locationSlug: ward.slug }),
+                        }))}
+                      />
+                    </div>
                     {wards.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {wards.map((ward) => (
@@ -101,22 +114,6 @@ export default async function KhuVucPage() {
                           </Link>
                         ))}
                       </div>
-                    )}
-                    {oldWards.length > 0 && (
-                      <>
-                        <p className="text-xs text-gray-400 mt-3 mb-2">Phường/xã cũ</p>
-                        <div className="flex flex-wrap gap-2">
-                          {oldWards.map((ward) => (
-                            <Link
-                              href={listingPath({ locationSlug: ward.slug })}
-                              key={ward.slug}
-                              className="px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-700 rounded-lg text-sm hover:bg-primary hover:text-white hover:border-primary transition-colors"
-                            >
-                              {ward.name}
-                            </Link>
-                          ))}
-                        </div>
-                      </>
                     )}
                   </div>
                 );
