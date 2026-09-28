@@ -24,8 +24,8 @@ import { formatPrice, formatArea } from '@/lib/utils';
  *   [dưới ảnh]
  *     2 dòng tiêu đề, chữ đậm, quá thì cắt bằng dấu ba chấm
  *     MỘT hàng cuối: avatar cao đúng 2 dòng chữ nhỏ + (trên) tên, (dưới) "Đăng: ngày" ở giữa,
- *                     hướng · số phòng ngủ · số WC ở bên phải — quá dài thì tự xuống dòng thứ 2
- *                     của khối này (khách yêu cầu 27/9, chỉnh lại 28/9: bỏ dòng thứ 3)
+ *                     hướng · số phòng ngủ · số WC ở bên phải cùng hàng; card hẹp không đủ chỗ thì
+ *                     đặc điểm rớt xuống dòng dưới (khách yêu cầu 27/9, chỉnh lại 28/9)
  *
  * Điểm khách nêu đích danh: bản cũ hiện GIÁ và GIÁ/M² hai lần — một lần đè trên ảnh,
  * một lần nữa ngay dưới tiêu đề. Bố cục này bỏ hẳn phần lặp đó.
@@ -279,31 +279,36 @@ export default function PropertyCard({ item }: { item: any }) {
         </h3>
 
         {(posterName || postedDate || metaParts.length > 0) && (
-          <div className="mt-auto pt-2 flex items-center gap-2 min-w-0">
-            {/* Card là một thẻ <a> nên tên KHÔNG phải link (không lồng <a> trong <a>). */}
-            {posterName && (
-              <div className="relative w-8 h-8 shrink-0 rounded-full overflow-hidden bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                {posterAvatar ? (
-                  <Image fill src={toMediaUrl(posterAvatar)} alt="" sizes="32px" className="object-cover" />
-                ) : (
-                  posterName.charAt(0).toUpperCase()
-                )}
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0 leading-tight">
+          // flex-wrap + justify-between: card đủ rộng (mobile, card lớn) thì avatar/tên/ngày ở
+          // bên trái, đặc điểm ở bên phải CÙNG một hàng; card hẹp (cột PC 4–5 cột) mà không đủ
+          // chỗ thì đặc điểm tự rớt xuống dòng dưới — đúng ý khách "dài quá thì kéo phòng ngủ,
+          // WC xuống dòng".
+          <div className="mt-auto pt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0 max-w-full">
+              {/* Card là một thẻ <a> nên tên KHÔNG phải link (không lồng <a> trong <a>). */}
               {posterName && (
-                <div className="text-[11px] sm:text-xs font-medium text-gray-700 truncate">{posterName}</div>
-              )}
-              {postedDate && (
-                <div className="text-[11px] sm:text-xs text-gray-400" suppressHydrationWarning>
-                  Đăng: {postedDate}
+                <div className="relative w-8 h-8 shrink-0 rounded-full overflow-hidden bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                  {posterAvatar ? (
+                    <Image fill src={toMediaUrl(posterAvatar)} alt="" sizes="32px" className="object-cover" />
+                  ) : (
+                    posterName.charAt(0).toUpperCase()
+                  )}
                 </div>
               )}
+              <div className="min-w-0 leading-tight">
+                {posterName && (
+                  <div className="text-[11px] sm:text-xs font-medium text-gray-700 truncate">{posterName}</div>
+                )}
+                {postedDate && (
+                  <div className="text-[11px] sm:text-xs text-gray-400 whitespace-nowrap" suppressHydrationWarning>
+                    Đăng: {postedDate}
+                  </div>
+                )}
+              </div>
             </div>
 
             {metaParts.length > 0 && (
-              <div className="max-w-[58%] shrink-0 text-right text-[11px] sm:text-xs leading-tight text-textSecondary">
+              <div className="text-[11px] sm:text-xs leading-tight text-textSecondary">
                 {metaParts.map((part, i) => (
                   <span key={i}>
                     <span className="whitespace-nowrap">{part}</span>
