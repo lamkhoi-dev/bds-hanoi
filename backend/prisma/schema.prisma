@@ -185,6 +185,8 @@ model Property {
   amenities String?
   thumbnail String?
   images    String[]
+  /// Video tin đăng (đã nén MP4). NULL = tin không có video. Chỉ 1 video/tin.
+  videoUrl  String?
 
   status       PropertyStatus @default(PENDING)
   tier         PropertyTier   @default(NORMAL)

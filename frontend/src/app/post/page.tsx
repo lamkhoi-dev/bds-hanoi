@@ -11,6 +11,7 @@ const MapPin = dynamic(() => import('@/components/MapPin'), { ssr: false, loadin
 import toast from 'react-hot-toast';
 import { PRICE_RANGES_SELL, PRICE_RANGES_RENT, AREA_RANGES, getPriceLabel, getAreaLabel } from '@/constants/ranges';
 import { siteConfig } from '@/lib/site-config';
+import { VIDEO_ACCEPT, MAX_MEDIA_BYTES, formatMegabytes, mediaBudgetError, videoUploadErrorMessage } from '@/lib/media-limits';
 import LocationPicker, { resolveLocationIds, districtHasWards } from '@/components/LocationPicker';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,6 +64,11 @@ function PostPropertyContent() {
   const [projects, setProjects] = useState<any[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  // Video tin đăng (1 video/tin, máy chủ nén về MP4). `mediaBytes` = tổng dung lượng GỐC ảnh +
+  // video khách đã tải lên phiên này — để chặn tổng 100MB (yêu cầu 27/9), xem lib/media-limits.
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [videoStage, setVideoStage] = useState<{ phase: 'uploading' | 'compressing'; pct: number } | null>(null);
+  const [mediaBytes, setMediaBytes] = useState(0);
   const [previewMode, setPreviewMode] = useState(false);
   const [phoneError, setPhoneError] = useState('');
 
@@ -166,6 +172,7 @@ function PostPropertyContent() {
           
           
           setImages(prop.images || []);
+          setVideoUrl(prop.videoUrl || null);
           setFormData(prev => {
             const nextState = { ...prev };
             
@@ -245,6 +252,7 @@ function PostPropertyContent() {
            return nextState;
         });
         setImages([]);
+        setVideoUrl(null);
       }
     }
   }, [searchEditId, searchType, searchTitle]);
@@ -408,7 +416,7 @@ function PostPropertyContent() {
     setLoading(true);
     try {
       const basePayload = getSanitizedPayload();
-      const payload = isRequirement ? basePayload : { ...basePayload, images };
+      const payload = isRequirement ? basePayload : { ...basePayload, images, videoUrl };
       
       const urlParams = new URLSearchParams(window.location.search);
       const editId = urlParams.get('editId');
@@ -458,7 +466,7 @@ function PostPropertyContent() {
     setLoading(true);
     try {
       const basePayload = getSanitizedPayload();
-      const payload = { ...basePayload, images };
+      const payload = { ...basePayload, images, videoUrl };
 
       const urlParams = new URLSearchParams(window.location.search);
       const editId = urlParams.get('editId');
@@ -1000,6 +1008,11 @@ function PostPropertyContent() {
                           return;
                         }
                       }
+                      const budgetError = mediaBudgetError(mediaBytes, Array.from(files).reduce((sum, f) => sum + f.size, 0));
+                      if (budgetError) {
+                        toast.error(budgetError);
+                        return;
+                      }
                       setUploading(true);
                       try {
                         for (let i = 0; i < files.length; i++) {
@@ -1009,6 +1022,7 @@ function PostPropertyContent() {
                             headers: { 'Content-Type': 'multipart/form-data' }
                           });
                           setImages(prev => [...prev, res.data.url]);
+                          setMediaBytes(prev => prev + files[i].size);
                         }
                       } catch (err) {
                         toast.error('Lỗi upload ảnh');
@@ -1027,6 +1041,91 @@ function PostPropertyContent() {
                     <p className="text-xs text-textLight mt-1">Tối đa 8 ảnh. Hỗ trợ JPG, PNG.</p>
                     <p className="text-xs text-accent mt-1">Nếu không có ảnh, hệ thống sẽ tạo thumbnail tự động.</p>
                   </div>
+                </div>
+
+                {/* Video — không bắt buộc, tối đa 1 video/tin. Máy chủ nén về MP4 nên khách chọn
+                    MP4/MOV/WebM nào cũng được; tổng ảnh + video tối đa 100MB (yêu cầu 27/9). */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium mb-2 text-textMain" htmlFor="post-video-input">
+                    Video (không bắt buộc)
+                  </label>
+
+                  {videoUrl ? (
+                    <div className="relative rounded-xl overflow-hidden border border-borderLight bg-black">
+                      <video src={toMediaUrl(videoUrl)} controls preload="metadata" playsInline className="w-full max-h-[320px]" />
+                      <button
+                        type="button"
+                        onClick={() => setVideoUrl(null)}
+                        className="absolute top-2 right-2 bg-black/60 text-white text-xs font-semibold rounded-full px-3 py-1 hover:bg-danger transition-colors"
+                      >
+                        Xóa video
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative border-2 border-dashed border-borderLight rounded-2xl p-6 text-center hover:border-primary/30 hover:bg-primary/[0.02] transition-all duration-300 cursor-pointer">
+                      <input
+                        id="post-video-input"
+                        type="file"
+                        accept={VIDEO_ACCEPT}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={videoStage !== null}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = ''; // cho phép chọn lại đúng file đó sau khi lỗi
+                          if (!file) return;
+                          if (file.size > MAX_MEDIA_BYTES) {
+                            toast.error(`Video "${file.name}" vượt quá ${formatMegabytes(MAX_MEDIA_BYTES)}.`);
+                            return;
+                          }
+                          const budgetError = mediaBudgetError(mediaBytes, file.size);
+                          if (budgetError) {
+                            toast.error(budgetError);
+                            return;
+                          }
+                          setVideoStage({ phase: 'uploading', pct: 0 });
+                          try {
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const res = await api.post('/upload/video', formData, {
+                              headers: { 'Content-Type': 'multipart/form-data' },
+                              // Tải lên + nén video có thể mất vài phút — vượt xa mức 10 giây mặc định.
+                              timeout: 15 * 60 * 1000,
+                              onUploadProgress: (ev) => {
+                                const pct = ev.total ? Math.round((ev.loaded * 100) / ev.total) : 0;
+                                setVideoStage(pct >= 100 ? { phase: 'compressing', pct: 100 } : { phase: 'uploading', pct });
+                              },
+                            });
+                            setVideoUrl(res.data.url);
+                            setMediaBytes((prev) => prev + file.size);
+                            toast.success('Đã tải video lên.');
+                          } catch (err) {
+                            toast.error(videoUploadErrorMessage(err));
+                          } finally {
+                            setVideoStage(null);
+                          }
+                        }}
+                      />
+                      <div className="flex flex-col items-center pointer-events-none">
+                        {videoStage ? (
+                          <>
+                            <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin mb-3"></div>
+                            <p className="text-sm font-bold text-textMain">
+                              {videoStage.phase === 'uploading' ? `Đang tải video lên… ${videoStage.pct}%` : 'Đang nén video, vui lòng chờ…'}
+                            </p>
+                            {videoStage.phase === 'compressing' && (
+                              <p className="text-xs text-textLight mt-1">Có thể mất 1–3 phút với video dài. Đừng đóng trang.</p>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-9 h-9 text-primary/60 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <p className="text-sm font-bold text-textMain">Tải lên 1 video (Nhấn hoặc kéo thả)</p>
+                            <p className="text-xs text-textLight mt-1">MP4, MOV hoặc WebM. Tổng ảnh + video tối đa 100MB. Video được tự động nén.</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

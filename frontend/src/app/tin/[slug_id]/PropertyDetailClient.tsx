@@ -464,6 +464,21 @@ export default function PropertyDetailClient({ initialProperty }: { initialPrope
           {/* Gallery */}
           <PropertyGallery imageUrls={imageUrls} status={property.status} />
 
+          {/* Video tin đăng (đã nén MP4 ở máy chủ). preload=metadata: chỉ tải phần đầu để hiện
+              khung hình đầu tiên, không tốn dữ liệu của người xem tới khi bấm phát. */}
+          {property.videoUrl && (
+            <div className="bg-white rounded-2xl p-4 shadow-card">
+              <h2 className="text-lg font-bold text-textMain mb-3">Video</h2>
+              <video
+                src={toMediaUrl(property.videoUrl)}
+                controls
+                preload="metadata"
+                playsInline
+                className="w-full max-h-[560px] rounded-xl bg-black"
+              />
+            </div>
+          )}
+
           {/* Details */}
           <div className="bg-white rounded-2xl p-6 shadow-card">
             {/* Category Tags */}

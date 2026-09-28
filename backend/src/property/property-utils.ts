@@ -305,6 +305,8 @@ export function normalizePropertyPayload(data: Record<string, any>): Record<stri
     'amenities',
     'thumbnail',
     'images',
+    // Video tin đăng (1 video/tin, đã nén ở `POST /upload/video`) — khách yêu cầu 27/9.
+    'videoUrl',
     'provinceId',
     'districtId',
     'wardId',
@@ -368,6 +370,13 @@ export function normalizePropertyPayload(data: Record<string, any>): Record<stri
   if (normalized['roadWidth'] !== undefined && normalized['roadWidth'] !== null) normalized['roadWidth'] = parseNumeric(normalized['roadWidth']);
   if (Array.isArray(normalized['images'])) {
     normalized['images'] = normalized['images'].filter((image: unknown) => typeof image === 'string' && image.trim());
+  }
+  // Chỉ nhận đúng dạng URL do `POST /upload/video` trả về (`.../video-<số>-<số>.mp4`, http(s)
+  // hoặc đường dẫn tương đối). Chuỗi rỗng / null / dạng lạ đều ghi NULL = "gỡ video khỏi tin".
+  if ('videoUrl' in normalized) {
+    const v = normalized['videoUrl'];
+    normalized['videoUrl'] =
+      typeof v === 'string' && /^(https?:\/\/|\/)[^\s]*\/video-\d+-\d+\.mp4$/.test(v.trim()) ? v.trim() : null;
   }
   return normalized;
 }

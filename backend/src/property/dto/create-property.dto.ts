@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, Min } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, IsArray, Min, MaxLength } from 'class-validator';
 
 export class CreatePropertyDto {
   @IsString()
@@ -112,6 +112,11 @@ export class CreatePropertyDto {
   @IsArray()
   @IsString({ each: true })
   images?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  videoUrl?: string | null;
 
   @IsOptional()
   @IsString()
