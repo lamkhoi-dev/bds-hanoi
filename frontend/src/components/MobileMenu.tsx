@@ -12,7 +12,7 @@ import { provinceLabel } from '@/lib/locations/picker';
 import { siteConfig } from '@/lib/site-config';
 
 /** Loại BĐS hiện trên menu, theo thứ tự. Nhãn/slug vẫn lấy từ taxonomy. */
-const MENU_TYPE_ORDER: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU', 'DU_AN', 'MAT_BANG'];
+const MENU_TYPE_ORDER: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', ...(siteConfig.features.villaMenu ? ['BIET_THU'] : []), 'DU_AN', 'MAT_BANG'];
 const MENU_TYPES = MENU_TYPE_ORDER
   .map((e) => PROPERTY_TYPES.find((t) => t.enum === e))
   .filter((t): t is (typeof PROPERTY_TYPES)[number] => Boolean(t));

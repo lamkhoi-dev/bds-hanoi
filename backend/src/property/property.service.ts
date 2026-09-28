@@ -701,16 +701,24 @@ export class PropertyService {
         const bPrimary = isPrimary(b[def.groupField]) ? 1 : 0;
         if (aPrimary !== bPrimary) return bPrimary - aPrimary;
 
-        // Khách chốt lại 27/9: khu vực có TIN MỚI NHẤT đứng đầu — không phải khu vực nhiều
-        // tin nhất (trước đây làm ngược, số tin thắng trước — sai với yêu cầu gốc "tab nào
-        // có tin mới nhất sẽ đứng đầu"). Số tin chỉ còn là tiêu chí phụ khi trùng giờ đăng.
         const at = a._max.publishedAt?.getTime() ?? 0;
         const bt = b._max.publishedAt?.getTime() ?? 0;
-        if (at !== bt) return bt - at;
-
         const ac = a._count?._all ?? 0;
         const bc = b._count?._all ?? 0;
-        return bc - ac;
+
+        // Hà Nội (`grouped`): khách chốt 27/9 — khu vực có TIN MỚI NHẤT đứng đầu, số tin chỉ
+        // là tiêu chí phụ khi trùng giờ đăng (yêu cầu gốc "tab nào có tin mới nhất sẽ đứng
+        // đầu", "menu động").
+        if (layout === 'grouped') {
+          if (at !== bt) return bt - at;
+          return bc - ac;
+        }
+
+        // Nghệ An (`classic`): GIỮ NGUYÊN luật khách đã duyệt — số tin nhiều nhất trước, tin
+        // mới nhất chỉ để phá hoà (xem giải thích "Vì sao đổi" ở trên). Đừng gộp hai nhánh:
+        // yêu cầu 27/9 nằm trong tài liệu "check web Hà Nội", không áp cho Nghệ An.
+        if (ac !== bc) return bc - ac;
+        return bt - at;
       })
       .slice(0, limit)
       .map((g: any) => g[def.groupField] as string);

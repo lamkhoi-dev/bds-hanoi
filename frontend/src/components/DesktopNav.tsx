@@ -29,7 +29,7 @@ export default function DesktopNav({
     // Đường dẫn dựng qua listingPath để đổi dạng URL chỉ cần đổi một cờ, và link nội
     // bộ không bao giờ trỏ vào một 301.
     { label: 'Trang chủ', href: '/' },
-    ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU']).map((t) => ({
+    ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', ...(siteConfig.features.villaMenu ? (['BIET_THU'] as const) : [])]).map((t) => ({
       label: t.label,
       href: listingPath({ propertyTypeSlug: t.slug }),
     })),

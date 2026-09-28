@@ -14,7 +14,7 @@ import type { LocationNode } from '@/lib/locations/group';
 const headItems = [{ label: 'Trang chủ', href: '/' }];
 
 const tailItems = [
-  ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU']).map((t) => ({
+  ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', ...(siteConfig.features.villaMenu ? (['BIET_THU'] as const) : [])]).map((t) => ({
     label: t.label,
     href: listingPath({ propertyTypeSlug: t.slug }),
   })),

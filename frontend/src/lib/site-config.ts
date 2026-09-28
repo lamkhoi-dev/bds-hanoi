@@ -84,6 +84,17 @@ export const siteConfig = {
     .map((s) => s.trim())
     .filter(Boolean),
 
+  /**
+   * Tính năng chỉ bật cho site Hà Nội — yêu cầu trong tài liệu "check web Hà Nội 27/9".
+   * Nghệ An là site đang chạy, đã được khách duyệt và có thứ hạng SEO nên KHÔNG tự nhận thêm
+   * thay đổi ngoài những mục tài liệu ghi rõ áp cho Nghệ An (tắt OTP, video, màu ô xã cũ,
+   * bố cục card).
+   */
+  features: {
+    /** Mục "Biệt thự" ở menu, chân trang, menu 3 gạch, khối khám phá thêm. */
+    villaMenu: provinceSlug !== 'nghe-an',
+  },
+
   /** Tên thương hiệu tách sẵn 2 dòng cho logo header — xem giải thích ở trên. */
   brand: {
     line1: brandLine1,

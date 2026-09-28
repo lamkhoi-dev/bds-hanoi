@@ -58,7 +58,7 @@ describe('buildDynamicLocationBlock', () => {
     expect(getItems).not.toHaveBeenCalled();
   });
 
-  it('xếp hạng theo TIN MỚI NHẤT, không theo thứ tự findMany trả về', async () => {
+  it('grouped (Hà Nội): xếp hạng theo TIN MỚI NHẤT, không theo thứ tự findMany trả về', async () => {
     const { service, prisma } = makeService();
     prisma.location.findMany.mockResolvedValue([
       { id: 'd1', type: 'DISTRICT', urlSegment: 'quan-1', name: 'Quận 1', path: 'nghe-an/quan-1' },
@@ -77,12 +77,56 @@ describe('buildDynamicLocationBlock', () => {
       { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false },
       9,
       getItems,
+      'grouped',
     );
 
     expect(result.map((block: any) => block.key)).toEqual(['quan-3', 'quan-1']);
   });
 
-  it('cùng thời điểm tin mới nhất thì mới xét tới số tin', async () => {
+  it('classic (Nghệ An): GIỮ luật cũ — xếp theo SỐ TIN nhiều nhất, không đổi theo yêu cầu 27/9', async () => {
+    const { service, prisma } = makeService();
+    prisma.location.findMany.mockResolvedValue([
+      { id: 'd1', type: 'DISTRICT', urlSegment: 'quan-1', name: 'Quận 1', path: 'nghe-an/quan-1' },
+      { id: 'd3', type: 'DISTRICT', urlSegment: 'quan-3', name: 'Quận 3', path: 'nghe-an/quan-3' },
+    ]);
+    // Cùng dữ liệu với ca grouped ở trên, kết quả NGƯỢC LẠI: d1 nhiều tin (9) thắng d3 mới hơn (1 tin).
+    prisma.property.groupBy.mockResolvedValue([
+      { districtId: 'd1', _max: { publishedAt: new Date('2026-01-01') }, _count: { _all: 9 } },
+      { districtId: 'd3', _max: { publishedAt: new Date('2026-06-01') }, _count: { _all: 1 } },
+    ]);
+
+    const result = await (service as any).buildDynamicLocationBlock(
+      { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false },
+      9,
+      getItems,
+      'classic',
+    );
+
+    expect(result.map((block: any) => block.key)).toEqual(['quan-1', 'quan-3']);
+  });
+
+  it('classic (Nghệ An): bằng số tin thì mới xét tới tin mới nhất', async () => {
+    const { service, prisma } = makeService();
+    prisma.location.findMany.mockResolvedValue([
+      { id: 'd1', type: 'DISTRICT', urlSegment: 'quan-1', name: 'Quận 1', path: 'nghe-an/quan-1' },
+      { id: 'd2', type: 'DISTRICT', urlSegment: 'quan-2', name: 'Quận 2', path: 'nghe-an/quan-2' },
+    ]);
+    prisma.property.groupBy.mockResolvedValue([
+      { districtId: 'd1', _max: { publishedAt: new Date('2026-01-01') }, _count: { _all: 5 } },
+      { districtId: 'd2', _max: { publishedAt: new Date('2026-06-01') }, _count: { _all: 5 } },
+    ]);
+
+    const result = await (service as any).buildDynamicLocationBlock(
+      { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false },
+      9,
+      getItems,
+      'classic',
+    );
+
+    expect(result.map((block: any) => block.key)).toEqual(['quan-2', 'quan-1']);
+  });
+
+  it('grouped (Hà Nội): cùng thời điểm tin mới nhất thì mới xét tới số tin', async () => {
     const { service, prisma } = makeService();
     prisma.location.findMany.mockResolvedValue([
       { id: 'd1', type: 'DISTRICT', urlSegment: 'quan-1', name: 'Quận 1', path: 'nghe-an/quan-1' },
@@ -98,6 +142,7 @@ describe('buildDynamicLocationBlock', () => {
       { type: 'DISTRICT', groupField: 'districtId', requireFeatured: false },
       9,
       getItems,
+      'grouped',
     );
 
     expect(result.map((block: any) => block.key)).toEqual(['quan-2', 'quan-1']);

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { listingPath } from '@/lib/seo/canonical';
 import Link from 'next/link';
 import { propertyTypeByEnum, propertyTypesByEnum } from '@/lib/seo/taxonomy';
+import { siteConfig } from '@/lib/site-config';
 
 /**
  * Bảng danh mục cũ ở đây tự khai `path: 'biet-thu-lien-ke'` — slug KHÔNG tồn tại trong
@@ -75,7 +76,7 @@ export default function ExploreMoreBehavioral() {
     // đúng với mọi tỉnh.
     if (generatedLinks.length < 4) {
       const fallbackLinks = [
-        ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU']).map((t) => ({
+        ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', ...(siteConfig.features.villaMenu ? (['BIET_THU'] as const) : [])]).map((t) => ({
           label: t.label,
           href: listingPath({ propertyTypeSlug: t.slug }),
         })),
