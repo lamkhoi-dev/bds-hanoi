@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { generateSlug } from '@/lib/utils';
 import { Star } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
+import { toMediaUrl } from '@/lib/media';
 
 
 export default function RecentlyViewed() {
@@ -34,7 +35,11 @@ export default function RecentlyViewed() {
           >
             <div className="h-36 bg-gray-100 relative">
               {item.images && item.images.length > 0 ? (
-                <Image fill src={item.images[0]} alt={item.title} className="object-cover" sizes="(max-width: 768px) 100vw, 288px" />
+                // `item.images[0]` được lưu vào localStorage lúc xem tin, có thể là URL tuyệt
+                // đối cũ (site đổi domain hoặc CSDL đang lưu URL tuyệt đối) — nơi khác trong
+                // app đều cắt qua toMediaUrl() trước khi render, chỗ này quên nên ảnh vỡ hết
+                // (khách báo 27/9). Không tự viết lại localStorage — chỉ cắt lúc hiển thị.
+                <Image fill src={toMediaUrl(item.images[0])} alt={item.title} className="object-cover" sizes="(max-width: 768px) 100vw, 288px" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-200">
                   <span className="text-gray-400 text-xs">No image</span>

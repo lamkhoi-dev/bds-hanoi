@@ -23,7 +23,9 @@ import { formatPrice, formatArea } from '@/lib/utils';
  *     đáy dòng 2     : xã/phường + huyện — KHÔNG kèm tỉnh
  *   [dưới ảnh]
  *     2 dòng tiêu đề, chữ đậm, quá thì cắt bằng dấu ba chấm
- *     1 dòng phụ    : hướng · số phòng ngủ · số WC · ngày đăng, chữ nhạt và nhỏ hơn
+ *     khối người đăng: avatar cao đúng 2 dòng chữ nhỏ + (trên) tên, (dưới) "Đăng: ngày"
+ *     dòng CUỐI     : hướng · số phòng ngủ · số WC, chữ nhạt và nhỏ hơn — quá dài thì
+ *                     "phòng ngủ · WC" tự xuống dòng dưới (khách yêu cầu 27/9)
  *
  * Điểm khách nêu đích danh: bản cũ hiện GIÁ và GIÁ/M² hai lần — một lần đè trên ảnh,
  * một lần nữa ngay dưới tiêu đề. Bố cục này bỏ hẳn phần lặp đó.
@@ -110,11 +112,17 @@ export default function PropertyCard({ item }: { item: any }) {
 
   const isClosed = item.status === 'SOLD' || item.status === 'RENTED';
 
-  // Dòng phụ dưới tiêu đề: hướng · phòng ngủ · WC · ngày đăng.
+  // Dòng cuối card: hướng · phòng ngủ · WC. Ngày đăng đã chuyển sang khối người đăng.
   const metaParts: string[] = [];
   if (item.direction) metaParts.push(String(item.direction));
   if (item.bedrooms) metaParts.push(`${item.bedrooms} phòng ngủ`);
   if (item.bathrooms && item.transactionType !== 'CHO_THUE') metaParts.push(`${item.bathrooms} WC`);
+
+  // Người đăng: tin từ Meilisearch được backend gắn `user` (attachPosters); thiếu thì khối
+  // chỉ còn dòng "Đăng: ngày", không dựng avatar/tên rỗng.
+  const posterName = item.user?.name ? String(item.user.name).trim() : '';
+  const posterAvatar: string | null = item.user?.avatar || null;
+  const postedDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '';
 
   const renderPopup = () => {
     if (!mounted || !isHovered || previewImages.length === 0) return null;
@@ -256,9 +264,9 @@ export default function PropertyCard({ item }: { item: any }) {
         </div>
       </div>
 
-      {/* DƯỚI ẢNH — 3 hàng, chạy suốt chiều ngang.
-          flex-1 + mt-auto ở dòng cuối: card ngắn tiêu đề (1 dòng) và card dài tiêu đề
-          (2 dòng) trong CÙNG một hàng lưới vẫn cao bằng nhau, dòng ngày đăng luôn nằm
+      {/* DƯỚI ẢNH — tiêu đề, khối người đăng, dòng đặc điểm; chạy suốt chiều ngang.
+          flex-1 + mt-auto ở khối dưới: card ngắn tiêu đề (1 dòng) và card dài tiêu đề
+          (2 dòng) trong CÙNG một hàng lưới vẫn cao bằng nhau, hai khối cuối luôn nằm
           sát đáy card thay vì lệch cao thấp theo độ dài tiêu đề. */}
       <div className="px-3 sm:px-4 py-3 flex-1 flex flex-col">
         {/* 2 hàng tiêu đề, chữ đậm, quá thì cắt bằng dấu ba chấm */}
@@ -269,17 +277,45 @@ export default function PropertyCard({ item }: { item: any }) {
           {item.title}
         </h3>
 
-        {/* Hàng thứ 3: chữ không đậm, nhỏ hơn một chút */}
-        <div className="mt-auto pt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-textSecondary">
-          {metaParts.map((part, i) => (
-            <span key={i} className="flex items-center gap-2">
-              {i > 0 && <span className="text-gray-300">·</span>}
-              {part}
-            </span>
-          ))}
-          <span className="ml-auto text-gray-400" suppressHydrationWarning>
-            {item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : ''}
-          </span>
+        <div className="mt-auto pt-2 flex flex-col gap-1.5">
+          {/* Người đăng: avatar cao bằng 2 dòng chữ nhỏ bên cạnh (tên trên, ngày dưới).
+              Card là một thẻ <a> nên tên KHÔNG phải link (không lồng <a> trong <a>). */}
+          {(posterName || postedDate) && (
+            <div className="flex items-center gap-2 min-w-0">
+              {posterName && (
+                <div className="relative w-8 h-8 shrink-0 rounded-full overflow-hidden bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                  {posterAvatar ? (
+                    <Image fill src={toMediaUrl(posterAvatar)} alt="" sizes="32px" className="object-cover" />
+                  ) : (
+                    posterName.charAt(0).toUpperCase()
+                  )}
+                </div>
+              )}
+              <div className="min-w-0 leading-tight">
+                {posterName && (
+                  <div className="text-[11px] sm:text-xs font-medium text-gray-700 truncate">{posterName}</div>
+                )}
+                {postedDate && (
+                  <div className="text-[11px] sm:text-xs text-gray-400" suppressHydrationWarning>
+                    Đăng: {postedDate}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Dòng cuối: chữ không đậm, nhỏ. flex-wrap để dài quá thì các mục cuối
+              ("phòng ngủ", "WC") tự xuống dòng dưới thay vì tràn khỏi card. */}
+          {metaParts.length > 0 && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-xs text-textSecondary">
+              {metaParts.map((part, i) => (
+                <span key={i} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-gray-300">·</span>}
+                  {part}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Link>

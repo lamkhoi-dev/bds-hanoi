@@ -92,7 +92,7 @@ const RENT_TAB_TYPES = ['NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'DAT_NEN', 'BDS_KHA
  * `transactionType: 'BAN'` — 6 khối tương ứng của bố cục `classic` trước đây KHÔNG lọc
  * nên lẫn tin cho thuê vào khối bán; đã lọc bù ở `getHomepageProperties`.
  */
-const SALE_TAB_TYPES = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'MAT_BANG', 'BDS_KHAC'] as const;
+const SALE_TAB_TYPES = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU', 'MAT_BANG', 'BDS_KHAC'] as const;
 
 /** Tiêu đề + đường dẫn của một khối theo loại BĐS, lấy từ một nguồn duy nhất. */
 function blockMeta(propertyTypeEnum: string, transaction: 'ban' | 'cho-thue' = 'ban') {
@@ -701,13 +701,16 @@ export class PropertyService {
         const bPrimary = isPrimary(b[def.groupField]) ? 1 : 0;
         if (aPrimary !== bPrimary) return bPrimary - aPrimary;
 
-        const ac = a._count?._all ?? 0;
-        const bc = b._count?._all ?? 0;
-        if (ac !== bc) return bc - ac;
-
+        // Khách chốt lại 27/9: khu vực có TIN MỚI NHẤT đứng đầu — không phải khu vực nhiều
+        // tin nhất (trước đây làm ngược, số tin thắng trước — sai với yêu cầu gốc "tab nào
+        // có tin mới nhất sẽ đứng đầu"). Số tin chỉ còn là tiêu chí phụ khi trùng giờ đăng.
         const at = a._max.publishedAt?.getTime() ?? 0;
         const bt = b._max.publishedAt?.getTime() ?? 0;
-        return bt - at;
+        if (at !== bt) return bt - at;
+
+        const ac = a._count?._all ?? 0;
+        const bc = b._count?._all ?? 0;
+        return bc - ac;
       })
       .slice(0, limit)
       .map((g: any) => g[def.groupField] as string);
@@ -763,6 +766,75 @@ export class PropertyService {
     );
   }
 
+  /** Mệnh đề khớp ĐÚNG cụm từ của một khu vực hot — dùng chung cho tab trang chủ và trang đích. */
+  private hotAreaMatch(name: string) {
+    return {
+      OR: [
+        { title: { contains: name, mode: 'insensitive' as const } },
+        { description: { contains: name, mode: 'insensitive' as const } },
+      ],
+    };
+  }
+
+  /**
+   * Trang đích "Khu vực hot" (`/khu-vuc-hot/{slug}`): mọi tin công khai chứa đúng cụm từ,
+   * MỌI hạng (VIP/UP/thường — khác tab trang chủ vốn chỉ lấy hạng thường vì VIP/UP đã có
+   * khối riêng), mới nhất trước.
+   */
+  async getHotAreaListings(slug: string, page = 1, limit = 20) {
+    const area = await this.prisma.hotArea.findFirst({
+      where: { slug, isActive: true },
+      select: { name: true, slug: true },
+    });
+    if (!area) throw new NotFoundException('Không tìm thấy khu vực hot');
+
+    const safeLimit = Math.min(Math.max(Math.floor(limit) || 20, 1), 50);
+    const safePage = Math.max(Math.floor(page) || 1, 1);
+    const where = {
+      status: { in: [...this.publicStatuses] },
+      deletedAt: null,
+      ...this.hotAreaMatch(area.name),
+    };
+
+    const [total, items] = await Promise.all([
+      this.prisma.property.count({ where } as any),
+      this.prisma.property.findMany({
+        where,
+        orderBy: [
+          { status: 'asc' },
+          { publishedAt: { sort: 'desc', nulls: 'last' } },
+          { pushedAt: { sort: 'desc', nulls: 'last' } },
+        ],
+        skip: (safePage - 1) * safeLimit,
+        take: safeLimit,
+        include: {
+          user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } },
+          imageObjects: true,
+        },
+      } as any),
+    ]);
+
+    return { area, items, total, page: safePage, limit: safeLimit };
+  }
+
+  /**
+   * Gắn người đăng (id/slug/shortCode/tên/avatar) vào tin thiếu `user` — chỉ 5 trường công
+   * khai, cùng bộ với mọi truy vấn Prisma khác. Cần vì tin lấy từ Meilisearch KHÔNG mang
+   * `user` (chỉ mục không nhúng người đăng), mà card tin cần avatar + tên (yêu cầu 27/9).
+   * Một truy vấn gộp cho cả trang, không truy vấn từng tin.
+   */
+  async attachPosters<T extends { userId?: string | null; user?: any }>(items: T[]): Promise<T[]> {
+    const missing = items.filter((it) => !it.user && it.userId);
+    if (missing.length === 0) return items;
+    const ids = [...new Set(missing.map((it) => it.userId as string))];
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, slug: true, shortCode: true, name: true, avatar: true },
+    });
+    const byId = new Map(users.map((u) => [u.id, u]));
+    return items.map((it) => (it.user || !it.userId ? it : { ...it, user: byId.get(it.userId) ?? undefined }));
+  }
+
   /**
    * Khối "Khu vực hot" (Bảng 4 tài liệu khách, chỉ bố cục `grouped`).
    *
@@ -798,17 +870,15 @@ export class PropertyService {
       areas.map(async (area) => ({
         key: area.slug,
         title: area.name,
-        // Trang đích phải lọc CÙNG một kiểu với tab, nếu không bấm vào lại ra tập khác.
-        // `/search?q=` là chỗ duy nhất hiện có nhận từ khoá tự do.
-        href: `/search?q=${encodeURIComponent(area.name)}`,
+        // Trang đích phải lọc CÙNG một kiểu với tab (`hotAreaMatch`), nếu không bấm vào lại
+        // ra tập khác. Trước 27/9 tab trỏ `/search?q=` — đường đó đi qua Meilisearch, tách
+        // từ + khớp mờ + từ đồng nghĩa, nên "Hồ Tây" ra cả tin không có cụm này: khách bắt lỗi.
+        href: `/khu-vuc-hot/${area.slug}`,
         items: await this.prisma.property.findMany({
           where: {
             ...baseWhere,
             tier: 'NORMAL',
-            OR: [
-              { title: { contains: area.name, mode: 'insensitive' } },
-              { description: { contains: area.name, mode: 'insensitive' } },
-            ],
+            ...this.hotAreaMatch(area.name),
           },
           orderBy: [
             { status: 'asc' },

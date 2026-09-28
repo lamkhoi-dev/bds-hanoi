@@ -75,7 +75,7 @@ export default function ExploreMoreBehavioral() {
     // đúng với mọi tỉnh.
     if (generatedLinks.length < 4) {
       const fallbackLinks = [
-        ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU']).map((t) => ({
+        ...propertyTypesByEnum(['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU']).map((t) => ({
           label: t.label,
           href: listingPath({ propertyTypeSlug: t.slug }),
         })),

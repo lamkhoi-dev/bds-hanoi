@@ -134,7 +134,9 @@ export default async function NewsDetail({ params }: { params: Promise<{ slug: s
         <figure className="mb-10">
           <div className="relative w-full h-[300px] md:h-[500px] rounded-xl overflow-hidden shadow-md bg-gray-100">
             <Image
-              src={newsItem.thumbnail}
+              // generateMetadata() (trên) đã cắt qua toMediaUrl() cho SEO/OG riêng — ảnh chính
+              // của bài lại quên dùng, ảnh vỡ với URL tuyệt đối cũ (khách báo 27/9).
+              src={toMediaUrl(newsItem.thumbnail)}
               alt={newsItem.thumbnailAlt || newsItem.title}
               fill
               className="object-cover"

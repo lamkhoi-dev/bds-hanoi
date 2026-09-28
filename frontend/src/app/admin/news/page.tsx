@@ -10,6 +10,7 @@ import { confirmAction } from '@/lib/toast-helpers';
 import { getApiErrorMessage } from '@/lib/api-error';
 import { newsStatusBadge } from '@/lib/news/status-badge';
 import { formatNewsDateTime } from '@/lib/news/dates';
+import { toMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 
 const STATUS_FILTERS = [
@@ -117,7 +118,7 @@ export default function AdminNews() {
                   <td data-label="Thumbnail" className="px-6 py-4">
                     <div className="h-12 w-20 relative rounded overflow-hidden bg-gray-100">
                       {news.thumbnail ? (
-                        <Image src={news.thumbnail} alt={news.title} fill className="object-cover" />
+                        <Image src={toMediaUrl(news.thumbnail)} alt={news.title} fill className="object-cover" />
                       ) : (
                         <div className="flex items-center justify-center w-full h-full text-gray-400 text-xs">No img</div>
                       )}

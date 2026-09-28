@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { formatNewsDate } from '@/lib/news/dates';
+import { toMediaUrl } from '@/lib/media';
 
 export interface NewsCardItem {
   id: string;
@@ -22,7 +23,10 @@ export default function NewsCard({ news }: { news: NewsCardItem }) {
     >
       <div className="relative w-full h-48 bg-gray-100">
         {news.thumbnail ? (
-          <Image src={news.thumbnail} alt={news.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+          // toMediaUrl(): CSDL đang lưu vài URL ảnh tin tức tuyệt đối trỏ domain cũ (dữ liệu
+          // mẫu tạo trước khi đổi domain 22/9) — cắt về đường dẫn tương đối như mọi nơi khác
+          // trong app đang làm, nếu không ảnh vỡ hết (khách báo 27/9).
+          <Image src={toMediaUrl(news.thumbnail)} alt={news.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="flex items-center justify-center w-full h-full text-gray-400">Không có ảnh</div>
         )}

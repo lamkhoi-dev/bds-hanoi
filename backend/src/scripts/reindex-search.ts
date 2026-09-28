@@ -69,7 +69,10 @@ async function main() {
       take: BATCH,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: { id: 'asc' },
-      include: { user: true },
+      // Chỉ các trường công khai của người đăng. `user: true` từng kéo NGUYÊN hàng User (mật
+      // khẩu băm, email, SĐT) vào Meilisearch — mà `/properties/search` trả nguyên tài liệu
+      // ra công khai. Các đường lập chỉ mục khác đều đã dùng đúng bộ 5 trường này.
+      include: { user: { select: { id: true, slug: true, shortCode: true, name: true, avatar: true } } },
     });
     if (rows.length === 0) break;
 

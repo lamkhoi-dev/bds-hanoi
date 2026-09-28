@@ -7,7 +7,7 @@ import { PROPERTY_TYPES } from '@/lib/seo/taxonomy';
 import FooterAuthLink from './FooterAuthLink';
 
 /** Bốn loại BĐS đưa lên footer. Nhãn và slug vẫn lấy từ taxonomy, đây chỉ là bộ lọc. */
-const FOOTER_TYPES: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN'];
+const FOOTER_TYPES: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU', 'DU_AN'];
 
 export default function Footer() {
   return (

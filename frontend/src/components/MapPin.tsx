@@ -3,6 +3,15 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { siteConfig } from '@/lib/site-config';
+
+/**
+ * Toạ độ mặc định khi đăng tin chưa chọn vị trí trên bản đồ — trước đây hardcode cứng
+ * TP Vinh (Nghệ An) dùng chung cho cả 2 site, nên trên Hà Nội bản đồ mặc định lại mở ra
+ * Nghệ An (khách báo 27/9). Hồ Gươm — trung tâm Hà Nội — cho site khác Nghệ An.
+ */
+const DEFAULT_MAP_CENTER: [number, number] =
+  siteConfig.province.slug === 'nghe-an' ? [18.679585, 105.681223] : [21.0285, 105.8542];
 
 // Fix for default Leaflet marker icon in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -45,15 +54,14 @@ export default function MapPin({ lat, lng, isApproximate, onChange }: MapPinProp
   useEffect(() => {
     isApproxRef.current = isApproximate;
     if (mapInstanceRef.current) {
-      const currentPos = lat && lng ? [lat, lng] as [number, number] : [18.679585, 105.681223] as [number, number];
+      const currentPos = lat && lng ? [lat, lng] as [number, number] : DEFAULT_MAP_CENTER;
       drawPin(mapInstanceRef.current, currentPos, isApproximate);
     }
   }, [isApproximate, lat, lng]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && mapRef.current && !mapInstanceRef.current) {
-      const defaultPosition: [number, number] = [18.679585, 105.681223];
-      const initialPos = lat && lng ? [lat, lng] as [number, number] : defaultPosition;
+      const initialPos = lat && lng ? [lat, lng] as [number, number] : DEFAULT_MAP_CENTER;
       
       const map = L.map(mapRef.current).setView(initialPos, 13);
       mapInstanceRef.current = map;

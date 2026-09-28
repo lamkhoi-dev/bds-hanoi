@@ -12,7 +12,7 @@ import { provinceLabel } from '@/lib/locations/picker';
 import { siteConfig } from '@/lib/site-config';
 
 /** Loại BĐS hiện trên menu, theo thứ tự. Nhãn/slug vẫn lấy từ taxonomy. */
-const MENU_TYPE_ORDER: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'DU_AN', 'MAT_BANG'];
+const MENU_TYPE_ORDER: readonly string[] = ['DAT_NEN', 'NHA_RIENG', 'CHUNG_CU', 'BIET_THU', 'DU_AN', 'MAT_BANG'];
 const MENU_TYPES = MENU_TYPE_ORDER
   .map((e) => PROPERTY_TYPES.find((t) => t.enum === e))
   .filter((t): t is (typeof PROPERTY_TYPES)[number] => Boolean(t));
@@ -62,7 +62,9 @@ export default function MobileMenu() {
     // nên Nghệ An (không phân nhóm) tự động giữ một mục "Khu vực" phẳng như cũ.
     ...(locationGroups.length > 0
       ? locationGroups.map((g) => ({
-          title: g.label,
+          // Khách yêu cầu 27/9 thêm chữ "BĐS" trước tên nhóm ("BĐS Nội thành" thay vì "Nội
+          // thành") — chỉ đổi tiêu đề hiển thị ở đây, không đổi `g.label` gốc (còn dùng nơi khác).
+          title: `BĐS ${g.label}`,
           icon: <MapPin className="w-5 h-5 text-gray-500" />,
           links: g.items.map((d) => ({
             label: d.shortName || d.name,

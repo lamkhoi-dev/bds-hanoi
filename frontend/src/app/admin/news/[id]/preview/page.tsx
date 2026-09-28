@@ -8,6 +8,7 @@ import api from '@/lib/axios';
 import { getApiErrorMessage } from '@/lib/api-error';
 import { formatNewsDateTime, shouldShowUpdated } from '@/lib/news/dates';
 import { newsStatusBadge } from '@/lib/news/status-badge';
+import { toMediaUrl } from '@/lib/media';
 
 /**
  * Xem trước CHỈ trong quản trị — không bao giờ mở URL công khai `/news/{slug}` cho bài Nháp
@@ -74,7 +75,7 @@ export default function PreviewNews({ params }: { params: Promise<{ id: string }
         {news.thumbnail && (
           <figure className="mb-8">
             <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-md bg-gray-100">
-              <Image src={news.thumbnail} alt={news.thumbnailAlt || news.title} fill className="object-cover" unoptimized />
+              <Image src={toMediaUrl(news.thumbnail)} alt={news.thumbnailAlt || news.title} fill className="object-cover" unoptimized />
             </div>
             {(news.thumbnailCaption || news.thumbnailCredit) && (
               <figcaption className="mt-2 text-sm text-gray-500 text-center">

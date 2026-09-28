@@ -248,32 +248,23 @@ export default async function RootLayout({
                   </div>
                   {/* Logo */}
                   <Link href="/" className="flex items-center gap-1 sm:gap-3 group min-w-0 pr-0 xl:pr-4">
-                    {siteConfig.province.slug === 'nghe-an' ? (
-                      <>
-                        <img width={223} height={145} src="/logo/ngoi_nha.svg" alt={siteConfig.name} className="h-7 sm:h-12 md:h-14 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
-                        {/*
-                          Wordmark cũ là ảnh /logo/nha_dat_xu_nghe.svg — chữ "NHÀ ĐẤT XỨ NGHỆ"
-                          vẽ cứng trong file SVG nên không dùng lại được cho site khác. Site
-                          khác dùng bộ logo riêng (xem nhánh bên dưới) — nhánh này CHỈ còn dùng
-                          cho Nghệ An, giữ nguyên y hệt bản gốc để không đổi hình ảnh site thật.
-                        */}
-                        <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black tracking-tight drop-shadow-sm">
-                          <span className="text-[#1E88E5] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
-                            {siteConfig.brand.line1}
-                          </span>
-                          {siteConfig.brand.line2 && (
-                            <span className="text-[#FFB300] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
-                              {siteConfig.brand.line2}
-                            </span>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      // Bộ logo chính thức khách gửi 22/9 (icon + chữ "Sàn BĐS Hà Nội" vẽ sẵn
-                      // trong 1 file, không dựng chữ rời bằng siteConfig nữa) — thay cho bản tạm
-                      // icon trung tính + chữ dựng bằng code trước đó.
-                      <img src="/logo/hanoi/wordmark.svg" alt={siteConfig.name} className="h-7 sm:h-11 md:h-12 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
-                    )}
+                    {/*
+                      22/9 từng đổi Hà Nội sang dùng file logo gộp "Sàn BĐS Hà Nội" (bộ logo
+                      chính thức khách gửi) — khách phản hồi 27/9 muốn quay lại đúng kiểu icon +
+                      2 dòng chữ như trước và như Nghệ An đang chạy, nên bỏ nhánh riêng, dùng
+                      chung 1 cách render cho cả 2 site (chỉ khác nội dung chữ theo siteConfig).
+                    */}
+                    <img width={223} height={145} src="/logo/ngoi_nha.svg" alt={siteConfig.name} className="h-7 sm:h-12 md:h-14 w-auto flex-shrink-0 object-contain transition-transform duration-300 group-hover:scale-105" />
+                    <div className="flex flex-col justify-center min-w-0 leading-[1.1] font-black tracking-tight drop-shadow-sm">
+                      <span className="text-[#1E88E5] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
+                        {siteConfig.brand.line1}
+                      </span>
+                      {siteConfig.brand.line2 && (
+                        <span className="text-[#FFB300] truncate max-w-full text-[11px] xs:text-[13px] sm:text-2xl md:text-3xl">
+                          {siteConfig.brand.line2}
+                        </span>
+                      )}
+                    </div>
                   </Link>
                 </div>
 
@@ -305,7 +296,7 @@ export default async function RootLayout({
             </div>
 
             {/* Main Menu - Swipeable on Mobile */}
-            <MobileSwipeMenu />
+            <MobileSwipeMenu groups={locationGroups} />
           </header>
         </ConditionalVisibility>
 

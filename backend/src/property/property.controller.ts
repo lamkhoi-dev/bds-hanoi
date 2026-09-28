@@ -105,6 +105,17 @@ export class PropertyController {
     return this.propertyService.getHotLocations();
   }
 
+  /** Trang đích "Khu vực hot" — khớp ĐÚNG cụm từ, khác `/search` (khớp mờ qua Meilisearch). */
+  @SkipThrottle()
+  @Get('hot-area/:slug')
+  async getHotArea(
+    @Param('slug') slug: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.propertyService.getHotAreaListings(slug, Number(page) || 1, Number(limit) || 20);
+  }
+
   @SkipThrottle()
   @Get('map')
   async getMapProperties(@Query() query: any) {
@@ -191,10 +202,17 @@ export class PropertyController {
       const hits = res.hits || [];
       const totalFromMeili = res.estimatedTotalHits || res.totalHits || 0;
 
+      // Chỉ mục Meilisearch không nhúng người đăng — card tin cần avatar + tên (27/9).
+      const [vipsWithPoster, upsWithPoster, hitsWithPoster] = await Promise.all([
+        this.propertyService.attachPosters(vipsToReturn),
+        this.propertyService.attachPosters(upsToReturn),
+        this.propertyService.attachPosters(hits),
+      ]);
+
       return {
-        vips: vipsToReturn,
-        ups: upsToReturn,
-        normals: hits,
+        vips: vipsWithPoster,
+        ups: upsWithPoster,
+        normals: hitsWithPoster,
         total: totalFromMeili,
         page: normalized.page,
         limit: normalized.limit,
