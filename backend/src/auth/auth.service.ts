@@ -12,7 +12,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { phoneLookupCandidates } from './phone-utils';
+import { phoneLookupCandidates, VN_PHONE_REGEX } from './phone-utils';
 
 // Khởi tạo Firebase Admin (chỉ chạy 1 lần)
 // Ưu tiên biến môi trường FIREBASE_SERVICE_ACCOUNT (JSON thô hoặc base64) để không phải
@@ -567,6 +567,34 @@ export class AuthService {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: { phone: phoneNumber }
+    });
+
+    return { message: 'Cập nhật số điện thoại thành công.', phone: updatedUser.phone };
+  }
+
+  /**
+   * Cập nhật SĐT trong Cài đặt tài khoản, KHÔNG bắt xác thực OTP — khách yêu cầu 29/9: Firebase
+   * hết quota SMS nên đường OTP (`updatePhoneWithFirebase` ở trên) đang bị ẩn nút trên cả 2
+   * site, người dùng không còn cách nào tự thêm/đổi SĐT trong Cài đặt. SĐT ở đây chỉ hiển thị
+   * trên tin đăng — không dùng để đăng nhập bằng mật khẩu (đăng nhập SĐT+mật khẩu đối chiếu
+   * đúng chuỗi đã lưu, không cần "đã xác thực") — nên bỏ bước xác thực chấp nhận được.
+   */
+  async updatePhoneDirect(userId: string, rawPhone: string) {
+    const phone = String(rawPhone || '').trim();
+    if (!VN_PHONE_REGEX.test(phone)) {
+      throw new BadRequestException('Số điện thoại không hợp lệ (VD: 0912345678).');
+    }
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: { phone: { in: phoneLookupCandidates(phone) }, id: { not: userId } },
+    });
+    if (existingUser) {
+      throw new ConflictException('Số điện thoại đã được sử dụng bởi tài khoản khác.');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { phone },
     });
 
     return { message: 'Cập nhật số điện thoại thành công.', phone: updatedUser.phone };

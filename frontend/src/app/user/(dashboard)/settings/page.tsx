@@ -3,19 +3,8 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
 import { toMediaUrl } from '@/lib/media';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '@/lib/firebase';
-import { translateFirebaseAuthError } from '@/lib/phone';
 import { toast } from 'react-hot-toast';
 import { confirmAction } from '@/lib/toast-helpers';
-
-
-declare global {
-  interface Window {
-    recaptchaVerifier: any;
-    confirmationResult: any;
-  }
-}
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState({
@@ -32,9 +21,9 @@ export default function SettingsPage() {
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
   
-  // Phone State
-  const [phoneData, setPhoneData] = useState({ currentPhone: '', newPhone: '', otp: '' });
-  const [stepPhone, setStepPhone] = useState<'IDLE' | 'OTP_SENT'>('IDLE');
+  // Phone State — khách yêu cầu 29/9: bỏ bước xác thực OTP khi cập nhật SĐT (Firebase hết
+  // quota SMS nên đường OTP đang bị ẩn nút, người dùng không còn cách nào tự thêm/đổi SĐT).
+  const [phoneData, setPhoneData] = useState({ currentPhone: '', newPhone: '' });
   const [phoneSaving, setPhoneSaving] = useState(false);
   const [showPhoneForm, setShowPhoneForm] = useState(false);
   const [phoneMsg, setPhoneMsg] = useState({ type: '', text: '' });
@@ -91,59 +80,26 @@ export default function SettingsPage() {
   }, []);
 
   
-  const handleRequestPhoneChange = async (e: React.FormEvent) => {
+  // Không còn bước OTP — gọi thẳng /auth/update-phone (xem AuthService.updatePhoneDirect).
+  const handleUpdatePhone = async (e: React.FormEvent) => {
     e.preventDefault();
     setPhoneSaving(true);
     setPhoneMsg({ type: '', text: '' });
-    
-    if (!/^(\+84|0)[3|5|7|8|9][0-9]{8}$/.test(phoneData.newPhone)) {
+
+    if (!/^(\+84|0)[35789][0-9]{8}$/.test(phoneData.newPhone)) {
       setPhoneMsg({ type: 'error', text: 'Số điện thoại không hợp lệ (VD: 0912345678).' });
       setPhoneSaving(false);
       return;
     }
 
     try {
-      let formattedPhone = phoneData.newPhone;
-      if (formattedPhone.startsWith('0')) {
-        formattedPhone = '+84' + formattedPhone.slice(1);
-      }
-
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible'
-        });
-      }
-
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
-      window.confirmationResult = confirmationResult;
-
-      setPhoneMsg({ type: 'success', text: 'Mã xác thực đã được gửi đến số điện thoại mới.' });
-      setStepPhone('OTP_SENT');
-    } catch (err: any) {
-      console.error(err);
-      setPhoneMsg({ type: 'error', text: translateFirebaseAuthError(err) || 'Lỗi gửi mã OTP. Vui lòng thử lại.' });
-    } finally {
-      setPhoneSaving(false);
-    }
-  };
-
-  const handleVerifyPhoneChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPhoneSaving(true);
-    setPhoneMsg({ type: '', text: '' });
-    try {
-      if (!window.confirmationResult) throw new Error('Không tìm thấy phiên xác thực.');
-      const result = await window.confirmationResult.confirm(phoneData.otp);
-      const idToken = await result.user.getIdToken();
-
-      const res = await api.post('/auth/update-phone-firebase', { idToken });
-      
+      const res = await api.post('/auth/update-phone', { phone: phoneData.newPhone });
       setPhoneMsg({ type: 'success', text: 'Cập nhật số điện thoại thành công.' });
-      setPhoneData({ ...phoneData, currentPhone: res.data?.phone || phoneData.newPhone, newPhone: '', otp: '' });
-      setStepPhone('IDLE');
+      setPhoneData({ currentPhone: res.data?.phone || phoneData.newPhone, newPhone: '' });
+      setShowPhoneForm(false);
     } catch (err: any) {
       console.error(err);
-      setPhoneMsg({ type: 'error', text: err.response?.data?.message || 'Mã xác thực không hợp lệ.' });
+      setPhoneMsg({ type: 'error', text: err.response?.data?.message || 'Không cập nhật được số điện thoại. Vui lòng thử lại.' });
     } finally {
       setPhoneSaving(false);
     }
@@ -377,10 +333,11 @@ export default function SettingsPage() {
 
       <hr className="my-10 border-gray-100" />
 
-      {/* Phone Management Section */}
+      {/* Phone Management Section — khách yêu cầu 29/9: bỏ bước xác thực OTP (Firebase hết
+          quota SMS). Cập nhật ngay, không còn phụ thuộc `isFirebaseConfigured`. */}
       <div className="mb-8">
         <h2 className="text-xl font-bold text-gray-900 mb-2">Quản lý Số điện thoại</h2>
-        <p className="text-gray-500">Cập nhật và xác thực số điện thoại của bạn (Không bắt buộc)</p>
+        <p className="text-gray-500">Cập nhật số điện thoại của bạn (Không bắt buộc)</p>
       </div>
 
       {phoneMsg.text && (
@@ -397,97 +354,50 @@ export default function SettingsPage() {
               <span className={`font-medium ${phoneData.currentPhone ? 'text-gray-900' : 'text-gray-400'}`}>
                 {phoneData.currentPhone || 'Chưa cập nhật'}
               </span>
-              {phoneData.currentPhone ? (
-                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  Đã xác thực
-                </span>
-              ) : (
+              {!phoneData.currentPhone && (
                 <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full whitespace-nowrap flex items-center gap-1">
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   Chưa có SĐT
                 </span>
               )}
             </div>
-            {isFirebaseConfigured ? (
-              <button
-                type="button"
-                onClick={() => setShowPhoneForm(!showPhoneForm)}
-                className="text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors"
-              >
-                {showPhoneForm ? 'Đóng' : (phoneData.currentPhone ? 'Thay đổi' : 'Thêm mới')}
-              </button>
-            ) : (
-              // Site chưa có cấu hình Firebase riêng (Hà Nội) — ẩn nút thay vì để bấm vào
-              // rồi gặp lỗi xác thực ngay từ bước gửi OTP.
-              <span className="text-xs text-gray-400 italic">Tạm chưa hỗ trợ</span>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowPhoneForm(!showPhoneForm)}
+              className="text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+            >
+              {showPhoneForm ? 'Đóng' : (phoneData.currentPhone ? 'Thay đổi' : 'Thêm mới')}
+            </button>
           </div>
         </div>
 
-        {showPhoneForm && isFirebaseConfigured && (
+        {showPhoneForm && (
           <div className="pt-4 border-t border-gray-100 mt-4 animate-in fade-in slide-in-from-top-2">
-            {stepPhone === 'IDLE' ? (
-              <form onSubmit={handleRequestPhoneChange} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {phoneData.currentPhone ? 'Đổi Số điện thoại' : 'Thêm Số điện thoại'}
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={phoneData.newPhone}
-                    onChange={e => setPhoneData({ ...phoneData, newPhone: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-primary focus:bg-white"
-                    placeholder="Nhập số điện thoại (VD: 0912345678)"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  id="send-otp-btn-phone"
-                  disabled={phoneSaving || !phoneData.newPhone}
-                  className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {phoneSaving ? 'ĐANG GỬI MÃ...' : (phoneData.currentPhone ? 'CẬP NHẬT SỐ ĐIỆN THOẠI' : 'THÊM SỐ ĐIỆN THOẠI')}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyPhoneChange} className="space-y-4 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-                <div>
-                  <label className="block text-sm font-semibold text-blue-900 mb-2">Mã xác thực (OTP)</label>
-                  <p className="text-xs text-blue-700 mb-3">Vui lòng kiểm tra tin nhắn SMS gửi đến số <strong>{phoneData.newPhone}</strong> để lấy mã xác thực gồm 6 số.</p>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    value={phoneData.otp}
-                    onChange={e => setPhoneData({ ...phoneData, otp: e.target.value.replace(/\D/g, '') })}
-                    className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl outline-none focus:border-blue-500 text-center tracking-[0.5em] text-lg font-bold"
-                    placeholder="------"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={phoneSaving || phoneData.otp.length < 6}
-                    className="flex-1 px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {phoneSaving ? 'ĐANG XÁC THỰC...' : 'XÁC THỰC'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStepPhone('IDLE')}
-                    className="px-6 py-3.5 bg-white text-gray-700 font-bold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    Hủy
-                  </button>
-                </div>
-              </form>
-            )}
+            <form onSubmit={handleUpdatePhone} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {phoneData.currentPhone ? 'Đổi Số điện thoại' : 'Thêm Số điện thoại'}
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={phoneData.newPhone}
+                  onChange={e => setPhoneData({ ...phoneData, newPhone: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-primary focus:bg-white"
+                  placeholder="Nhập số điện thoại (VD: 0912345678)"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={phoneSaving || !phoneData.newPhone}
+                className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {phoneSaving ? 'ĐANG LƯU...' : (phoneData.currentPhone ? 'CẬP NHẬT SỐ ĐIỆN THOẠI' : 'THÊM SỐ ĐIỆN THOẠI')}
+              </button>
+            </form>
           </div>
         )}
       </div>
-      <div id="recaptcha-container"></div>
 
       <hr className="my-10 border-gray-100" />
 

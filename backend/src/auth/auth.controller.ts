@@ -208,6 +208,14 @@ export class AuthController {
     return this.authService.updatePhoneWithFirebase(req.user.id, idToken);
   }
 
+  /** Cập nhật SĐT không cần OTP — xem `AuthService.updatePhoneDirect`. */
+  @UseGuards(JwtAuthGuard)
+  @Post('update-phone')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  async updatePhone(@Request() req, @Body('phone') phone: string) {
+    return this.authService.updatePhoneDirect(req.user.id, phone);
+  }
+
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   async googleAuth() {

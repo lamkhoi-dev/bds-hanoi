@@ -14,6 +14,9 @@ export function stripPhoneFormatting(raw: string): string {
   return String(raw || '').replace(/[^\d+]/g, '');
 }
 
+/** Số di động VN hợp lệ, dạng `0xxxxxxxxx` hoặc `+84xxxxxxxxx` — cùng mẫu form đăng tin dùng. */
+export const VN_PHONE_REGEX = /^(\+84|0)[35789][0-9]{8}$/;
+
 /**
  * Trả về MỌI dạng biểu diễn hợp lệ của một số điện thoại VN, để tra `WHERE phone IN (...)`.
  *
